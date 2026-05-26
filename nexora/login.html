@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Nexora</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page">
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-mark">N</div>
+    <div class="auth-logo-text">Nexora</div>
+  </div>
+
+  <div class="auth-heading">
+    <h1>Welcome back 👋</h1>
+    <p>Sign in to your Nexora account</p>
+  </div>
+
+  <!-- Demo hint -->
+  <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--text-secondary)">
+    <div style="font-weight:600;color:var(--purple-400);margin-bottom:6px">🎭 Demo Accounts</div>
+    <div>student@nexora.dev · organizer@nexora.dev · admin@nexora.dev</div>
+    <div style="margin-top:2px;color:var(--text-muted)">Any password with 6+ characters</div>
+  </div>
+
+  <form class="auth-form" id="login-form" novalidate>
+
+    <!-- Google -->
+    <button type="button" class="google-btn" id="google-login-btn">
+      <span class="google-icon">🌐</span>
+      Continue with Google
+    </button>
+
+    <div class="auth-divider">
+      <div class="auth-divider-line"></div>
+      <span class="auth-divider-text">or continue with email</span>
+      <div class="auth-divider-line"></div>
+    </div>
+
+    <!-- Email -->
+    <div class="input-group">
+      <label class="input-label" for="email">Email address</label>
+      <div class="input-with-icon">
+        <span class="input-icon">✉️</span>
+        <input
+          type="email"
+          id="email"
+          class="input-field"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="input-group">
+      <div style="display:flex;justify-content:space-between">
+        <label class="input-label" for="password">Password</label>
+        <a href="#" class="auth-link" style="font-size:12px" onclick="toast.info('Coming Soon','Password reset will be available after Firebase setup.')">Forgot password?</a>
+      </div>
+      <div class="input-with-icon password-wrap">
+        <span class="input-icon">🔒</span>
+        <input
+          type="password"
+          id="password"
+          class="input-field"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        />
+        <span class="password-toggle" id="toggle-pw">👁️</span>
+      </div>
+    </div>
+
+    <button type="submit" class="auth-submit" id="login-btn">
+      <span class="btn-text">Sign In →</span>
+      <div class="btn-spinner"></div>
+    </button>
+
+  </form>
+
+  <div class="auth-footer">
+    Don't have an account?
+    <a href="signup.html" class="auth-link">Sign up free</a>
+  </div>
+
+  <div style="text-align:center;margin-top:12px">
+    <a href="index.html" style="font-size:12px;color:var(--text-muted)">← Back to home</a>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  redirectIfLoggedIn();
+
+  // Password toggle
+  const togglePw = document.getElementById('toggle-pw');
+  const pwInput  = document.getElementById('password');
+  if (togglePw && pwInput) {
+    togglePw.addEventListener('click', () => {
+      pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+      togglePw.textContent = pwInput.type === 'password' ? '👁️' : '🙈';
+    });
+  }
+
+  // Google login
+  document.getElementById('google-login-btn').addEventListener('click', async () => {
+    try {
+      await loginWithGoogle();
+      toast.success('Signed in! 🎉', 'Redirecting to your dashboard...');
+      setTimeout(() => window.location.href = 'dashboard.html', 900);
+    } catch (err) {
+      toast.error('Sign-in failed', err.message);
+    }
+  });
+
+  // Email login
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('login-btn');
+
+    // Basic validation
+    if (!email) { showFieldError('email', 'Please enter your email'); return; }
+    if (!password) { showFieldError('password', 'Please enter your password'); return; }
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      await loginUser(email, password);
+      toast.success('Welcome back! 🎉', 'Redirecting...');
+      setTimeout(() => window.location.href = 'dashboard.html', 800);
+    } catch (err) {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      toast.error('Login failed', err.message || 'Check your credentials and try again.');
+    }
+  });
+});
+
+function showFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.classList.add('error');
+  const existing = field.parentElement.querySelector('.input-error');
+  if (existing) existing.remove();
+  const err = document.createElement('div');
+  err.className = 'input-error';
+  err.textContent = message;
+  field.parentElement.appendChild(err);
+  field.addEventListener('input', () => { field.classList.remove('error'); err.remove(); }, { once: true });
+}
+</script>
+</body>
+</html>

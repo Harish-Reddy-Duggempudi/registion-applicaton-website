@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Nexora</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/community.css" />
+</head>
+<body>
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="page-loader">
+  <div class="loader-logo">Nexora</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div id="navbar-container"></div>
+
+    <div class="page-content">
+
+      <div style="max-width:760px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Settings ⚙️</h1>
+        <p class="text-secondary text-sm mb-6">Manage your profile, account, and preferences</p>
+
+        <!-- Profile Settings -->
+        <div class="settings-section">
+          <div class="settings-section-title">👤 Profile</div>
+
+          <div class="avatar-upload">
+            <div class="avatar avatar-xl" id="s-avatar" style="background:var(--gradient-primary)">U</div>
+            <div>
+              <button class="avatar-upload-btn" onclick="toast.info('Coming Soon','Avatar upload launches with Firebase Storage integration')">📷 Change Photo</button>
+              <div class="text-muted text-xs mt-2">JPG, PNG or GIF. Max size 2MB.</div>
+            </div>
+          </div>
+
+          <form id="profile-form" novalidate>
+            <div class="form-row mb-4" style="grid-template-columns:1fr 1fr;display:grid;gap:16px">
+              <div class="input-group">
+                <label class="input-label">Full Name</label>
+                <input id="s-name" class="input-field" placeholder="Your full name" />
+              </div>
+              <div class="input-group">
+                <label class="input-label">Email</label>
+                <input id="s-email" class="input-field" placeholder="your@email.com" disabled style="opacity:0.5;cursor:not-allowed" />
+              </div>
+            </div>
+            <div class="input-group mb-4">
+              <label class="input-label">Bio</label>
+              <textarea id="s-bio" class="input-field" rows="3" placeholder="Tell the community a little about yourself..."></textarea>
+            </div>
+            <div class="form-row mb-4" style="grid-template-columns:1fr 1fr;display:grid;gap:16px">
+              <div class="input-group">
+                <label class="input-label">College / Institution</label>
+                <input id="s-college" class="input-field" placeholder="e.g. IIIT Hyderabad" />
+              </div>
+              <div class="input-group">
+                <label class="input-label">City</label>
+                <input id="s-city" class="input-field" placeholder="e.g. Hyderabad" />
+              </div>
+            </div>
+            <div class="input-group mb-4">
+              <label class="input-label">LinkedIn Profile</label>
+              <div class="input-with-icon">
+                <span class="input-icon">💼</span>
+                <input id="s-linkedin" class="input-field" placeholder="https://linkedin.com/in/yourname" />
+              </div>
+            </div>
+            <div class="input-group mb-5">
+              <label class="input-label">GitHub</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🐙</span>
+                <input id="s-github" class="input-field" placeholder="https://github.com/yourhandle" />
+              </div>
+            </div>
+            <button type="submit" class="auth-submit" style="width:auto;padding:12px 28px">
+              <span class="btn-text">💾 Save Profile</span>
+              <div class="btn-spinner"></div>
+            </button>
+          </form>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-section">
+          <div class="settings-section-title">🔔 Notifications</div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Event Reminders</div>
+              <div class="settings-row-desc">Get notified 24h before events you've registered for</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">New Events in Communities</div>
+              <div class="settings-row-desc">Be the first to know when your communities post new events</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Registration Confirmations</div>
+              <div class="settings-row-desc">Email and in-app confirmation when you register for events</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Community Announcements</div>
+              <div class="settings-row-desc">Announcements from communities you're a member of</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Platform Updates</div>
+              <div class="settings-row-desc">News about new Nexora features and improvements</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Weekly Digest Email</div>
+              <div class="settings-row-desc">Summary of upcoming events and community activity every Monday</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="settings-section">
+          <div class="settings-section-title">🎨 Appearance</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Theme</div>
+              <div class="settings-row-desc">Currently using Dark Futuristic theme</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm">🌙 Dark</button>
+              <button class="btn btn-ghost btn-sm" onclick="toast.info('Coming Soon','Light mode launching in v2.0')">☀️ Light</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Accent Color</div>
+              <div class="settings-row-desc">Choose your dashboard accent color</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              ${['#a855f7','#3b82f6','#22d3ee','#f472b6','#4ade80'].map(c =>
+                `<div style="width:24px;height:24px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c==='#a855f7'?'white':'transparent'}" onclick="toast.info('Accent changed','Color updated to your preference')"></div>`
+              ).join('')}
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Compact Mode</div>
+              <div class="settings-row-desc">Reduce padding and spacing for more content density</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Reduce Animations</div>
+              <div class="settings-row-desc">Turn off aurora backgrounds and motion effects</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+        </div>
+
+        <!-- Privacy -->
+        <div class="settings-section">
+          <div class="settings-section-title">🔒 Privacy & Security</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Public Profile</div>
+              <div class="settings-row-desc">Let other students find and view your profile</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Show in Community Member List</div>
+              <div class="settings-row-desc">Display your name in communities you've joined</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Change Password</div>
+              <div class="settings-row-desc">Update your account password</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="toast.info('Coming Soon','Password change available after Firebase setup')">Change Password</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Two-Factor Authentication</div>
+              <div class="settings-row-desc">Add an extra layer of security to your account</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="toast.info('Coming Soon','2FA launching in v2.0')">Enable 2FA</button>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-section" style="border-color:rgba(248,113,113,0.2)">
+          <div class="settings-section-title" style="color:#f87171">⚠️ Danger Zone</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Export My Data</div>
+              <div class="settings-row-desc">Download a copy of all your Nexora data</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="toast.info('Preparing export','Your data will be emailed to you shortly')">📦 Export Data</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label" style="color:#f87171">Delete Account</div>
+              <div class="settings-row-desc">Permanently delete your account and all data. This cannot be undone.</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete()">🗑️ Delete Account</button>
+          </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="card" style="text-align:center;padding:28px">
+          <div style="font-size:32px;margin-bottom:12px">👋</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:6px">Done for today?</div>
+          <div style="color:var(--text-secondary);font-size:13px;margin-bottom:20px">Your progress and settings are saved automatically.</div>
+          <button id="logout-btn" class="btn btn-danger">🚪 Sign Out</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../components/sidebar.js"></script>
+<script src="../js/analytics.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!requireAuth()) return;
+  initDashboardLayout({
+    activePage: 'settings',
+    pageTitle:  'Settings',
+    basePath:   '../'
+  });
+});
+
+function confirmDelete() {
+  if (confirm('Are you sure? This will permanently delete your account and cannot be undone.')) {
+    toast.error('Account Deletion', 'Please contact support to complete account deletion. This is a safety measure.');
+  }
+}
+</script>
+</body>
+</html>

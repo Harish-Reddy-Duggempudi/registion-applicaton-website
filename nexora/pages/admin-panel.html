@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Nexora</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/community.css" />
+</head>
+<body>
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="page-loader">
+  <div class="loader-logo">Nexora</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div id="navbar-container"></div>
+
+    <div class="page-content">
+
+      <!-- Header -->
+      <div class="section-header mb-6">
+        <div>
+          <h1 style="font-size:24px;font-weight:800">Admin Panel 🛡️</h1>
+          <div class="text-secondary text-sm mt-1">Manage users, approve content, and monitor the platform</div>
+        </div>
+        <span class="badge badge-yellow" style="font-size:12px;padding:6px 14px">🛡️ Admin Only</span>
+      </div>
+
+      <!-- Platform Stats -->
+      <div class="section-header mb-3">
+        <div class="section-title">📊 Platform Overview</div>
+      </div>
+      <div id="admin-stats" class="grid-3 mb-6"></div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content;flex-wrap:wrap">
+        <button class="tab-btn active" id="tab-approvals" onclick="switchAdminTab('approvals',this)">⏳ Approvals</button>
+        <button class="tab-btn" id="tab-users"     onclick="switchAdminTab('users',this)">👥 Users</button>
+        <button class="tab-btn" id="tab-reports"   onclick="switchAdminTab('reports',this)">🚨 Reports</button>
+        <button class="tab-btn" id="tab-platform"  onclick="switchAdminTab('platform',this)">⚙️ Platform</button>
+      </div>
+
+      <!-- Approvals Tab -->
+      <div id="panel-approvals">
+        <div class="section-header mb-4">
+          <div class="section-title">⏳ Pending Approvals</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="approveAllVisible()">✅ Approve All</button>
+            <button class="btn btn-outline btn-sm" onclick="toast.info('Filtered','Showing only community approvals')">Filter</button>
+          </div>
+        </div>
+        <div id="admin-approvals-list"></div>
+
+        <!-- Recent Approved -->
+        <div class="section-header mt-6 mb-4">
+          <div class="section-title">✅ Recently Approved</div>
+        </div>
+        <div class="card">
+          ${[
+            { emoji:'🌐', name:'GDG Hyderabad',    type:'Community', by:'Priya Sharma',  date:'Jul 28' },
+            { emoji:'🏆', name:'HackHyderabad 3.0', type:'Event',     by:'ACM CBIT',      date:'Jul 25' },
+            { emoji:'🔷', name:'MLSA IIIT-H',       type:'Community', by:'Rahul Singh',   date:'Jul 20' },
+            { emoji:'☁️', name:'Azure Workshop',    type:'Event',     by:'MLSA IIIT-H',   date:'Jul 18' },
+          ].map(item => `
+            <div class="activity-item">
+              <div class="activity-icon-wrap" style="background:rgba(74,222,128,0.1);font-size:18px">${item.emoji}</div>
+              <div class="activity-body">
+                <div class="activity-title">${item.name} <span class="badge badge-green" style="font-size:9px">${item.type}</span></div>
+                <div style="font-size:12px;color:var(--text-secondary)">By ${item.by}</div>
+                <div class="activity-time">${item.date}</div>
+              </div>
+              <div style="color:var(--green-400);font-size:18px">✅</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="panel-users" style="display:none">
+        <div class="section-header mb-4">
+          <div class="section-title">👥 User Management</div>
+          <div style="display:flex;gap:8px">
+            <div class="search-bar" style="max-width:280px">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Search users..." id="user-search"
+                oninput="filterAdminUsers(this.value)" />
+            </div>
+            <select class="input-field" style="width:auto;padding:8px 12px;border-radius:8px" onchange="filterByRole(this.value)">
+              <option value="all">All Roles</option>
+              <option value="student">Students</option>
+              <option value="organizer">Organizers</option>
+              <option value="admin">Admins</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div id="admin-users-list"></div>
+        </div>
+
+        <!-- Role Breakdown -->
+        <div class="grid-3 mt-4">
+          ${[
+            { role:'Students',   count:3421, icon:'🎓', color:'badge-blue'   },
+            { role:'Organizers', count:389,  icon:'⚡', color:'badge-purple' },
+            { role:'Admins',     count:37,   icon:'🛡️', color:'badge-yellow' },
+          ].map(r => `
+            <div class="stat-card" style="text-align:center">
+              <div style="font-size:32px;margin-bottom:8px">${r.icon}</div>
+              <div class="stat-value">${r.count.toLocaleString()}</div>
+              <div class="stat-label">${r.role}</div>
+              <span class="badge ${r.color} mt-2" style="display:inline-flex">${r.role}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Reports Tab -->
+      <div id="panel-reports" style="display:none">
+        <div class="section-header mb-4">
+          <div class="section-title">🚨 Reported Content</div>
+          <span class="badge badge-pink">3 Open</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          ${[
+            { type:'Event',     title:'Suspicious Event: "Win ₹1 Lakh Daily"', reporter:'Aarav M.',  reason:'Spam / Scam content',   date:'Aug 2' },
+            { type:'Community', title:'Community: "Get Rich Quick Hacks"',     reporter:'Sneha R.',  reason:'Misleading description', date:'Aug 1' },
+            { type:'User',      title:'User: fake_organizer_2025',             reporter:'Karthik N.',reason:'Impersonation',          date:'Jul 30' },
+          ].map(r => `
+            <div class="approval-card">
+              <div style="font-size:28px">🚨</div>
+              <div class="approval-info">
+                <div class="approval-name">${r.title}</div>
+                <div class="approval-meta">${r.type} · Reported by ${r.reporter} · ${r.date} · Reason: ${r.reason}</div>
+              </div>
+              <div class="approval-actions">
+                <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
+                <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <div class="empty-state mt-6" style="opacity:0.5">
+          <div class="empty-icon">🏆</div>
+          <div class="empty-title">Great moderation!</div>
+          <div class="empty-desc">Only 3 open reports. Platform is healthy.</div>
+        </div>
+      </div>
+
+      <!-- Platform Tab -->
+      <div id="panel-platform" style="display:none">
+        <div class="section-header mb-4">
+          <div class="section-title">⚙️ Platform Settings</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🛡️ Content Moderation</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Require Approval for New Communities</div>
+              <div class="settings-row-desc">All new community submissions go through admin review before going live</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Require Approval for New Events</div>
+              <div class="settings-row-desc">Events created by organizers need admin approval before being visible</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Allow Student Community Creation</div>
+              <div class="settings-row-desc">Let students (not just organizers) submit new communities</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">📧 Email & Notifications</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Send Welcome Email to New Users</div>
+              <div class="settings-row-desc">Auto-send a welcome email when students sign up</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Weekly Platform Digest</div>
+              <div class="settings-row-desc">Send weekly stats summary to all admins</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🚀 Feature Flags</div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">AI Tools</div>
+              <div class="settings-row-desc">Enable AI-powered tools for all users</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Analytics Dashboard</div>
+              <div class="settings-row-desc">Show analytics page to organizers and students</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">Beta: Certificate Generator</div>
+              <div class="settings-row-desc">Allow organizers to generate attendance certificates</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(248,113,113,0.2)">
+          <div class="text-muted text-xs mb-4" style="letter-spacing:0.8px">DANGER ZONE</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-danger" onclick="toast.error('Restricted','This action requires super-admin confirmation')">🔴 Maintenance Mode</button>
+            <button class="btn btn-danger" onclick="toast.error('Restricted','Contact engineering team for data operations')">🗑️ Clear Cache</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../components/sidebar.js"></script>
+<script src="../js/analytics.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!requireAuth()) return;
+
+  const user = getCurrentUser();
+  if (user?.role !== 'admin') {
+    toast.error('Access Denied', 'This area is restricted to admins only.');
+    setTimeout(() => window.location.href = '../dashboard.html', 1500);
+    return;
+  }
+
+  initDashboardLayout({
+    activePage: 'admin-panel',
+    pageTitle:  'Admin Panel',
+    basePath:   '../'
+  });
+});
+
+function switchAdminTab(tab, btn) {
+  ['approvals','users','reports','platform'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  btn.classList.add('active');
+}
+
+function filterAdminUsers(query) {
+  const rows = document.querySelectorAll('#admin-users-list .admin-user-row');
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterByRole(role) {
+  const rows = document.querySelectorAll('#admin-users-list .admin-user-row');
+  rows.forEach(row => {
+    row.style.display = (role === 'all' || row.textContent.toLowerCase().includes(role)) ? '' : 'none';
+  });
+}
+
+function resolveReport(btn, action) {
+  const card = btn.closest('.approval-card');
+  if (card) {
+    card.style.opacity = '0';
+    card.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => card.remove(), 300);
+  }
+  if (action === 'remove') {
+    toast.success('Content Removed', 'The reported content has been removed from the platform.');
+  } else {
+    toast.info('Report Dismissed', 'The report has been marked as reviewed and dismissed.');
+  }
+}
+
+function approveAllVisible() {
+  const cards = document.querySelectorAll('#admin-approvals-list .approval-card');
+  if (cards.length === 0) { toast.info('Nothing pending', 'No pending approvals to process.'); return; }
+  cards.forEach((c, i) => {
+    setTimeout(() => {
+      c.style.opacity = '0';
+      c.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => c.remove(), 300);
+    }, i * 150);
+  });
+  toast.success('All Approved! ✅', `${cards.length} item(s) approved and are now live.`);
+}
+</script>
+</body>
+</html>

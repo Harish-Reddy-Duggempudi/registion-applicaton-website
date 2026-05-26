@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — Nexora</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/community.css" />
+</head>
+<body>
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="page-loader">
+  <div class="loader-logo">Nexora</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div id="navbar-container"></div>
+
+    <div class="page-content">
+
+      <!-- Header -->
+      <div class="analytics-header">
+        <div>
+          <h1 style="font-size:24px;font-weight:800">Analytics 📊</h1>
+          <div class="text-secondary text-sm mt-1">Track your growth, engagement, and impact</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select class="analytics-period-select" onchange="toast.info('Period changed','Analytics updated for selected period')">
+            <option>Last 12 Months</option>
+            <option>Last 6 Months</option>
+            <option>Last 30 Days</option>
+            <option>This Year</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="toast.info('Export','PDF report generating...')">📄 Export Report</button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div id="analytics-stats" class="grid-4 mb-6"></div>
+
+      <!-- Charts Row 1 -->
+      <div class="grid-2 mb-5">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">📈 Registrations Over Time</div>
+              <div class="text-muted text-xs mt-1">Total event registrations per month</div>
+            </div>
+            <div class="chart-value" id="reg-total">—</div>
+          </div>
+          <div class="fake-chart" id="registrations-chart"></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
+            <span>Jan 2025</span><span>Dec 2025</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">🌐 Community Growth</div>
+              <div class="text-muted text-xs mt-1">Cumulative member count growth</div>
+            </div>
+            <div class="chart-value" id="community-total">—</div>
+          </div>
+          <div class="fake-chart" id="community-chart"></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
+            <span>Jan 2025</span><span>Dec 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="grid-2 mb-5">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">🎯 Event Attendance Rate</div>
+              <div class="text-muted text-xs mt-1">Percentage of registrants who attended</div>
+            </div>
+            <div class="chart-value">88%</div>
+          </div>
+          <div class="fake-chart" id="attendance-chart"></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
+            <span>Jan 2025</span><span>Dec 2025</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">🏷️ Events by Category</div>
+              <div class="text-muted text-xs mt-1">Distribution across event types</div>
+            </div>
+          </div>
+          <div id="category-chart" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- Top Events + Community Table -->
+      <div class="grid-2 mb-5">
+        <!-- Top Events -->
+        <div class="card">
+          <div class="section-header mb-4">
+            <div class="section-title">🔥 Top Events by Registrations</div>
+          </div>
+          <div id="top-events-list">
+            ${[
+              { emoji:'🌐', title:'Google I/O Extended Hyderabad', regs:843, pct:84 },
+              { emoji:'🏆', title:'HackHyderabad 3.0',             regs:487, pct:81 },
+              { emoji:'🎨', title:'UI/UX Design Bootcamp',         regs:234, pct:78 },
+              { emoji:'☁️', title:'Cloud Computing with Azure',    regs:156, pct:62 },
+              { emoji:'💡', title:'Startup Pitch Night',           regs:312, pct:78 },
+            ].map((e,i) => `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${i+1}</div>
+                <div style="font-size:20px">${e.emoji}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
+                  <div class="progress-bar" style="margin-top:6px">
+                    <div class="progress-fill" style="width:${e.pct}%"></div>
+                  </div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">${e.regs.toLocaleString()}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <!-- Top Communities -->
+        <div class="card">
+          <div class="section-header mb-4">
+            <div class="section-title">🌐 Top Communities by Members</div>
+          </div>
+          <div id="top-communities-list">
+            ${[
+              { emoji:'🌐', name:'GDG Hyderabad',    members:1240, growth:'+12%' },
+              { emoji:'🚀', name:'StartupHub Campus', members:780,  growth:'+22%' },
+              { emoji:'🔷', name:'MLSA IIIT-H',       members:890,  growth:'+8%'  },
+              { emoji:'⚙️', name:'ACM CBIT',           members:650,  growth:'+5%'  },
+              { emoji:'🔬', name:'IEEE CS Society',   members:420,  growth:'+3%'  },
+            ].map((c,i) => `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${i+1}</div>
+                <div style="font-size:20px">${c.emoji}</div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600">${c.name}</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 ${c.members.toLocaleString()} members</div>
+                </div>
+                <div class="stat-change up">${c.growth}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Engagement Metrics -->
+      <div class="card mb-5">
+        <div class="section-title mb-4">⚡ Engagement Metrics</div>
+        <div class="grid-4">
+          ${[
+            { label:'Avg Events per Student', value:'3.2',  icon:'🎯', change:'+0.4 from last month' },
+            { label:'Avg Community Members',  value:'682',  icon:'👥', change:'+8% growth rate'      },
+            { label:'Registration Conv. Rate',value:'73%',  icon:'📈', change:'Above industry avg'   },
+            { label:'Platform NPS Score',     value:'84',   icon:'⭐', change:'Excellent rating'      },
+          ].map(m => `
+            <div style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+              <div style="font-size:28px;margin-bottom:8px">${m.icon}</div>
+              <div style="font-family:var(--font-display);font-size:28px;font-weight:800;background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${m.value}</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">${m.label}</div>
+              <div class="stat-change up" style="margin-top:8px;display:inline-flex">${m.change}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../components/sidebar.js"></script>
+<script src="../js/analytics.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!requireAuth()) return;
+  initDashboardLayout({
+    activePage: 'analytics',
+    pageTitle:  'Analytics',
+    basePath:   '../'
+  });
+
+  // Set totals after render
+  setTimeout(() => {
+    const data = DataStore.getAnalytics();
+    const regTotal = data.registrationsOverTime.reduce((a,b) => a+b, 0);
+    const comTotal = data.communityGrowth[data.communityGrowth.length - 1];
+    const regEl = document.getElementById('reg-total');
+    const comEl = document.getElementById('community-total');
+    if (regEl) { regEl.textContent = '0'; animateCounter(regEl, regTotal); }
+    if (comEl) { comEl.textContent = '0'; animateCounter(comEl, comTotal); }
+  }, 500);
+});
+</script>
+</body>
+</html>

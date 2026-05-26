@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrations — Nexora</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/community.css" />
+</head>
+<body>
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="page-loader">
+  <div class="loader-logo">Nexora</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div id="navbar-container"></div>
+
+    <div class="page-content">
+
+      <!-- Header -->
+      <div class="section-header mb-6">
+        <div>
+          <h1 style="font-size:24px;font-weight:800">My Registrations 🎫</h1>
+          <div class="text-secondary text-sm mt-1">All your event tickets and registration history</div>
+        </div>
+        <a href="events.html" class="btn btn-primary">+ Register for Events</a>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="grid-4 mb-6" id="reg-stats">
+        <div class="stat-card">
+          <div style="font-size:28px;margin-bottom:8px">🎫</div>
+          <div class="stat-value" data-count="3">3</div>
+          <div class="stat-label">Total Registrations</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:28px;margin-bottom:8px">✅</div>
+          <div class="stat-value" data-count="2">2</div>
+          <div class="stat-label">Confirmed</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:28px;margin-bottom:8px">⏳</div>
+          <div class="stat-value" data-count="1">1</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:28px;margin-bottom:8px">🏆</div>
+          <div class="stat-value" data-count="0">0</div>
+          <div class="stat-label">Attended</div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="filter-chip active" data-reg-filter="all">All Registrations</button>
+        <button class="filter-chip" data-reg-filter="confirmed">✅ Confirmed</button>
+        <button class="filter-chip" data-reg-filter="pending">⏳ Pending</button>
+        <button class="filter-chip" data-reg-filter="cancelled">❌ Cancelled</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar mb-4" style="max-width:400px">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="reg-search" placeholder="Search registrations..." />
+      </div>
+
+      <!-- Registrations List -->
+      <div id="registrations-list"></div>
+
+      <!-- Organizer View: Registrations Table -->
+      <div id="organizer-reg-section" style="display:none">
+        <div class="divider"></div>
+        <div class="section-header mt-6 mb-4">
+          <div class="section-title">📋 All Event Registrations (Organizer View)</div>
+          <button class="btn btn-outline btn-sm" onclick="toast.info('Coming soon','Export CSV launching next sprint')">📊 Export CSV</button>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto">
+            <table class="data-table" id="org-reg-table">
+              <thead>
+                <tr>
+                  <th>Attendee</th>
+                  <th>Event</th>
+                  <th>Ticket ID</th>
+                  <th>Status</th>
+                  <th>Registered</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="org-reg-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../components/sidebar.js"></script>
+<script src="../js/analytics.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!requireAuth()) return;
+  initDashboardLayout({
+    activePage: 'registrations',
+    pageTitle:  'Registrations',
+    basePath:   '../'
+  });
+
+  const user = getCurrentUser();
+
+  // Animate stats
+  setTimeout(() => {
+    document.querySelectorAll('[data-count]').forEach(el => {
+      animateCounter(el, parseInt(el.dataset.count));
+    });
+  }, 400);
+
+  // Organizer extra table
+  if (user?.role === 'organizer' || user?.role === 'admin') {
+    document.getElementById('organizer-reg-section').style.display = '';
+    renderOrganizerTable();
+  }
+
+  // Search
+  const searchInput = document.getElementById('reg-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll('#registrations-list .ticket-card').forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+});
+
+function renderOrganizerTable() {
+  const tbody = document.getElementById('org-reg-tbody');
+  if (!tbody) return;
+
+  const rows = [
+    { name:'Aarav Mehta',   email:'aarav@iiith.ac.in',   event:'Google I/O Extended',    ticket:'NXR-E1-001', status:'confirmed', date:'Jul 28, 2025' },
+    { name:'Sneha Reddy',   email:'sneha@cbit.ac.in',    event:'Google I/O Extended',    ticket:'NXR-E1-002', status:'confirmed', date:'Jul 29, 2025' },
+    { name:'Rahul Singh',   email:'rahul@mlsa.dev',      event:'HackHyderabad 3.0',      ticket:'NXR-E2-001', status:'confirmed', date:'Jul 30, 2025' },
+    { name:'Karthik Nair',  email:'karthik@ieee.org',    event:'HackHyderabad 3.0',      ticket:'NXR-E2-002', status:'pending',   date:'Aug 1, 2025'  },
+    { name:'Priya Sharma',  email:'priya@gdg.dev',       event:'UI/UX Design Bootcamp',  ticket:'NXR-E3-001', status:'confirmed', date:'Aug 1, 2025'  },
+    { name:'Ananya Patel',  email:'ananya@design.io',    event:'UI/UX Design Bootcamp',  ticket:'NXR-E3-002', status:'cancelled', date:'Aug 2, 2025'  },
+  ];
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar avatar-sm" style="background:var(--gradient-primary)">${r.name.split(' ').map(w=>w[0]).join('')}</div>
+          <div>
+            <div style="font-weight:500;font-size:13px">${r.name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${r.email}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:13px">${r.event}</td>
+      <td><code style="font-size:11px;color:var(--purple-400)">${r.ticket}</code></td>
+      <td><div class="reg-status ${r.status}"><div class="reg-status-dot"></div>${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</div></td>
+      <td style="font-size:12px;color:var(--text-muted)">${r.date}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${r.ticket}')">📋</button>
+          <button class="btn btn-ghost btn-sm" onclick="toast.info('Email sent','Confirmation email sent to ${r.email}')">📧</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>

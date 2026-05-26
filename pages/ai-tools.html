@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Tools — Nexora</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/community.css" />
+</head>
+<body>
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="page-loader">
+  <div class="loader-logo">Nexora</div>
+  <div class="loader-spinner"></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="app-layout">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div id="navbar-container"></div>
+
+    <div class="page-content">
+
+      <!-- Header -->
+      <div class="section-header mb-2">
+        <div>
+          <h1 style="font-size:24px;font-weight:800">AI Tools 🤖</h1>
+          <div class="text-secondary text-sm mt-1">Supercharge your productivity with AI-powered generators</div>
+        </div>
+        <span class="badge badge-purple" style="font-size:12px;padding:6px 14px">✨ Powered by Claude AI</span>
+      </div>
+
+      <!-- Hero Banner -->
+      <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(8,145,178,0.1));border:1px solid rgba(168,85,247,0.25);border-radius:20px;padding:28px 32px;margin-bottom:32px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.15),transparent 70%);pointer-events:none"></div>
+        <div style="max-width:600px">
+          <div style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px">
+            Stop spending hours on copy. <span class="text-gradient">Let AI do it in seconds.</span>
+          </div>
+          <div style="color:var(--text-secondary);font-size:14px;line-height:1.7">
+            Nexora's AI toolkit generates event titles, descriptions, announcements, emails, and social captions — all trained to sound like a real campus organizer, not a robot.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tool Cards -->
+      <div class="grid-3 mb-6">
+
+        <div class="ai-tool-card" data-ai-tool="title">
+          <span class="ai-tool-icon">🏷️</span>
+          <div class="ai-tool-name">Event Title Generator</div>
+          <div class="ai-tool-desc">Generate 5 catchy, creative, and professional event titles instantly. Perfect for hackathons, workshops, and talks.</div>
+          <button class="btn btn-primary btn-sm mt-3" data-ai-tool="title">✨ Generate Titles</button>
+        </div>
+
+        <div class="ai-tool-card" data-ai-tool="description">
+          <span class="ai-tool-icon">📝</span>
+          <div class="ai-tool-name">Description Generator</div>
+          <div class="ai-tool-desc">Write a compelling event description that drives registrations. Highlights benefits, outcomes, and a strong CTA.</div>
+          <button class="btn btn-primary btn-sm mt-3" data-ai-tool="description">✨ Generate Description</button>
+        </div>
+
+        <div class="ai-tool-card" data-ai-tool="announcement">
+          <span class="ai-tool-icon">📢</span>
+          <div class="ai-tool-name">Announcement Generator</div>
+          <div class="ai-tool-desc">Create a short, punchy social media announcement. Perfect for WhatsApp groups, Telegram channels, and Instagram.</div>
+          <button class="btn btn-primary btn-sm mt-3" data-ai-tool="announcement">✨ Generate Announcement</button>
+        </div>
+
+        <div class="ai-tool-card" data-ai-tool="email">
+          <span class="ai-tool-icon">📧</span>
+          <div class="ai-tool-name">Email Generator</div>
+          <div class="ai-tool-desc">Craft a professional event invitation email complete with subject line, body, and a compelling call to action.</div>
+          <button class="btn btn-primary btn-sm mt-3" data-ai-tool="email">✨ Generate Email</button>
+        </div>
+
+        <div class="ai-tool-card" data-ai-tool="caption">
+          <span class="ai-tool-icon">📸</span>
+          <div class="ai-tool-name">Caption Generator</div>
+          <div class="ai-tool-desc">Get 3 different Instagram captions — excited, professional, and fun — with relevant hashtags included.</div>
+          <button class="btn btn-primary btn-sm mt-3" data-ai-tool="caption">✨ Generate Captions</button>
+        </div>
+
+        <!-- Coming Soon -->
+        <div class="ai-tool-card" style="opacity:0.5;cursor:not-allowed" onclick="toast.info('Coming Soon 🚀','This tool is under development and will be available soon!')">
+          <span class="ai-tool-icon">🎨</span>
+          <div class="ai-tool-name">Banner Generator <span class="badge badge-yellow" style="font-size:9px;vertical-align:middle">Soon</span></div>
+          <div class="ai-tool-desc">AI-powered event banner designs generated from your event details. No design skills needed.</div>
+          <button class="btn btn-ghost btn-sm mt-3" disabled>🔒 Coming Soon</button>
+        </div>
+
+      </div>
+
+      <!-- Usage Tips -->
+      <div class="card">
+        <div class="section-title mb-4">💡 Tips for Best Results</div>
+        <div class="grid-3">
+          ${[
+            { icon:'📌', tip:'Be Specific', desc:'The more details you provide (topic, audience, format), the better the AI output.' },
+            { icon:'🔄', tip:'Regenerate Freely', desc:'Not happy? Hit regenerate. Each output is unique. Mix and match for the perfect copy.' },
+            { icon:'✏️', tip:'Edit After', desc:'AI gives you the 80%. You add the 20% — your community\'s voice and specific details.' },
+          ].map(t => `
+            <div style="display:flex;gap:14px">
+              <div style="font-size:24px;flex-shrink:0">${t.icon}</div>
+              <div>
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px">${t.tip}</div>
+                <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">${t.desc}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- AI Tool Modal -->
+<div class="modal-overlay" id="ai-tool-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title" id="ai-modal-title">AI Generator</div>
+      <span class="modal-close" onclick="closeModal('ai-tool-modal')">✕</span>
+    </div>
+
+    <div id="ai-modal-inputs" style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px"></div>
+
+    <button class="btn btn-primary w-full" id="ai-generate-btn" style="justify-content:center">
+      ✨ Generate
+    </button>
+
+    <div class="ai-output-box" id="ai-output-area" style="margin-top:16px">
+      <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">
+        ✨ Fill in the fields above and click Generate
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/data.js"></script>
+<script src="../components/sidebar.js"></script>
+<script src="../js/analytics.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!requireAuth()) return;
+  initDashboardLayout({
+    activePage: 'ai-tools',
+    pageTitle:  'AI Tools',
+    basePath:   '../'
+  });
+  initAIToolsPage();
+});
+</script>
+</body>
+</html>

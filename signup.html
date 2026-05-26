@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — Nexora</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page">
+
+<div class="aurora-bg">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-mark">N</div>
+    <div class="auth-logo-text">Nexora</div>
+  </div>
+
+  <div class="auth-heading">
+    <h1>Join Nexora 🚀</h1>
+    <p>Create your free account in 30 seconds</p>
+  </div>
+
+  <form class="auth-form" id="signup-form" novalidate>
+
+    <!-- Google -->
+    <button type="button" class="google-btn" id="google-signup-btn">
+      <span class="google-icon">🌐</span>
+      Sign up with Google
+    </button>
+
+    <div class="auth-divider">
+      <div class="auth-divider-line"></div>
+      <span class="auth-divider-text">or create account</span>
+      <div class="auth-divider-line"></div>
+    </div>
+
+    <!-- Role Select -->
+    <div class="input-group">
+      <label class="input-label">I am a...</label>
+      <div class="role-select-grid">
+        <div class="role-option selected" data-role="student" onclick="selectRole('student',this)">
+          <div class="role-option-icon">🎓</div>
+          <div class="role-option-label">Student</div>
+        </div>
+        <div class="role-option" data-role="organizer" onclick="selectRole('organizer',this)">
+          <div class="role-option-icon">⚡</div>
+          <div class="role-option-label">Organizer</div>
+        </div>
+        <div class="role-option" data-role="admin" onclick="selectRole('admin',this)">
+          <div class="role-option-icon">🛡️</div>
+          <div class="role-option-label">Admin</div>
+        </div>
+      </div>
+      <input type="hidden" id="selected-role" value="student" />
+    </div>
+
+    <!-- Full Name -->
+    <div class="input-group">
+      <label class="input-label" for="fullname">Full Name</label>
+      <div class="input-with-icon">
+        <span class="input-icon">👤</span>
+        <input type="text" id="fullname" class="input-field" placeholder="Aarav Mehta" autocomplete="name" required />
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="input-group">
+      <label class="input-label" for="email">Email address</label>
+      <div class="input-with-icon">
+        <span class="input-icon">✉️</span>
+        <input type="email" id="email" class="input-field" placeholder="you@college.edu" autocomplete="email" required />
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="input-group">
+      <label class="input-label" for="password">Password</label>
+      <div class="input-with-icon password-wrap">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="password" class="input-field" placeholder="Min 6 characters" autocomplete="new-password" required />
+        <span class="password-toggle" id="toggle-pw">👁️</span>
+      </div>
+      <!-- Password strength -->
+      <div id="pw-strength-wrap" style="margin-top:6px;display:none">
+        <div class="progress-bar">
+          <div class="progress-fill" id="pw-strength-bar" style="width:0%;transition:width 0.3s ease,background 0.3s ease"></div>
+        </div>
+        <div id="pw-strength-label" style="font-size:11px;margin-top:4px;color:var(--text-muted)"></div>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary)">
+      <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--purple-500);width:16px;height:16px" required />
+      <label for="terms">I agree to Nexora's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
+    </div>
+
+    <button type="submit" class="auth-submit" id="signup-btn">
+      <span class="btn-text">Create Account 🚀</span>
+      <div class="btn-spinner"></div>
+    </button>
+
+  </form>
+
+  <div class="auth-footer">
+    Already have an account?
+    <a href="login.html" class="auth-link">Sign in</a>
+  </div>
+
+  <div style="text-align:center;margin-top:12px">
+    <a href="index.html" style="font-size:12px;color:var(--text-muted)">← Back to home</a>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script>
+let selectedRole = 'student';
+
+function selectRole(role, el) {
+  selectedRole = role;
+  document.getElementById('selected-role').value = role;
+  document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  redirectIfLoggedIn();
+
+  // Password toggle
+  const togglePw = document.getElementById('toggle-pw');
+  const pwInput  = document.getElementById('password');
+  if (togglePw && pwInput) {
+    togglePw.addEventListener('click', () => {
+      pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+      togglePw.textContent = pwInput.type === 'password' ? '👁️' : '🙈';
+    });
+
+    // Password strength
+    pwInput.addEventListener('input', () => {
+      const val = pwInput.value;
+      const wrap = document.getElementById('pw-strength-wrap');
+      const bar  = document.getElementById('pw-strength-bar');
+      const lbl  = document.getElementById('pw-strength-label');
+      if (!val) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      let score = 0;
+      if (val.length >= 6) score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { pct:'20%', color:'#ef4444', label:'Weak' },
+        { pct:'40%', color:'#f97316', label:'Fair' },
+        { pct:'60%', color:'#facc15', label:'Good' },
+        { pct:'80%', color:'#4ade80', label:'Strong' },
+        { pct:'100%',color:'#22d3ee', label:'Very Strong 💪' },
+      ];
+      const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+      bar.style.width = lvl.pct;
+      bar.style.background = lvl.color;
+      lbl.textContent = lvl.label;
+      lbl.style.color = lvl.color;
+    });
+  }
+
+  // Google signup
+  document.getElementById('google-signup-btn').addEventListener('click', async () => {
+    try {
+      await loginWithGoogle();
+      toast.success('Account created! 🎉', 'Redirecting to dashboard...');
+      setTimeout(() => window.location.href = 'dashboard.html', 900);
+    } catch (err) {
+      toast.error('Sign-up failed', err.message);
+    }
+  });
+
+  // Email signup
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name     = document.getElementById('fullname').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const terms    = document.getElementById('terms').checked;
+    const btn      = document.getElementById('signup-btn');
+    const role     = selectedRole;
+
+    if (!name)     { showFieldError('fullname', 'Please enter your name'); return; }
+    if (!email)    { showFieldError('email', 'Please enter your email'); return; }
+    if (password.length < 6) { showFieldError('password', 'Password must be at least 6 characters'); return; }
+    if (!terms) { toast.warning('Terms required', 'Please accept the terms to continue.'); return; }
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      await registerUser(name, email, password, role);
+      toast.success('Account created! 🎉', `Welcome to Nexora, ${name}!`);
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    } catch (err) {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      toast.error('Sign-up failed', err.message || 'Something went wrong. Try again.');
+    }
+  });
+});
+
+function showFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.classList.add('error');
+  const existing = field.parentElement.querySelector('.input-error');
+  if (existing) existing.remove();
+  const err = document.createElement('div');
+  err.className = 'input-error';
+  err.textContent = message;
+  field.parentElement.appendChild(err);
+  field.addEventListener('input', () => { field.classList.remove('error'); err.remove(); }, { once: true });
+}
+</script>
+</body>
+</html>
