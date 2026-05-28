@@ -63,7 +63,6 @@
   transition: color var(--transition-fast);
   cursor: pointer;
 }
-.nav-logo-img { height: 40px; width: auto; display: block; }
 .nav-link:hover { color: var(--text-primary); }
 .nav-cta {
   display: flex;
