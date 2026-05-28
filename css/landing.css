@@ -117,6 +117,39 @@
   animation: fadeInUp 0.7s ease 0.2s forwards;
   opacity: 0;
 }
+
+/* Trusted communities row */
+.trusted-row {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.trusted-card {
+  display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);min-width:200px;box-shadow:0 6px 18px rgba(2,6,23,0.4);
+}
+.trusted-logo{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--purple-500),var(--blue-500));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+.trusted-name{font-size:13px;color:var(--text-primary);font-weight:600}
+
+/* How it works */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.how-card{background:var(--bg-card);border-radius:12px;padding:20px;text-align:center;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+.how-icon{font-size:28px;margin-bottom:10px}
+
+/* FAQ */
+.faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.faq-item{background:var(--bg-card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.faq-q{width:100%;text-align:left;padding:16px 18px;background:transparent;border:none;color:var(--text-primary);font-weight:600;font-size:15px;cursor:pointer}
+.faq-a{padding:0 18px 16px 18px;color:var(--text-secondary);line-height:1.6}
+
+@media (max-width: 900px){
+  .how-grid{grid-template-columns:1fr}
+  .faq-grid{grid-template-columns:1fr}
+  .trusted-card{min-width:140px}
+}
+
 .hero-cta {
   display: flex;
   align-items: center;

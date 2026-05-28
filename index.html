@@ -147,6 +147,23 @@
 </section>
 
 <!-- Stats Row -->
+<!-- Trusted Communities (new) -->
+<section class="section" id="trusted">
+  <div>
+    <div class="section-eyebrow">Trusted By</div>
+    <h3 class="section-title" style="margin-top:6px">Trusted communities & partners</h3>
+    <p class="section-subtitle">Small, subtle badge row of organizations using NEXOVERSE.</p>
+  </div>
+  <div class="trusted-row mt-8">
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">GDG</div><div class="trusted-name">Google Developer Groups</div></div>
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">MS</div><div class="trusted-name">Microsoft Learn</div></div>
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">IEEE</div><div class="trusted-name">IEEE</div></div>
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">ACM</div><div class="trusted-name">ACM</div></div>
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">GH</div><div class="trusted-name">GitHub Campus</div></div>
+    <div class="trusted-card" aria-hidden="true"><div class="trusted-logo">SU</div><div class="trusted-name">Startup Communities</div></div>
+  </div>
+</section>
+
 <section class="container">
   <div class="stats-row">
     <div class="stats-row-item"><div class="stats-row-value">3,847+</div><div class="stats-row-label">Active Students</div></div>
@@ -157,6 +174,33 @@
 </section>
 
 <!-- Features Section -->
+<!-- How It Works (new) -->
+<section class="section how-works" id="how-it-works">
+  <div>
+    <div class="section-eyebrow">How it Works</div>
+    <h2 class="section-title">3 simple steps to get started</h2>
+    <p class="section-subtitle">From joining communities to growing your network — NEXOVERSE makes it effortless.</p>
+  </div>
+
+  <div class="how-grid mt-12">
+    <div class="how-card">
+      <div class="how-icon">📥</div>
+      <h4>Create or Join Communities</h4>
+      <p class="muted-desc">Set up chapters or join existing student groups to collaborate and grow.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🎟️</div>
+      <h4>Discover & Register for Events</h4>
+      <p class="muted-desc">Find workshops, hackathons and meetups — register in one click.</p>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🤝</div>
+      <h4>Grow Your Network & Ecosystem</h4>
+      <p class="muted-desc">Engage, share resources and scale your community impact.</p>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="features">
   <div>
     <div class="section-eyebrow">✨ Everything You Need</div>
@@ -430,6 +474,39 @@
   </div>
 </section>
 
+<!-- FAQ -->
+<section class="section container section-py-xl" id="faq-section">
+  <div class="faq-wrap">
+    <div>
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Frequently asked questions</h2>
+      <p class="section-subtitle">Quick answers to common questions about NEXOVERSE.</p>
+    </div>
+    <div class="faq-grid mt-8">
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Is NEXOVERSE free?</button>
+        <div class="faq-a">Yes — basic features are free for students. Premium plans available for organizers and institutions.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Can organizers create communities?</button>
+        <div class="faq-a">Absolutely — organizers can create communities, manage members, and host events with full controls.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">How do event registrations work?</button>
+        <div class="faq-a">Registrations are one-click with optional ticketing and QR check-in for attendees.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Are AI tools included?</button>
+        <div class="faq-a">Yes — content generation and assistant tools are built-in for members and organizers.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">Can colleges use NEXOVERSE officially?</button>
+        <div class="faq-a">Colleges can onboard as institutions; contact our team for enterprise setup and integrations.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="section container section-py-xl">
   <div class="cta-banner">
@@ -603,6 +680,24 @@
       setTimeout(() => { if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 320);
     });
   });
+  // FAQ accordion behavior
+  (function(){
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        // close all
+        document.querySelectorAll('.faq-q').forEach(b => b.setAttribute('aria-expanded','false'));
+        document.querySelectorAll('.faq-a').forEach(a => a.style.maxHeight = null);
+        if (!open) {
+          btn.setAttribute('aria-expanded','true');
+          const a = btn.nextElementSibling;
+          if (a) { a.style.maxHeight = a.scrollHeight + 'px'; }
+        }
+      });
+    });
+    // Set initial heights to 0
+    document.querySelectorAll('.faq-a').forEach(a => { a.style.overflow='hidden'; a.style.maxHeight = null; a.style.transition='max-height 0.32s ease'; });
+  })();
 </script>
 </body>
 </html>
