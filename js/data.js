@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Dummy Data & Data Module
+// NEXOVERSE — Dummy Data & Data Module
 // =============================================
 
 const DUMMY_DATA = {
@@ -148,7 +148,7 @@ const DUMMY_DATA = {
     { id:'n1', type:'event', title:'Event starts in 3 days!', message:'Google I/O Extended Hyderabad is on Aug 15', read:false, time:'1h ago' },
     { id:'n2', type:'community', title:'New event in GDG Hyderabad', message:'Flutter Workshop announced for Aug 25', read:false, time:'3h ago' },
     { id:'n3', type:'registration', title:'Registration confirmed', message:'Your spot for HackHyderabad is secured ✅', read:true, time:'1d ago' },
-    { id:'n4', type:'system', title:'Welcome to Nexora!', message:'Complete your profile to get personalized recommendations', read:true, time:'3d ago' },
+    { id:'n4', type:'system', title:'Welcome to NEXOVERSE!', message:'Complete your profile to get personalized recommendations', read:true, time:'3d ago' },
   ],
 
   analytics: {

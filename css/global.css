@@ -1,5 +1,5 @@
 /* =============================================
-   NEXORA — Global Design System
+  NEXOVERSE — Global Design System
    ============================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
@@ -84,6 +84,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--purple-400);
+  outline-offset: 3px;
+}
 img { max-width: 100%; display: block; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; }
 input, textarea, select {
@@ -672,11 +677,86 @@ textarea.input-field { resize: vertical; min-height: 100px; }
 .text-right { text-align: right; }
 .opacity-50 { opacity: 0.5; }
 .truncate { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.items-start { align-items: flex-start; }
+.mb-1 { margin-bottom: 6px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.my-3 { margin: 12px 0; }
+.mt-10 { margin-top: 40px; }
+.mt-12 { margin-top: 48px; }
+.text-center { text-align: center; }
+.flex-wrap { flex-wrap: wrap; }
+.shrink-0 { flex-shrink: 0; }
 
 /* ── Glow Effects ── */
 .glow-purple { box-shadow: 0 0 20px rgba(168,85,247,0.3); }
 .glow-blue   { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
 .glow-cyan   { box-shadow: 0 0 20px rgba(34,211,238,0.3); }
+
+/* ── Small utilities for fixed widths used on the preview bars ── */
+.w-40 { width: 40%; }
+.w-60 { width: 60%; }
+.w-75 { width: 75%; }
+.w-90 { width: 90%; }
+
+/* ── Reusable card/banner utilities ── */
+.card-banner { border-radius: var(--radius-xl) var(--radius-xl) 0 0; min-height: 80px; position: relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.banner-sm { height: 80px; }
+.banner-lg { height: 140px; }
+.banner-icon { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; font-size: 52px; }
+.badge-top-right { position: absolute; top: 12px; right: 12px; }
+
+/* ── Predefined gradients (used by banners & avatars) ── */
+.grad-1 { background: linear-gradient(135deg,#4285F4,#34A853); }
+.grad-2 { background: linear-gradient(135deg,#00A4EF,#7FBA00); }
+.grad-3 { background: linear-gradient(135deg,#7c3aed,#2563eb); }
+.grad-4 { background: linear-gradient(135deg,#0891b2,#0e7490); }
+.grad-5 { background: linear-gradient(135deg,#ec4899,#f97316); }
+.grad-6 { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+.grad-7 { background: linear-gradient(135deg,#22d3ee,#3b82f6); }
+.grad-8 { background: linear-gradient(135deg,#f472b6,#a855f7); }
+
+/* avatar gradient helpers matching hero avatars */
+.avatar-grad-1 { background: var(--gradient-primary); }
+.avatar-grad-2 { background: linear-gradient(135deg,#22d3ee,#3b82f6); }
+.avatar-grad-3 { background: linear-gradient(135deg,#f472b6,#a855f7); }
+.avatar-grad-4 { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+.avatar-grad-5 { background: linear-gradient(135deg,#4ade80,#22d3ee); }
+.avatar-grad-6 { background: linear-gradient(135deg,#4285F4,#34A853); }
+.avatar-grad-7 { background: linear-gradient(135deg,#7c3aed,#ec4899); }
+
+/* footer branding helpers */
+.footer-brand-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.footer-logo-mark { width:36px; height:36px; font-size:18px; box-shadow:0 0 16px rgba(168,85,247,0.18); }
+.footer-brand-title { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.footer-brand-desc { color: var(--text-secondary); font-size: 15px; line-height: 1.7; max-width: 260px; }
+.footer-email { margin-top: 10px; display: inline-block; font-size: 14px; }
+
+/* generic page spacing utility for top/bottom padding sections */
+.section-py-xl { padding-top: 80px; padding-bottom: 80px; }
+
+/* testimonial helpers */
+.testimonial-card { min-height: 100%; display: flex; flex-direction: column; }
+.testimonial-text { flex: 1; }
+
+/* hamburger icon lines */
+.hamburger-icon { display:block; width:28px; height:28px; position:relative; }
+.hamburger-icon > span { position:absolute; left:0; width:100%; height:3px; background:var(--text-primary); border-radius:2px; }
+.hamburger-icon > span:nth-child(1) { top:6px; }
+.hamburger-icon > span:nth-child(2) { top:13px; }
+.hamburger-icon > span:nth-child(3) { top:20px; }
+
+/* preview helpers */
+.preview-greeting { font-size:9px; color: rgba(148,163,184,0.7); margin-bottom:8px; font-family: 'DM Sans', sans-serif; }
+
+/* small container utility used on a few sections */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+/* section variant that keeps same muted background + borders used on communities */
+.section-muted { background: rgba(255,255,255,0.01); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+
+/* small descriptive text used in cards (preserve original sizing & spacing) */
+.muted-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; }
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {

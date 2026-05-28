@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Analytics, AI, Registrations
+// NEXOVERSE — Analytics, AI, Registrations
 // =============================================
 
 // ============================================================
@@ -409,9 +409,9 @@ async function generateAIContent(tool, cfg) {
     const fallbacks = {
       title:       `1. 🚀 Build, Break, Innovate — The Ultimate ${values.type}\n2. ✨ Code & Create: ${values.topic} Edition\n3. 🌟 Future Forward: ${values.topic} Summit\n4. ⚡ Spark Sessions: Deep Dive into ${values.topic}\n5. 🎯 Zero to Hero: ${values.topic} ${values.type}`,
       description: `Join us for an incredible ${values.type} experience!\n\n"${values.title}" is designed for curious minds who want to push boundaries and explore the future of technology.\n\nWhat you'll gain:\n✅ Hands-on experience with cutting-edge tools\n✅ Networking with industry experts\n✅ Certificates & goodies for all participants\n✅ Real-world project experience\n\nSpots are limited — register NOW and level up your skills! 🚀`,
-      announcement:`🔥 BIG ANNOUNCEMENT!\n\n${values.event} is HAPPENING and you DON'T want to miss it! 🎯\n\nMark your calendars, grab your team, and get ready for an unforgettable experience! 💫\n\n🔗 Register now — link in bio!\n\n#Nexora #StudentEvents #TechCommunity`,
-      email:       `Subject: You're Invited — ${values.event} 🎉\n\nHi [Name],\n\nWe're thrilled to invite you to ${values.event} — one of the most exciting student events of the year!\n\nJoin us for a day packed with learning, networking, and fun. Whether you're a beginner or a seasoned pro, there's something for everyone.\n\n🗓️ Date: [Date]\n📍 Venue: [Venue]\n🕐 Time: [Time]\n\nSeats are filling up fast — secure yours today!\n\n👉 [Register Now Button]\n\nSee you there!\nTeam Nexora`,
-      caption:     `Caption 1: 🚀 The wait is OVER! ${values.event} is officially here. Are you ready to level up? Drop a 🔥 if you're joining! #StudentLife #TechEvent\n\nCaption 2: Innovation meets inspiration at ${values.event}. Join thousands of students building the future, one line of code at a time. #NexoraCommunity #BuildTheFuture\n\nCaption 3: Okay bestie, drop everything — ${values.event} is the event of the season and YOU need to be there! 👀✨ Link in bio, run! 🏃 #FOMO #EventAlert`,
+      announcement:`🔥 BIG ANNOUNCEMENT!\n\n${values.event} is HAPPENING and you DON'T want to miss it! 🎯\n\nMark your calendars, grab your team, and get ready for an unforgettable experience! 💫\n\n🔗 Register now — link in bio!\n\n#NEXOVERSE #StudentEvents #TechCommunity`,
+      email:       `Subject: You're Invited — ${values.event} 🎉\n\nHi [Name],\n\nWe're thrilled to invite you to ${values.event} — one of the most exciting student events of the year!\n\nJoin us for a day packed with learning, networking, and fun. Whether you're a beginner or a seasoned pro, there's something for everyone.\n\n🗓️ Date: [Date]\n📍 Venue: [Venue]\n🕐 Time: [Time]\n\nSeats are filling up fast — secure yours today!\n\n👉 [Register Now Button]\n\nSee you there!\nTeam NEXOVERSE`,
+      caption:     `Caption 1: 🚀 The wait is OVER! ${values.event} is officially here. Are you ready to level up? Drop a 🔥 if you're joining! #StudentLife #TechEvent\n\nCaption 2: Innovation meets inspiration at ${values.event}. Join thousands of students building the future, one line of code at a time. #NEXOVERSECommunity #BuildTheFuture\n\nCaption 3: Okay bestie, drop everything — ${values.event} is the event of the season and YOU need to be there! 👀✨ Link in bio, run! 🏃 #FOMO #EventAlert`,
     };
 
     const fallback = fallbacks[tool] || 'Generated content will appear here.';
@@ -521,7 +521,7 @@ function renderAdminUsers() {
     { name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
     { name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
     { name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'student',   joined:'Jul 10, 2025', status:'active' },
-    { name:'Rohan Verma',  email:'rohan@nexora.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
+    { name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
     { name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
   ];
 

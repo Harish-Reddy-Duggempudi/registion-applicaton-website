@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Communities Module
+// NEXOVERSE — Communities Module
 // =============================================
 
 document.addEventListener('DOMContentLoaded', () => {

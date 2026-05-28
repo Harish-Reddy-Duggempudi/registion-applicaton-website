@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Events Module
+// NEXOVERSE — Events Module
 // =============================================
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,5 +1,5 @@
 /* =============================================
-   NEXORA — Community & Event CSS
+  NEXOVERSE — Community & Event CSS
    ============================================= */
 
 /* ── Filter Chips ── */
@@ -438,4 +438,27 @@
   .form-row { grid-template-columns: 1fr; }
   .community-detail-header { flex-direction: column; align-items: flex-start; margin-top: -20px; }
   .community-detail-actions { margin-left: 0; }
+  .settings-section {
+    padding: 20px;
+  }
+  .settings-section .form-row,
+  #profile-form .form-row {
+    grid-template-columns: 1fr !important;
+  }
+  #profile-form .form-row {
+    display: block !important;
+  }
+  .avatar-upload,
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .settings-row-info {
+    width: 100%;
+  }
+  .settings-row .btn,
+  .toggle {
+    align-self: flex-start;
+  }
 }

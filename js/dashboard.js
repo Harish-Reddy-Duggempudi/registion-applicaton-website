@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Dashboard Module
+// NEXOVERSE — Dashboard Module
 // =============================================
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Global UI Utilities
+// NEXOVERSE — Global UI Utilities
 // =============================================
 
 // ── Page Loader ──────────────────────────────
@@ -9,7 +9,7 @@ function showPageLoader() {
     loader = document.createElement('div');
     loader.id = 'page-loader';
     loader.innerHTML = `
-      <div class="loader-logo">Nexora</div>
+      <div class="loader-logo">NEXOVERSE</div>
       <div class="loader-spinner"></div>
       <div class="loader-bar"><div class="loader-bar-fill"></div></div>
     `;
@@ -251,7 +251,7 @@ function formatRelative(dateStr) {
 
 // ── Animate counter ───────────────────────────
 function animateCounter(el, target, duration = 1200) {
-  const start = 0;
+  let start = null;
   const step = (timestamp) => {
     if (!start) start = timestamp;
     const progress = Math.min((timestamp - start) / duration, 1);
@@ -269,4 +269,55 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileSidebar();
   initToggles();
   initTabs();
+
+  // ── Mobile Navigation ──
+  const hamburger = document.getElementById('mobile-nav-hamburger');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const closeBtn = document.getElementById('mobile-nav-close');
+  const navLinks = drawer ? drawer.querySelectorAll('.mobile-nav-link') : [];
+  let lastScrollY = 0;
+
+  function openMobileNav() {
+    drawer.classList.add('active');
+    overlay.classList.add('active');
+    lastScrollY = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${lastScrollY}px`;
+  }
+  function closeMobileNav() {
+    drawer.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.top = '';
+    window.scrollTo(0, lastScrollY);
+  }
+  if (hamburger && overlay && drawer && closeBtn) {
+    hamburger.addEventListener('click', openMobileNav);
+    closeBtn.addEventListener('click', closeMobileNav);
+    overlay.addEventListener('click', closeMobileNav);
+    navLinks.forEach(link => link.addEventListener('click', closeMobileNav));
+    document.addEventListener('keydown', e => {
+      if (drawer.classList.contains('active') && e.key === 'Escape') closeMobileNav();
+    });
+  }
+
+  // Accessible click/keyboard navigation for homepage community cards
+  document.querySelectorAll('[data-href]').forEach(card => {
+    const href = card.getAttribute('data-href');
+    if (!href) return;
+    card.addEventListener('click', () => {
+      window.location = href;
+    });
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        window.location = href;
+      }
+    });
+  });
 });

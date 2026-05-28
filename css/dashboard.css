@@ -1,5 +1,5 @@
 /* =============================================
-   NEXORA — Dashboard CSS
+  NEXOVERSE — Dashboard CSS
    ============================================= */
 
 /* ── Layout ── */
@@ -581,6 +581,13 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  .app-layout {
+    display: block;
+  }
+  #sidebar-container {
+    width: 0;
+    height: 0;
+  }
   .sidebar {
     transform: translateX(-100%);
   }
@@ -593,6 +600,8 @@
   }
   .main-content {
     margin-left: 0;
+    width: 100%;
+    min-width: 0;
   }
   .hamburger-btn {
     display: flex;

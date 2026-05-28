@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Firebase Config
+// NEXOVERSE — Firebase Config
 // =============================================
 // Replace these with your actual Firebase project config from Firebase Console
 // https://console.firebase.google.com

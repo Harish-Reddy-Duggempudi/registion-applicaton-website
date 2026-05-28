@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up — Nexora</title>
+  <title>Sign Up — NEXOVERSE</title>
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/auth.css" />
 </head>
@@ -18,11 +18,11 @@
 <div class="auth-card">
   <div class="auth-logo">
     <div class="auth-logo-mark">N</div>
-    <div class="auth-logo-text">Nexora</div>
+    <div class="auth-logo-text">NEXOVERSE</div>
   </div>
 
   <div class="auth-heading">
-    <h1>Join Nexora 🚀</h1>
+    <h1>Join NEXOVERSE 🚀</h1>
     <p>Create your free account in 30 seconds</p>
   </div>
 
@@ -98,7 +98,7 @@
     <!-- Terms -->
     <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary)">
       <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--purple-500);width:16px;height:16px" required />
-      <label for="terms">I agree to Nexora's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
+      <label for="terms">I agree to NEXOVERSE's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
     </div>
 
     <button type="submit" class="auth-submit" id="signup-btn">
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await registerUser(name, email, password, role);
-      toast.success('Account created! 🎉', `Welcome to Nexora, ${name}!`);
+      toast.success('Account created! 🎉', `Welcome to NEXOVERSE, ${name}!`);
       setTimeout(() => window.location.href = 'dashboard.html', 1000);
     } catch (err) {
       btn.classList.remove('loading');

@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Sidebar & Navbar Component
+// NEXOVERSE — Sidebar & Navbar Component
 // =============================================
 
 function buildSidebar(activePage, basePath = '') {
@@ -41,7 +41,7 @@ function buildSidebar(activePage, basePath = '') {
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <div class="sidebar-logo-mark">N</div>
-        <div class="sidebar-logo-text">Nexora</div>
+        <div class="sidebar-logo-text">NEXOVERSE</div>
       </div>
 
       <div class="role-badge ${role}" data-user-role>${role.toUpperCase()}</div>

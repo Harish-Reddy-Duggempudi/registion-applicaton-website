@@ -1,12 +1,12 @@
-# 🚀 Nexora — Student Organizer Ecosystem Platform
+# 🚀 NEXOVERSE — The Student Ecosystem Platform
 
 > A premium, startup-grade SaaS platform for students, organizers, campus ambassadors, coding clubs, hackathon organizers, and tech communities.
 
 ---
 
-## ✨ What is Nexora?
+## ✨ What is NEXOVERSE?
 
-Nexora is a **role-based community + event management SaaS** that combines:
+NEXOVERSE is a **role-based community + event management SaaS** that combines:
 
 - 🌐 **Community Management** — Create, join, and manage student tech communities (GDGs, MLSAs, ACMs, IEEE)
 - 🎯 **Event Management** — Plan and run hackathons, workshops, tech talks, networking events
@@ -20,7 +20,7 @@ Nexora is a **role-based community + event management SaaS** that combines:
 ## 📁 Project Structure
 
 ```
-nexora/
+nexoverse/
 ├── index.html               ← Landing page
 ├── login.html               ← Login page
 ├── signup.html              ← Sign up page
@@ -68,9 +68,9 @@ Open the project and use these pre-built accounts on the login page:
 
 | Role       | Email                    | Password         |
 |------------|--------------------------|------------------|
-| 🎓 Student  | student@nexora.dev       | any 6+ chars     |
-| ⚡ Organizer| organizer@nexora.dev     | any 6+ chars     |
-| 🛡️ Admin   | admin@nexora.dev         | any 6+ chars     |
+| 🎓 Student  | student@nexoverse.dev       | any 6+ chars     |
+| ⚡ Organizer| organizer@nexoverse.dev     | any 6+ chars     |
+| 🛡️ Admin   | admin@nexoverse.dev         | any 6+ chars     |
 
 > **No Firebase setup needed for the demo** — the app runs in demo mode using localStorage.
 
@@ -80,16 +80,16 @@ Open the project and use these pre-built accounts on the login page:
 
 ```bash
 # 1. Clone or download the project
-git clone https://github.com/your-username/nexora.git
+git clone https://github.com/your-username/nexoverse.git
 
 # 2. Open in VS Code
-code nexora/
+code nexoverse/
 
 # 3. Install the Live Server extension (VS Code)
 # Then right-click index.html → "Open with Live Server"
 
 # OR use Python's built-in server
-cd nexora
+cd nexoverse
 python -m http.server 3000
 # Open http://localhost:3000
 ```
@@ -103,7 +103,7 @@ That's it. No npm, no build step, no dependencies.
 ### Step 1: Create Firebase Project
 
 1. Go to [https://console.firebase.google.com](https://console.firebase.google.com)
-2. Click **"Add Project"** → Name it `nexora`
+2. Click **"Add Project"** → Name it `nexoverse`
 3. Enable **Google Analytics** (optional)
 
 ### Step 2: Enable Authentication
@@ -264,17 +264,17 @@ The AI Tools page uses the **Anthropic Claude API**.
 npm install -g netlify-cli
 
 # 2. Deploy
-cd nexora
+cd nexoverse
 netlify deploy --prod --dir .
 ```
 
-Or drag & drop the `nexora/` folder at [app.netlify.com](https://app.netlify.com)
+Or drag & drop the `nexoverse/` folder at [app.netlify.com](https://app.netlify.com)
 
 ### Vercel
 
 ```bash
 npm install -g vercel
-cd nexora
+cd nexoverse
 vercel --prod
 ```
 
@@ -388,8 +388,8 @@ MIT License — free for personal and commercial use.
 
 Built with ❤️ for the student community ecosystem.
 
-**Questions?** Open a GitHub issue or reach out at hello@nexora.dev
+**Questions?** Open a GitHub issue or reach out at support@nexoverse.dev
 
 ---
 
-*Nexora — Where student communities thrive. 🚀*
+*NEXOVERSE — Where student communities thrive. 🚀*

@@ -1,5 +1,5 @@
 // =============================================
-// NEXORA — Auth Module
+// NEXOVERSE — Auth Module
 // =============================================
 
 // ── Demo Mode (no Firebase) ──────────────────
@@ -8,9 +8,9 @@ const DEMO_MODE = !window.db;
 
 // ── Dummy users for demo ──────────────────────
 const DEMO_USERS = {
-  'student@nexora.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexora.dev',   role:'student',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
-  'organizer@nexora.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexora.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
-  'admin@nexora.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexora.dev',     role:'admin',     avatar:'RV', bio:'Nexora Platform Admin' },
+  'student@nexoverse.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexoverse.dev',   role:'student',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
+  'organizer@nexoverse.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexoverse.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
+  'admin@nexoverse.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexoverse.dev',     role:'admin',     avatar:'RV', bio:'NEXOVERSE Platform Admin' },
 };
 
 // ── Current User ─────────────────────────────
@@ -19,15 +19,15 @@ let currentUser = null;
 function setCurrentUser(user) {
   currentUser = user;
   if (user) {
-    localStorage.setItem('nexora_user', JSON.stringify(user));
+    localStorage.setItem('nexoverse_user', JSON.stringify(user));
   } else {
-    localStorage.removeItem('nexora_user');
+    localStorage.removeItem('nexoverse_user');
   }
 }
 
 function getCurrentUser() {
   if (currentUser) return currentUser;
-  const stored = localStorage.getItem('nexora_user');
+  const stored = localStorage.getItem('nexoverse_user');
   if (stored) {
     currentUser = JSON.parse(stored);
     return currentUser;
