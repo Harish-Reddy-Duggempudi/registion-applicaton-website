@@ -1,17 +1,49 @@
 // =============================================
-// NEXOVERSE — Auth Module
+// NEXORA — Auth Module
 // =============================================
 
-// ── Demo Mode (no Firebase) ──────────────────
-// When Firebase is not configured, we use localStorage for demo
-const DEMO_MODE = !window.db;
+// ── Demo Mode (no Firebase Auth) ─────────────
+// Keep demo data only when Firebase Auth is unavailable.
+const HAS_FIREBASE_AUTH = typeof auth !== 'undefined' && !!auth;
+const HAS_FIRESTORE = typeof db !== 'undefined' && !!db && typeof db.collection === 'function';
+const DEMO_MODE = !HAS_FIREBASE_AUTH;
 
 // ── Dummy users for demo ──────────────────────
 const DEMO_USERS = {
-  'student@nexoverse.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexoverse.dev',   role:'student',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
-  'organizer@nexoverse.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexoverse.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
-  'admin@nexoverse.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexoverse.dev',     role:'admin',     avatar:'RV', bio:'NEXOVERSE Platform Admin' },
+  'student@nexora.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexora.dev',   role:'student',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
+  'organizer@nexora.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexora.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
+  'admin@nexora.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexora.dev',     role:'admin',     avatar:'RV', bio:'Nexora Platform Admin' },
 };
+
+function createDefaultUserProfile(overrides = {}) {
+  return {
+    uid: '',
+    name: '',
+    email: '',
+    role: 'member',
+    organizerAccess: false,
+    avatar: '',
+    bio: '',
+    joinedAt: null,
+    communities: [],
+    events: [],
+    ...overrides,
+  };
+}
+
+function normalizeUserProfile(data = {}, overrides = {}) {
+  return createDefaultUserProfile({
+    ...data,
+    ...overrides,
+    role: data.role || overrides.role || 'member',
+    organizerAccess: data.organizerAccess ?? overrides.organizerAccess ?? false,
+    avatar: data.avatar || overrides.avatar || '',
+    bio: data.bio || overrides.bio || '',
+    joinedAt: data.joinedAt ?? overrides.joinedAt ?? null,
+    communities: Array.isArray(data.communities) ? data.communities : (Array.isArray(overrides.communities) ? overrides.communities : []),
+    events: Array.isArray(data.events) ? data.events : (Array.isArray(overrides.events) ? overrides.events : []),
+  });
+}
 
 // ── Current User ─────────────────────────────
 let currentUser = null;
@@ -19,15 +51,15 @@ let currentUser = null;
 function setCurrentUser(user) {
   currentUser = user;
   if (user) {
-    localStorage.setItem('nexoverse_user', JSON.stringify(user));
+    localStorage.setItem('nexora_user', JSON.stringify(user));
   } else {
-    localStorage.removeItem('nexoverse_user');
+    localStorage.removeItem('nexora_user');
   }
 }
 
 function getCurrentUser() {
   if (currentUser) return currentUser;
-  const stored = localStorage.getItem('nexoverse_user');
+  const stored = localStorage.getItem('nexora_user');
   if (stored) {
     currentUser = JSON.parse(stored);
     return currentUser;
@@ -71,36 +103,48 @@ async function loginUser(email, password) {
     const user = DEMO_USERS[email.toLowerCase()];
     if (!user) throw new Error('No account found with this email.');
     if (password.length < 6) throw new Error('Invalid password.');
-    setCurrentUser(user);
-    return user;
+    const profile = normalizeUserProfile(user, { uid: user.uid, email: user.email, name: user.name });
+    setCurrentUser(profile);
+    return profile;
   }
 
   // Firebase login
   const cred = await auth.signInWithEmailAndPassword(email, password);
-  const snap = await db.collection('users').doc(cred.user.uid).get();
-  const userData = snap.exists ? snap.data() : { role: 'student' };
-  const user = {
-    uid:    cred.user.uid,
-    email:  cred.user.email,
-    name:   cred.user.displayName || userData.name || 'User',
-    role:   userData.role,
+  let userData = {};
+  if (HAS_FIRESTORE) {
+    try {
+      const snap = await db.collection('users').doc(cred.user.uid).get();
+      userData = snap.exists ? snap.data() : {};
+    } catch (error) {
+      console.warn('Firestore lookup skipped during login', error);
+    }
+  }
+  const user = normalizeUserProfile(userData, {
+    uid: cred.user.uid,
+    email: cred.user.email,
+    name: cred.user.displayName || userData.name || 'User',
     avatar: userData.avatar || cred.user.displayName?.charAt(0) || 'U',
-  };
+    joinedAt: userData.joinedAt || null,
+  });
   setCurrentUser(user);
   return user;
 }
 
 // ── Register ──────────────────────────────────
-async function registerUser(name, email, password, role) {
+async function registerUser(name, email, password) {
   if (DEMO_MODE) {
-    const user = {
-      uid:    'u_' + Date.now(),
+    const user = createDefaultUserProfile({
+      uid: 'u_' + Date.now(),
       name,
       email,
-      role,
+      role: 'member',
+      organizerAccess: false,
       avatar: name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
       bio: '',
-    };
+      joinedAt: new Date().toISOString(),
+      communities: [],
+      events: [],
+    });
     setCurrentUser(user);
     DEMO_USERS[email.toLowerCase()] = user;
     return user;
@@ -110,54 +154,92 @@ async function registerUser(name, email, password, role) {
   const cred = await auth.createUserWithEmailAndPassword(email, password);
   await cred.user.updateProfile({ displayName: name });
 
-  const userData = {
+  const userData = createDefaultUserProfile({
     uid:       cred.user.uid,
     name,
     email,
-    role,
+    role:      'member',
+    organizerAccess: false,
     avatar:    name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
     bio:       '',
     joinedAt:  firebase.firestore.FieldValue.serverTimestamp(),
     communities: [],
     events: [],
-  };
-  await db.collection('users').doc(cred.user.uid).set(userData);
+  });
+  if (HAS_FIRESTORE) {
+    try {
+      await db.collection('users').doc(cred.user.uid).set(userData);
+    } catch (error) {
+      console.warn('Firestore profile write skipped during registration', error);
+    }
+  }
 
-  setCurrentUser({ ...userData, uid: cred.user.uid });
-  return userData;
+  const sessionUser = normalizeUserProfile(userData, { joinedAt: new Date().toISOString() });
+  setCurrentUser(sessionUser);
+  return sessionUser;
 }
 
 // ── Google Auth ───────────────────────────────
 async function loginWithGoogle() {
   if (DEMO_MODE) {
-    // Demo: create student account
-    const user = { uid:'ug_'+Date.now(), name:'Demo User', email:'demo@gmail.com', role:'student', avatar:'DU', bio:'' };
+    const user = createDefaultUserProfile({
+      uid:'ug_'+Date.now(),
+      name:'Demo User',
+      email:'demo@gmail.com',
+      role:'member',
+      organizerAccess:false,
+      avatar:'DU',
+      bio:'',
+      joinedAt:new Date().toISOString(),
+      communities:[],
+      events:[],
+    });
     setCurrentUser(user);
     return user;
   }
   const cred = await auth.signInWithPopup(googleProvider);
   const uid = cred.user.uid;
-  const snap = await db.collection('users').doc(uid).get();
+  let snap = null;
+  if (HAS_FIRESTORE) {
+    try {
+      snap = await db.collection('users').doc(uid).get();
+    } catch (error) {
+      console.warn('Firestore lookup skipped during Google sign-in', error);
+    }
+  }
 
-  if (!snap.exists) {
-    const userData = {
+  if (!snap || !snap.exists) {
+    const userData = createDefaultUserProfile({
       uid,
       name:   cred.user.displayName,
       email:  cred.user.email,
-      role:   'student',
-      avatar: cred.user.displayName?.charAt(0) || 'G',
+      role:   'member',
+      organizerAccess: false,
+      avatar: cred.user.photoURL || cred.user.displayName?.charAt(0) || 'G',
       bio:    '',
       joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
       communities: [], events: [],
-    };
-    await db.collection('users').doc(uid).set(userData);
-    setCurrentUser(userData);
-    return userData;
+    });
+    if (HAS_FIRESTORE) {
+      try {
+        await db.collection('users').doc(uid).set(userData);
+      } catch (error) {
+        console.warn('Firestore profile write skipped during Google sign-in', error);
+      }
+    }
+    const sessionUser = normalizeUserProfile(userData, { joinedAt: new Date().toISOString() });
+    setCurrentUser(sessionUser);
+    return sessionUser;
   }
 
-  const userData = snap.data();
-  setCurrentUser({ ...userData, uid });
-  return { ...userData, uid };
+  const userData = normalizeUserProfile(snap.data(), {
+    uid,
+    name: cred.user.displayName || snap.data()?.name || 'User',
+    email: cred.user.email,
+    avatar: snap.data()?.avatar || cred.user.photoURL || cred.user.displayName?.charAt(0) || 'G',
+  });
+  setCurrentUser(userData);
+  return userData;
 }
 
 // ── Logout ────────────────────────────────────

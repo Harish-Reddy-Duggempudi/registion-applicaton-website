@@ -26,44 +26,24 @@
 
   <div class="auth-heading">
     <h1>Join NEXOVERSE 🚀</h1>
-    <p>Create your free account in 30 seconds</p>
+    <p>Create your account and join the ecosystem in minutes</p>
   </div>
 
   <form class="auth-form" id="signup-form" novalidate>
 
     <!-- Google -->
-    <button type="button" class="google-btn" id="google-signup-btn">
+    <button type="button" class="google-btn google-primary-btn" id="google-signup-btn">
       <span class="google-icon">🌐</span>
-      Sign up with Google
+      <span class="btn-text">Continue with Google</span>
+      <div class="btn-spinner"></div>
     </button>
 
     <div class="auth-divider">
       <div class="auth-divider-line"></div>
-      <span class="auth-divider-text">or create account</span>
+      <span class="auth-divider-text">OR CONTINUE WITH EMAIL</span>
       <div class="auth-divider-line"></div>
     </div>
 
-    <!-- Role Select -->
-    <div class="input-group">
-      <label class="input-label">I am a...</label>
-      <div class="role-select-grid">
-        <div class="role-option selected" data-role="student" onclick="selectRole('student',this)">
-          <div class="role-option-icon">🎓</div>
-          <div class="role-option-label">Student</div>
-        </div>
-        <div class="role-option" data-role="organizer" onclick="selectRole('organizer',this)">
-          <div class="role-option-icon">⚡</div>
-          <div class="role-option-label">Organizer</div>
-        </div>
-        <div class="role-option" data-role="admin" onclick="selectRole('admin',this)">
-          <div class="role-option-icon">🛡️</div>
-          <div class="role-option-label">Admin</div>
-        </div>
-      </div>
-      <input type="hidden" id="selected-role" value="student" />
-    </div>
-
-    <!-- Full Name -->
     <div class="input-group">
       <label class="input-label" for="fullname">Full Name</label>
       <div class="input-with-icon">
@@ -72,21 +52,19 @@
       </div>
     </div>
 
-    <!-- Email -->
     <div class="input-group">
       <label class="input-label" for="email">Email address</label>
       <div class="input-with-icon">
         <span class="input-icon">✉️</span>
-        <input type="email" id="email" class="input-field" placeholder="you@college.edu" autocomplete="email" required />
+        <input type="email" id="email" class="input-field" placeholder="you@company.com" autocomplete="email" required />
       </div>
     </div>
 
-    <!-- Password -->
     <div class="input-group">
       <label class="input-label" for="password">Password</label>
       <div class="input-with-icon password-wrap">
         <span class="input-icon">🔒</span>
-        <input type="password" id="password" class="input-field" placeholder="Min 6 characters" autocomplete="new-password" required />
+        <input type="password" id="password" class="input-field" placeholder="Min 8 characters" autocomplete="new-password" required />
         <span class="password-toggle" id="toggle-pw">👁️</span>
       </div>
       <!-- Password strength -->
@@ -96,9 +74,17 @@
         </div>
         <div id="pw-strength-label" style="font-size:11px;margin-top:4px;color:var(--text-muted)"></div>
       </div>
+      <div style="font-size:11px;margin-top:4px;color:var(--text-muted)">Use at least 8 characters with one uppercase letter and one number.</div>
     </div>
 
-    <!-- Terms -->
+    <div class="input-group">
+      <label class="input-label" for="confirm-password">Confirm Password</label>
+      <div class="input-with-icon password-wrap">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="confirm-password" class="input-field" placeholder="Re-enter your password" autocomplete="new-password" required />
+      </div>
+    </div>
+
     <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary)">
       <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--purple-500);width:16px;height:16px" required />
       <label for="terms">I agree to NEXOVERSE's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
@@ -124,23 +110,19 @@
 <div id="toast-container"></div>
 
 <script src="js/ui.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
 <script src="js/auth.js"></script>
 <script>
-let selectedRole = 'student';
-
-function selectRole(role, el) {
-  selectedRole = role;
-  document.getElementById('selected-role').value = role;
-  document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   redirectIfLoggedIn();
 
   // Password toggle
   const togglePw = document.getElementById('toggle-pw');
   const pwInput  = document.getElementById('password');
+  const confirmPwInput = document.getElementById('confirm-password');
   if (togglePw && pwInput) {
     togglePw.addEventListener('click', () => {
       pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
@@ -156,8 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!val) { wrap.style.display = 'none'; return; }
       wrap.style.display = '';
       let score = 0;
-      if (val.length >= 6) score++;
-      if (val.length >= 10) score++;
+      if (val.length >= 8) score++;
+      if (val.length >= 12) score++;
       if (/[A-Z]/.test(val)) score++;
       if (/[0-9]/.test(val)) score++;
       if (/[^A-Za-z0-9]/.test(val)) score++;
@@ -176,13 +158,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (confirmPwInput && pwInput) {
+    const clearMatchError = () => {
+      confirmPwInput.classList.remove('error');
+      const existing = confirmPwInput.parentElement.querySelector('.input-error');
+      if (existing) existing.remove();
+    };
+
+    confirmPwInput.addEventListener('input', clearMatchError);
+    pwInput.addEventListener('input', clearMatchError);
+  }
+
   // Google signup
   document.getElementById('google-signup-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('google-signup-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
     try {
       await loginWithGoogle();
-      toast.success('Account created! 🎉', 'Redirecting to dashboard...');
+      toast.success('Signed in! 🎉', 'Redirecting to dashboard...');
       setTimeout(() => window.location.href = 'dashboard.html', 900);
     } catch (err) {
+      btn.classList.remove('loading');
+      btn.disabled = false;
       toast.error('Sign-up failed', err.message);
     }
   });
@@ -193,20 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const name     = document.getElementById('fullname').value.trim();
     const email    = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
     const terms    = document.getElementById('terms').checked;
     const btn      = document.getElementById('signup-btn');
-    const role     = selectedRole;
 
-    if (!name)     { showFieldError('fullname', 'Please enter your name'); return; }
-    if (!email)    { showFieldError('email', 'Please enter your email'); return; }
-    if (password.length < 6) { showFieldError('password', 'Password must be at least 6 characters'); return; }
+    if (!name)     { showFieldError('fullname', 'Please enter your full name'); return; }
+    if (!email)    { showFieldError('email', 'Please enter your email address'); return; }
+    if (!password) { showFieldError('password', 'Please create a password'); return; }
+    if (!confirmPassword) { showFieldError('confirm-password', 'Please confirm your password'); return; }
+    if (password.length < 8) { showFieldError('password', 'Password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(password)) { showFieldError('password', 'Password must include at least 1 uppercase letter'); return; }
+    if (!/[0-9]/.test(password)) { showFieldError('password', 'Password must include at least 1 number'); return; }
+    if (password !== confirmPassword) { showFieldError('confirm-password', 'Passwords do not match'); return; }
     if (!terms) { toast.warning('Terms required', 'Please accept the terms to continue.'); return; }
 
     btn.classList.add('loading');
     btn.disabled = true;
 
     try {
-      await registerUser(name, email, password, role);
+      await registerUser(name, email, password);
       toast.success('Account created! 🎉', `Welcome to NEXOVERSE, ${name}!`);
       setTimeout(() => window.location.href = 'dashboard.html', 1000);
     } catch (err) {
