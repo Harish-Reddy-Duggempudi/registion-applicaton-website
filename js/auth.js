@@ -48,20 +48,24 @@ function normalizeUserProfile(data = {}, overrides = {}) {
 // ── Current User ─────────────────────────────
 let currentUser = null;
 
-function setCurrentUser(user) {
+function setCurrentUser(user, persist = true) {
   currentUser = user;
   if (user) {
-    localStorage.setItem('nexora_user', JSON.stringify(user));
+    const primaryStorage = persist ? localStorage : sessionStorage;
+    const secondaryStorage = persist ? sessionStorage : localStorage;
+    primaryStorage.setItem('nexora_user', JSON.stringify(user));
+    secondaryStorage.removeItem('nexora_user');
   } else {
     localStorage.removeItem('nexora_user');
+    sessionStorage.removeItem('nexora_user');
   }
 }
 
 function getCurrentUser() {
   if (currentUser) return currentUser;
-  const stored = localStorage.getItem('nexora_user');
-  if (stored) {
-    currentUser = JSON.parse(stored);
+  const storedUser = localStorage.getItem('nexora_user') || sessionStorage.getItem('nexora_user');
+  if (storedUser) {
+    currentUser = JSON.parse(storedUser);
     return currentUser;
   }
   return null;
@@ -98,13 +102,14 @@ function getRelativePath(page) {
 }
 
 // ── Login ─────────────────────────────────────
-async function loginUser(email, password) {
+async function loginUser(email, password, options = {}) {
+  const shouldPersist = options.rememberMe !== false;
   if (DEMO_MODE) {
     const user = DEMO_USERS[email.toLowerCase()];
     if (!user) throw new Error('No account found with this email.');
     if (password.length < 6) throw new Error('Invalid password.');
     const profile = normalizeUserProfile(user, { uid: user.uid, email: user.email, name: user.name });
-    setCurrentUser(profile);
+    setCurrentUser(profile, shouldPersist);
     return profile;
   }
 
@@ -126,7 +131,7 @@ async function loginUser(email, password) {
     avatar: userData.avatar || cred.user.displayName?.charAt(0) || 'U',
     joinedAt: userData.joinedAt || null,
   });
-  setCurrentUser(user);
+  setCurrentUser(user, shouldPersist);
   return user;
 }
 

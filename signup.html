@@ -87,7 +87,7 @@
 
     <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary)">
       <input type="checkbox" id="terms" style="margin-top:2px;accent-color:var(--purple-500);width:16px;height:16px" required />
-      <label for="terms">I agree to NEXOVERSE's <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a></label>
+      <label for="terms">I agree to NEXOVERSE's <a href="#" class="auth-link" id="terms-link">Terms of Service</a> and <a href="#" class="auth-link" id="privacy-link">Privacy Policy</a></label>
     </div>
 
     <button type="submit" class="auth-submit" id="signup-btn">
@@ -108,6 +108,20 @@
 </div>
 
 <div id="toast-container"></div>
+
+<!-- Policy Modal -->
+<div id="policy-modal" class="policy-modal" aria-hidden="true">
+  <div class="policy-modal-backdrop" data-close></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="policy-modal-title">
+    <header class="policy-modal-header">
+      <h3 id="policy-modal-title">Policy</h3>
+      <button class="policy-modal-close" aria-label="Close" data-close>✕</button>
+    </header>
+    <div class="policy-modal-body">
+      <iframe id="policy-iframe" src="" frameborder="0" style="width:100%;height:100%;border:0;border-radius:8px"></iframe>
+    </div>
+  </div>
+</div>
 
 <script src="js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -135,7 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const wrap = document.getElementById('pw-strength-wrap');
       const bar  = document.getElementById('pw-strength-bar');
       const lbl  = document.getElementById('pw-strength-label');
-      if (!val) { wrap.style.display = 'none'; return; }
+        const signupBtn = document.getElementById('signup-btn');
+        if (!val) { 
+          wrap.style.display = 'none'; 
+          if (signupBtn) signupBtn.style.display = 'none';
+          return; 
+        }
+        // show/hide signup button based on strength
       wrap.style.display = '';
       let score = 0;
       if (val.length >= 8) score++;
@@ -155,8 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
       bar.style.background = lvl.color;
       lbl.textContent = lvl.label;
       lbl.style.color = lvl.color;
+      // Require minimum rules for account creation: accept scores of 'Strong' or higher
+      const isStrong = score >= 4;
+      if (signupBtn) signupBtn.style.display = isStrong ? '' : 'none';
     });
   }
+
+  // ensure signup button hidden initially until password qualifies
+  const _signupBtnInit = document.getElementById('signup-btn');
+  if (_signupBtnInit) _signupBtnInit.style.display = 'none';
 
   if (confirmPwInput && pwInput) {
     const clearMatchError = () => {
@@ -165,6 +192,29 @@ document.addEventListener('DOMContentLoaded', () => {
       if (existing) existing.remove();
     };
 
+
+  // Policy modal behavior
+  (function(){
+    const modal = document.getElementById('policy-modal');
+    const iframe = document.getElementById('policy-iframe');
+    const titleEl = document.getElementById('policy-modal-title');
+    function openPolicy(url, title){
+      if (!modal) return;
+      titleEl.textContent = title || 'Policy';
+      iframe.src = url;
+      modal.setAttribute('aria-hidden','false');
+    }
+    function closePolicy(){
+      if (!modal) return;
+      modal.setAttribute('aria-hidden','true');
+      // clear iframe after short delay to stop audio/video
+      setTimeout(()=>{ iframe.src = ''; }, 300);
+    }
+    document.getElementById('terms-link')?.addEventListener('click', (e)=>{ e.preventDefault(); openPolicy('pages/terms-of-service.html','Terms of Service'); });
+    document.getElementById('privacy-link')?.addEventListener('click', (e)=>{ e.preventDefault(); openPolicy('pages/privacy-policy.html','Privacy Policy'); });
+    modal?.addEventListener('click', (e)=>{ if (e.target && e.target.matches('[data-close], .policy-modal-backdrop')) closePolicy(); });
+    document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closePolicy(); });
+  })();
     confirmPwInput.addEventListener('input', clearMatchError);
     pwInput.addEventListener('input', clearMatchError);
   }

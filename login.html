@@ -6,6 +6,313 @@
   <title>Login — NEXOVERSE</title>
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/auth.css" />
+  <style>
+    .auth-card--login .auth-heading {
+      margin-bottom: 24px;
+    }
+
+    .auth-status {
+      display: none;
+      margin: 0 0 18px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .auth-status[data-variant="info"] {
+      display: block;
+      background: rgba(96, 165, 250, 0.08);
+      border-color: rgba(96, 165, 250, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .auth-status[data-variant="success"] {
+      display: block;
+      background: rgba(74, 222, 128, 0.08);
+      border-color: rgba(74, 222, 128, 0.2);
+      color: var(--green-400);
+    }
+
+    .auth-status[data-variant="error"] {
+      display: block;
+      background: rgba(248, 113, 113, 0.08);
+      border-color: rgba(248, 113, 113, 0.2);
+      color: #fca5a5;
+    }
+
+    .password-actions,
+    .login-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .forgot-password-btn {
+      padding: 0;
+      background: none;
+      border: none;
+      color: var(--purple-400);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .forgot-password-btn:hover {
+      color: var(--purple-300, #d8b4fe);
+    }
+
+    .forgot-password-btn:focus-visible {
+      outline: 2px solid var(--purple-400);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+
+    .remember-me {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .remember-me input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--purple-500);
+      flex-shrink: 0;
+    }
+
+    .remember-me span {
+      line-height: 1.3;
+    }
+
+    .remember-me-note {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .auth-form .input-field[aria-invalid="true"] {
+      border-color: #f87171;
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14);
+    }
+
+    .reset-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2200;
+    }
+
+    .reset-modal[aria-hidden="false"] {
+      display: block;
+    }
+
+    .reset-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .reset-modal-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(92vw, 460px);
+      border-radius: 24px;
+      border: 1px solid rgba(168, 85, 247, 0.22);
+      background: linear-gradient(180deg, rgba(15, 15, 35, 0.96), rgba(8, 8, 20, 0.98));
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.02) inset;
+      backdrop-filter: blur(22px);
+      overflow: hidden;
+    }
+
+    .reset-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(168,85,247,0.08), transparent);
+    }
+
+    .reset-modal-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .reset-modal-close {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .reset-modal-close:hover {
+      color: var(--text-primary);
+      border-color: rgba(168,85,247,0.35);
+      background: rgba(168,85,247,0.12);
+    }
+
+    .reset-modal-body {
+      padding: 20px;
+    }
+
+    .reset-modal-copy {
+      margin: 0 0 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .reset-modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .reset-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .reset-modal-secondary {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .reset-modal-secondary:hover {
+      border-color: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .reset-modal-primary {
+      min-width: 172px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: var(--gradient-primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 24px rgba(168,85,247,0.28);
+    }
+
+    .reset-modal-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 32px rgba(168,85,247,0.38);
+    }
+
+    .reset-modal-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .reset-modal-primary .btn-spinner {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      width: 18px;
+      height: 18px;
+      margin-top: -9px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .reset-modal-primary.loading .btn-text {
+      opacity: 0;
+    }
+
+    .reset-modal-primary.loading .btn-spinner {
+      display: block;
+    }
+
+    .reset-modal-status {
+      display: none;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      line-height: 1.5;
+      border: 1px solid transparent;
+      white-space: pre-line;
+    }
+
+    .reset-modal-status[data-variant="info"] {
+      display: block;
+      background: rgba(96, 165, 250, 0.08);
+      border-color: rgba(96, 165, 250, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .reset-modal-status[data-variant="success"] {
+      display: block;
+      background: rgba(74, 222, 128, 0.08);
+      border-color: rgba(74, 222, 128, 0.2);
+      color: var(--green-400);
+    }
+
+    .reset-modal-status[data-variant="error"] {
+      display: block;
+      background: rgba(248, 113, 113, 0.08);
+      border-color: rgba(248, 113, 113, 0.2);
+      color: #fca5a5;
+    }
+
+    @media (max-width: 640px) {
+      .reset-modal-dialog {
+        width: min(94vw, 460px);
+      }
+
+      .reset-modal-header,
+      .reset-modal-body {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .reset-modal-actions {
+        flex-direction: column-reverse;
+      }
+
+      .reset-modal-secondary,
+      .reset-modal-primary {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body class="auth-page">
 
@@ -15,7 +322,7 @@
   <div class="aurora-blob"></div>
 </div>
 
-<div class="auth-card">
+<div class="auth-card auth-card--login">
   <div class="auth-logo">
     <img class="auth-logo-image" src="assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" />
     <div class="auth-logo-copy">
@@ -29,17 +336,12 @@
     <p>Sign in to your NEXOVERSE account</p>
   </div>
 
-  <!-- Demo hint -->
-  <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--text-secondary)">
-    <div style="font-weight:600;color:var(--purple-400);margin-bottom:6px">🎭 Demo Accounts</div>
-    <div>student@nexoverse.dev · organizer@nexoverse.dev · admin@nexoverse.dev</div>
-    <div style="margin-top:2px;color:var(--text-muted)">Any password with 6+ characters</div>
-  </div>
+  <div id="login-status" class="auth-status" role="alert" aria-live="polite" aria-atomic="true"></div>
 
-  <form class="auth-form" id="login-form" novalidate>
+  <form class="auth-form" id="login-form" novalidate aria-describedby="login-status">
 
     <!-- Google -->
-    <button type="button" class="google-btn" id="google-login-btn">
+    <button type="button" class="google-btn" id="google-login-btn" aria-label="Continue with Google">
       <span class="google-icon">🌐</span>
       Continue with Google
     </button>
@@ -61,6 +363,9 @@
           class="input-field"
           placeholder="you@example.com"
           autocomplete="email"
+          inputmode="email"
+          spellcheck="false"
+          aria-describedby="login-status"
           required
         />
       </div>
@@ -68,9 +373,9 @@
 
     <!-- Password -->
     <div class="input-group">
-      <div style="display:flex;justify-content:space-between">
+      <div class="password-actions">
         <label class="input-label" for="password">Password</label>
-        <a href="#" class="auth-link" style="font-size:12px" onclick="toast.info('Coming Soon','Password reset will be available after Firebase setup.')">Forgot password?</a>
+        <button type="button" class="forgot-password-btn" id="forgot-password-btn">Forgot password?</button>
       </div>
       <div class="input-with-icon password-wrap">
         <span class="input-icon">🔒</span>
@@ -80,10 +385,19 @@
           class="input-field"
           placeholder="••••••••"
           autocomplete="current-password"
+          aria-describedby="login-status"
           required
         />
-        <span class="password-toggle" id="toggle-pw">👁️</span>
+        <button type="button" class="password-toggle" id="toggle-pw" aria-label="Show password" aria-pressed="false">👁️</button>
       </div>
+    </div>
+
+    <div class="login-meta-row">
+      <label class="remember-me" for="remember-me">
+        <input type="checkbox" id="remember-me" checked />
+        <span>Remember me on this device</span>
+      </label>
+      <span class="remember-me-note">Keeps you signed in across refreshes</span>
     </div>
 
     <button type="submit" class="auth-submit" id="login-btn">
@@ -103,6 +417,46 @@
   </div>
 </div>
 
+<div id="reset-modal" class="reset-modal" aria-hidden="true">
+  <div class="reset-modal-backdrop" data-reset-close></div>
+  <div class="reset-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title" aria-describedby="reset-modal-description">
+    <div class="reset-modal-header">
+      <h2 class="reset-modal-title" id="reset-modal-title">Reset your password</h2>
+      <button type="button" class="reset-modal-close" id="reset-modal-close" aria-label="Close password reset dialog">✕</button>
+    </div>
+    <div class="reset-modal-body">
+      <p class="reset-modal-copy" id="reset-modal-description">Enter your registered email address and we will send you a secure reset link.</p>
+      <form class="reset-modal-form" id="reset-form" novalidate>
+        <div class="input-group">
+          <label class="input-label" for="reset-email">Registered email address</label>
+          <div class="input-with-icon">
+            <span class="input-icon">✉️</span>
+            <input
+              type="email"
+              id="reset-email"
+              class="input-field"
+              placeholder="you@example.com"
+              autocomplete="email"
+              inputmode="email"
+              spellcheck="false"
+              aria-describedby="reset-modal-status"
+              required
+            />
+          </div>
+        </div>
+        <div id="reset-modal-status" class="reset-modal-status" role="alert" aria-live="polite" aria-atomic="true"></div>
+        <div class="reset-modal-actions">
+          <button type="button" class="reset-modal-secondary" id="reset-cancel-btn">Cancel</button>
+          <button type="submit" class="reset-modal-primary" id="reset-submit-btn">
+            <span class="btn-text">Send reset link</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script src="js/ui.js"></script>
@@ -115,65 +469,307 @@
 document.addEventListener('DOMContentLoaded', () => {
   redirectIfLoggedIn();
 
-  // Password toggle
+  const form = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('login-btn');
+  const googleBtn = document.getElementById('google-login-btn');
+  const rememberMe = document.getElementById('remember-me');
+  const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+  const statusEl = document.getElementById('login-status');
   const togglePw = document.getElementById('toggle-pw');
-  const pwInput  = document.getElementById('password');
-  if (togglePw && pwInput) {
+  const resetModal = document.getElementById('reset-modal');
+  const resetForm = document.getElementById('reset-form');
+  const resetEmailInput = document.getElementById('reset-email');
+  const resetStatusEl = document.getElementById('reset-modal-status');
+  const resetSubmitBtn = document.getElementById('reset-submit-btn');
+  const resetCancelBtn = document.getElementById('reset-cancel-btn');
+  const resetCloseBtn = document.getElementById('reset-modal-close');
+  let isAuthenticating = false;
+  let resetAutoCloseTimer = null;
+  let lastFocusBeforeReset = null;
+
+  const storedRemember = localStorage.getItem('nexora_remember_me');
+  if (rememberMe && storedRemember !== null) {
+    rememberMe.checked = storedRemember === 'true';
+  }
+
+  function setStatus(message = '', variant = 'info') {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.dataset.variant = message ? variant : '';
+    statusEl.hidden = !message;
+  }
+
+  function clearStatus() {
+    setStatus('');
+  }
+
+  function clearFieldError(field) {
+    if (!field) return;
+    field.classList.remove('error');
+    field.removeAttribute('aria-invalid');
+    const existing = field.parentElement?.querySelector('.input-error');
+    if (existing) existing.remove();
+  }
+
+  function showFieldError(field, message) {
+    if (!field) return;
+    field.classList.add('error');
+    field.setAttribute('aria-invalid', 'true');
+    const existing = field.parentElement?.querySelector('.input-error');
+    if (existing) existing.remove();
+    const error = document.createElement('div');
+    error.className = 'input-error';
+    error.textContent = message;
+    field.parentElement?.appendChild(error);
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function clearFormErrors() {
+    [emailInput, passwordInput].forEach(clearFieldError);
+  }
+
+  function setLoading(loading) {
+    isAuthenticating = loading;
+    loginBtn.disabled = loading;
+    loginBtn.classList.toggle('loading', loading);
+    loginBtn.setAttribute('aria-busy', String(loading));
+    if (googleBtn) googleBtn.disabled = loading;
+  }
+
+  function mapLoginError(error) {
+    const code = error?.code || '';
+    if (code === 'auth/user-not-found') return 'Account not found. Please sign up first.';
+    if (code === 'auth/wrong-password') return 'Incorrect password. Please try again.';
+    if (code === 'auth/invalid-credential') return 'Invalid email or password.';
+    if (code === 'auth/too-many-requests') return 'Too many login attempts. Please try again later.';
+    if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
+    return error?.message || 'Unable to sign in. Please try again.';
+  }
+
+  function mapResetError(error) {
+    const code = error?.code || '';
+    if (code === 'auth/user-not-found') return 'No account exists with this email.';
+    if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
+    if (code === 'auth/too-many-requests') return 'Too many reset requests. Please try again later.';
+    return error?.message || 'Unable to send password reset email.';
+  }
+
+  function setResetStatus(message = '', variant = 'info') {
+    if (!resetStatusEl) return;
+    resetStatusEl.textContent = message;
+    resetStatusEl.dataset.variant = message ? variant : '';
+    resetStatusEl.hidden = !message;
+  }
+
+  function clearResetError() {
+    if (!resetEmailInput) return;
+    resetEmailInput.classList.remove('error');
+    resetEmailInput.removeAttribute('aria-invalid');
+    const existing = resetEmailInput.parentElement?.querySelector('.input-error');
+    if (existing) existing.remove();
+  }
+
+  function showResetFieldError(message) {
+    if (!resetEmailInput) return;
+    clearResetError();
+    resetEmailInput.classList.add('error');
+    resetEmailInput.setAttribute('aria-invalid', 'true');
+    const error = document.createElement('div');
+    error.className = 'input-error';
+    error.textContent = message;
+    resetEmailInput.parentElement?.appendChild(error);
+  }
+
+  function setResetLoading(loading) {
+    if (!resetSubmitBtn) return;
+    resetSubmitBtn.disabled = loading;
+    resetSubmitBtn.classList.toggle('loading', loading);
+    resetSubmitBtn.setAttribute('aria-busy', String(loading));
+    if (resetCancelBtn) resetCancelBtn.disabled = loading;
+    if (resetCloseBtn) resetCloseBtn.disabled = loading;
+  }
+
+  function openResetModal() {
+    if (!resetModal) return;
+    lastFocusBeforeReset = document.activeElement;
+    clearResetError();
+    setResetStatus('Enter your registered email address to receive a password reset link.', 'info');
+    resetModal.setAttribute('aria-hidden', 'false');
+    resetEmailInput.value = emailInput.value.trim();
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => resetEmailInput.focus(), 50);
+  }
+
+  function closeResetModal() {
+    if (!resetModal) return;
+    resetModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    setResetLoading(false);
+    clearResetError();
+    setResetStatus('', 'info');
+    if (resetAutoCloseTimer) {
+      clearTimeout(resetAutoCloseTimer);
+      resetAutoCloseTimer = null;
+    }
+    if (lastFocusBeforeReset && typeof lastFocusBeforeReset.focus === 'function') {
+      lastFocusBeforeReset.focus();
+    } else {
+      forgotPasswordBtn?.focus();
+    }
+  }
+
+  // Password toggle
+  if (togglePw && passwordInput) {
     togglePw.addEventListener('click', () => {
-      pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
-      togglePw.textContent = pwInput.type === 'password' ? '👁️' : '🙈';
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      togglePw.textContent = isHidden ? '🙈' : '👁️';
+      togglePw.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      togglePw.setAttribute('aria-pressed', String(isHidden));
     });
   }
 
+  emailInput?.addEventListener('input', () => clearFieldError(emailInput));
+  passwordInput?.addEventListener('input', () => clearFieldError(passwordInput));
+
   // Google login
-  document.getElementById('google-login-btn').addEventListener('click', async () => {
+  googleBtn?.addEventListener('click', async () => {
     try {
       await loginWithGoogle();
       toast.success('Signed in! 🎉', 'Redirecting to your dashboard...');
       setTimeout(() => window.location.href = 'dashboard.html', 900);
     } catch (err) {
-      toast.error('Sign-in failed', err.message);
+      toast.error('Sign-in failed', err.message || 'Google sign-in failed.');
+    }
+  });
+
+  forgotPasswordBtn?.addEventListener('click', () => {
+    openResetModal();
+  });
+
+  resetCancelBtn?.addEventListener('click', closeResetModal);
+  resetCloseBtn?.addEventListener('click', closeResetModal);
+  resetModal?.addEventListener('click', (event) => {
+    if (event.target && event.target.hasAttribute('data-reset-close')) {
+      closeResetModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && resetModal?.getAttribute('aria-hidden') === 'false') {
+      closeResetModal();
+    }
+  });
+
+  resetEmailInput?.addEventListener('input', clearResetError);
+
+  resetForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!resetEmailInput || !resetSubmitBtn) return;
+
+    clearResetError();
+    setResetStatus('', 'info');
+
+    const email = resetEmailInput.value.trim();
+    if (!email) {
+      showResetFieldError('Please enter your registered email address.');
+      setResetStatus('Please enter your registered email address.', 'error');
+      resetEmailInput.focus();
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showResetFieldError('Please enter a valid email address.');
+      setResetStatus('Please enter a valid email address.', 'error');
+      resetEmailInput.focus();
+      return;
+    }
+
+    setResetLoading(true);
+    setResetStatus('Sending password reset email...', 'info');
+
+    try {
+      await auth.sendPasswordResetEmail(email);
+      setResetLoading(false);
+      setResetStatus('Password reset email sent successfully 📩\n\nPlease check your Inbox, Spam, and Promotions folders for the reset link.', 'success');
+      toast.success('Password reset email sent successfully', 'Please check your Inbox, Spam, and Promotions folders.');
+      resetAutoCloseTimer = window.setTimeout(() => {
+        closeResetModal();
+      }, 2200);
+    } catch (err) {
+      setResetLoading(false);
+      const message = mapResetError(err);
+      toast.error('Password reset failed', message);
+      setResetStatus(message, 'error');
     }
   });
 
   // Email login
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email    = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const btn      = document.getElementById('login-btn');
 
-    // Basic validation
-    if (!email) { showFieldError('email', 'Please enter your email'); return; }
-    if (!password) { showFieldError('password', 'Please enter your password'); return; }
+    if (isAuthenticating) return;
 
-    btn.classList.add('loading');
-    btn.disabled = true;
+    clearStatus();
+    clearFormErrors();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const rememberSession = rememberMe?.checked !== false;
+    const invalidFields = [];
+
+    if (!email) {
+      showFieldError(emailInput, 'Please enter your email address.');
+      invalidFields.push(emailInput);
+    } else if (!isValidEmail(email)) {
+      showFieldError(emailInput, 'Please enter a valid email address.');
+      invalidFields.push(emailInput);
+    }
+
+    if (!password) {
+      showFieldError(passwordInput, 'Please enter your password.');
+      invalidFields.push(passwordInput);
+    }
+
+    if (invalidFields.length) {
+      invalidFields[0].focus();
+      setStatus('Please correct the highlighted fields and try again.', 'error');
+      return;
+    }
+
+    localStorage.setItem('nexora_remember_me', String(rememberSession));
+    setLoading(true);
+    setStatus('Signing you in...', 'info');
+
+    let redirectScheduled = false;
 
     try {
-      await loginUser(email, password);
+      const user = await loginUser(email, password, { rememberMe: rememberSession });
+      if (user) {
+        localStorage.setItem('nexora_last_login_method', 'email');
+      }
       toast.success('Welcome back! 🎉', 'Redirecting...');
+      setStatus('Login successful. Redirecting to your dashboard...', 'success');
+      redirectScheduled = true;
       setTimeout(() => window.location.href = 'dashboard.html', 800);
     } catch (err) {
-      btn.classList.remove('loading');
-      btn.disabled = false;
-      toast.error('Login failed', err.message || 'Check your credentials and try again.');
+      const friendlyMessage = mapLoginError(err);
+      setLoading(false);
+      toast.error('Login failed', friendlyMessage);
+      setStatus(friendlyMessage, 'error');
+      if (!isAuthenticating) {
+        passwordInput.focus();
+      }
     }
+
+    if (redirectScheduled) return;
   });
 });
-
-function showFieldError(fieldId, message) {
-  const field = document.getElementById(fieldId);
-  if (!field) return;
-  field.classList.add('error');
-  const existing = field.parentElement.querySelector('.input-error');
-  if (existing) existing.remove();
-  const err = document.createElement('div');
-  err.className = 'input-error';
-  err.textContent = message;
-  field.parentElement.appendChild(err);
-  field.addEventListener('input', () => { field.classList.remove('error'); err.remove(); }, { once: true });
-}
 </script>
 </body>
 </html>
