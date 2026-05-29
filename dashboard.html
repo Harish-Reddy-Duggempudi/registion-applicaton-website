@@ -6,6 +6,27 @@
   <title>Dashboard — NEXOVERSE</title>
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    #member-organizer-request-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 20, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      padding: 20px;
+    }
+    #member-organizer-request-modal .modal-card {
+      width: min(520px, 100%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
+  </style>
 </head>
 <body>
 
@@ -81,6 +102,21 @@
 
 <div id="toast-container"></div>
 
+<div id="member-organizer-request-modal" role="dialog" aria-modal="true" aria-labelledby="member-organizer-request-title">
+  <div class="modal-card">
+    <div class="section-title" id="member-organizer-request-title">Request organizer access</div>
+    <div class="text-secondary text-sm mt-1">Tell the admin why you need organizer access.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Reason for request</label>
+      <textarea id="member-organizer-request-reason" class="input-field" rows="4" placeholder="Write your reason here..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeMemberOrganizerRequestModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitMemberOrganizerRequestModal()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -88,6 +124,7 @@
 <script src="js/firebase.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
 <script src="components/sidebar.js"></script>
 <script src="js/dashboard.js"></script>
 <script>

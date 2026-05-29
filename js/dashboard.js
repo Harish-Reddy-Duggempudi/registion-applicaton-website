@@ -4,8 +4,16 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!requireAuth()) return;
+  renderDashboard();
+  startDashboardOrganizerSync();
+});
 
-  const user  = getCurrentUser();
+let dashboardOrganizerUnsubscribe = null;
+
+function renderDashboard(userOverride) {
+  const user = userOverride || getCurrentUser();
+  if (!user) return;
+
   populateUserInfo();
 
   const role  = user?.role || 'member';
@@ -20,14 +28,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   finalizeDashboardReady();
 
-  // Animate counters after short delay
   setTimeout(() => {
     document.querySelectorAll('[data-count]').forEach(el => {
       const target = parseInt(el.dataset.count);
       animateCounter(el, target);
     });
   }, 300);
-});
+}
+
+function startDashboardOrganizerSync() {
+  if (dashboardOrganizerUnsubscribe) {
+    dashboardOrganizerUnsubscribe();
+    dashboardOrganizerUnsubscribe = null;
+  }
+
+  const user = getCurrentUser();
+  if (!user?.uid || !db || typeof db.collection !== 'function') return;
+
+  const userRef = db.collection('users').doc(user.uid);
+  dashboardOrganizerUnsubscribe = userRef.onSnapshot(snapshot => {
+    const profileData = snapshot.exists ? (snapshot.data() || {}) : {};
+    const currentUser = getCurrentUser();
+
+    if (profileData.organizerRequestStatus === 'approved' && currentUser && (currentUser.role !== 'organizer' || currentUser.organizerAccess !== true)) {
+      const upgradedUser = {
+        ...currentUser,
+        ...profileData,
+        role: 'organizer',
+        organizerAccess: true,
+        organizerRequestStatus: 'approved',
+      };
+      setCurrentUser(upgradedUser);
+      renderDashboard(upgradedUser);
+      toast.success('Organizer access approved', 'Your dashboard has been updated.');
+      return;
+    }
+
+    if (profileData.organizerRequestStatus === 'pending') {
+      const updatedUser = {
+        ...currentUser,
+        ...profileData,
+        organizerRequestStatus: 'pending',
+        organizerRequestReason: profileData.organizerRequestReason || currentUser.organizerRequestReason || '',
+      };
+      setCurrentUser(updatedUser);
+      renderDashboard(updatedUser);
+      return;
+    }
+
+    if (profileData.organizerRequestStatus === 'rejected') {
+      const updatedUser = {
+        ...currentUser,
+        ...profileData,
+        organizerRequestStatus: 'rejected',
+      };
+      setCurrentUser(updatedUser);
+      renderDashboard(updatedUser);
+    }
+  }, error => {
+    console.warn('Organizer request listener failed', error);
+  });
+}
 
 function finalizeDashboardReady() {
   const hide = () => {
@@ -179,6 +240,8 @@ function renderRoleContent(role) {
 function renderMemberContent() {
   const user = getCurrentUser();
   const regs = DataStore.getUserRegistrations(user.uid);
+  const hasOrganizerAccess = typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user.role === 'organizer' || user.role === 'admin' || user.organizerAccess === true);
+  const requestStatus = user.organizerRequestStatus || 'none';
 
   return `
     <div class="card">
@@ -225,7 +288,78 @@ function renderMemberContent() {
         `).join('')}
       </div>
     </div>
+    <div class="card mt-4">
+      <div class="section-header">
+        <div class="section-title">⚡ Organizer Access</div>
+      </div>
+      ${hasOrganizerAccess ? `
+        <div class="empty-state" style="padding:18px 12px">
+          <div class="empty-icon">✅</div>
+          <div class="empty-title">Organizer access approved</div>
+          <div class="empty-desc">You can create communities and events now.</div>
+      ` : requestStatus === 'pending' ? `
+        <div class="empty-state" style="padding:18px 12px">
+          <div class="empty-icon">⏳</div>
+          <div class="empty-title">Request pending</div>
+          <div class="empty-desc">An admin is reviewing your organizer access request.</div>
+          <div class="badge badge-yellow mt-3">Waiting for approval</div>
+        </div>
+      ` : requestStatus === 'rejected' ? `
+        <div class="empty-state" style="padding:18px 12px">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-title">Request rejected</div>
+          <div class="empty-desc">Your previous organizer request was rejected${user.organizerRequestRejectionReason ? `: ${user.organizerRequestRejectionReason}` : '. You can request again.'}</div>
+          <button class="btn btn-primary mt-3" onclick="openMemberOrganizerRequestModal('retry')">Request Again</button>
+        </div>
+      ` : `
+        <div class="empty-state" style="padding:18px 12px">
+          <div class="empty-icon">⚡</div>
+          <div class="empty-title">Want to become an organizer?</div>
+          <div class="empty-desc">Request organizer access to create communities and events.</div>
+          <button class="btn btn-primary mt-3" onclick="openMemberOrganizerRequestModal('new')">Request Access</button>
+        </div>
+      `}
+    </div>
   `;
+}
+
+function openMemberOrganizerRequestModal(mode = 'new', initialReason = '') {
+  const modal = document.getElementById('member-organizer-request-modal');
+  const reasonInput = document.getElementById('member-organizer-request-reason');
+  const title = document.getElementById('member-organizer-request-title');
+
+  if (title) {
+    title.textContent = mode === 'retry' ? 'Request again' : 'Request organizer access';
+  }
+  if (reasonInput) {
+    reasonInput.value = '';
+  }
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+  if (reasonInput) {
+    setTimeout(() => reasonInput.focus(), 50);
+  }
+}
+
+function closeMemberOrganizerRequestModal() {
+  const modal = document.getElementById('member-organizer-request-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function submitMemberOrganizerRequestModal() {
+  const reasonInput = document.getElementById('member-organizer-request-reason');
+  const reason = reasonInput?.value.trim() || 'I want to create communities and events on NEXOVERSE.';
+  closeMemberOrganizerRequestModal();
+
+  try {
+    await requestOrganizerAccess(reason);
+    toast.success('Request submitted', 'An admin will review your request.');
+  } catch (error) {
+    toast.error('Request failed', error?.message || 'Unable to submit organizer request.');
+  }
 }
 
 function renderOrganizerContent() {

@@ -163,7 +163,7 @@ function renderEventDetail(e) {
   const userRegs = DataStore.getUserRegistrations(user?.uid || '');
   const isRegistered = userRegs.some(r => r.eventId === e.id);
   const fillPct = Math.round((e.attendees / e.maxAttendees) * 100);
-  const canManage = user?.role === 'organizer' || user?.role === 'admin';
+  const canManage = typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user?.role === 'organizer' || user?.role === 'admin');
 
   el.innerHTML = `
     <!-- Banner -->
@@ -341,7 +341,7 @@ function shareEvent(id) {
 // ── Create Event Page ─────────────────────────
 function initCreateEventPage() {
   const user = getCurrentUser();
-  if (user?.role === 'member') {
+  if (typeof canUseOrganizerFeatures === 'function' ? !canUseOrganizerFeatures(user) : user?.role === 'member') {
     toast.warning('Restricted', 'Only organizers can create events.');
   }
 

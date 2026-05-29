@@ -91,6 +91,21 @@
           </form>
         </div>
 
+        <!-- Organizer Access Request -->
+        <div class="settings-section" id="organizer-access-section">
+          <div class="settings-section-title">⚡ Organizer Access</div>
+          <div class="settings-row" style="align-items:flex-start;gap:16px;flex-direction:column">
+            <div class="settings-row-info" style="width:100%">
+              <div class="settings-row-label">Request organizer permissions</div>
+              <div class="settings-row-desc">Ask an admin to upgrade your account so you can create communities and events.</div>
+            </div>
+            <div id="organizer-access-status" class="text-sm text-secondary"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button type="button" id="request-organizer-access-btn" class="btn btn-primary btn-sm">⚡ Request Organizer Access</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Notification Settings -->
         <div class="settings-section">
           <div class="settings-section-title">🔔 Notifications</div>
@@ -211,6 +226,21 @@
               <div class="settings-row-desc">Add an extra layer of security to your account</div>
             </div>
             <button class="btn btn-outline btn-sm" onclick="toast.info('Coming Soon','2FA launching in v2.0')">Enable 2FA</button>
+          </div>
+        </div>
+
+        <div id="settings-organizer-request-modal" role="dialog" aria-modal="true" aria-labelledby="settings-organizer-request-title" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,11,20,.72);backdrop-filter:blur(10px);z-index:2000;padding:20px">
+          <div class="card" style="width:min(520px,100%);padding:20px;border-radius:18px">
+            <div class="section-title" id="settings-organizer-request-title">Request organizer access</div>
+            <div class="text-secondary text-sm mt-1">Tell the admin why you need organizer access.</div>
+            <div class="input-group mt-4">
+              <label class="input-label">Reason for request</label>
+              <textarea id="settings-organizer-request-reason-modal" class="input-field" rows="4" placeholder="Write your reason here..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="closeSettingsOrganizerRequestModal()">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="submitSettingsOrganizerRequestModal()">Submit Request</button>
+            </div>
           </div>
         </div>
 

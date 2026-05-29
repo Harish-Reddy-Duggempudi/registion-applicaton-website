@@ -106,6 +106,14 @@ function getCommunityMembershipRef(communityId, userId) {
   return db.collection('community_members').doc(getMembershipDocId(communityId, userId));
 }
 
+function getCommunityDetailsUrl(communityId) {
+  return `community-details.html?id=${encodeURIComponent(communityId)}`;
+}
+
+function getCommunityEditUrl(communityId) {
+  return `create-community.html?edit=${encodeURIComponent(communityId)}`;
+}
+
 function normalizeCommunityDoc(doc) {
   const data = doc.data() || {};
   const category = data.category || 'Other';
@@ -443,7 +451,7 @@ function buildJoinedCommunityCard(c) {
   const events = typeof c.events === 'number' ? c.events : 0;
   const description = c.description || c.desc || '';
   return `
-    <div class="community-card" onclick="window.location='community-details.html?id=${c.id}'">
+    <div class="community-card" onclick="window.location='${getCommunityDetailsUrl(c.id)}'">
       <div class="community-card-banner" style="background:${c.banner || getFallbackCommunityBanner(c.category)};height:90px">
         <div class="community-card-logo">${c.emoji}</div>
       </div>
@@ -459,10 +467,10 @@ function buildJoinedCommunityCard(c) {
         </div>
         <div class="divider" style="margin:12px 0"></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm w-full" onclick="event.stopPropagation();leaveCommunity('${c.id}','${c.name}')">
+          <button class="btn btn-ghost btn-sm w-full" onclick='event.stopPropagation();leaveCommunity(${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
             Leave
           </button>
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.location='community-details.html?id=${c.id}'">
+          <button class="btn btn-ghost btn-sm" onclick='event.stopPropagation();window.location="${getCommunityDetailsUrl(c.id)}"'>
             View →
           </button>
         </div>
@@ -478,7 +486,7 @@ function buildCommunityCard(c) {
   const isMember = communityPageState.memberCommunityIds.has(c.id);
   const isJoining = communityPageState.joiningCommunityIds.has(c.id);
   return `
-    <div class="community-card" data-category="${c.category}" onclick="window.location='community-details.html?id=${c.id}'">
+    <div class="community-card" data-category="${c.category}" onclick="window.location='${getCommunityDetailsUrl(c.id)}'">
       <div class="community-card-banner" style="background:${c.banner || getFallbackCommunityBanner(c.category)};height:90px">
         <div class="community-card-logo">${c.emoji}</div>
       </div>
@@ -503,11 +511,11 @@ function buildCommunityCard(c) {
               ⏳ Joining...
             </button>
           ` : `
-            <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();joinCommunity('${c.id}','${c.name}')">
+            <button class="btn btn-primary btn-sm w-full" onclick='event.stopPropagation();joinCommunity(${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
               🌟 Join
             </button>
           `}
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.location='community-details.html?id=${c.id}'">
+          <button class="btn btn-ghost btn-sm" onclick='event.stopPropagation();window.location="${getCommunityDetailsUrl(c.id)}"'>
             View →
           </button>
         </div>
@@ -739,12 +747,11 @@ async function renderCommunityDetail(c) {
   if (!el) return;
 
   const user = getCurrentUser();
-  const canManage = user?.role === 'organizer' || user?.role === 'admin';
+  const canManage = !!user?.uid && (user.uid === c.organizerId || user.uid === c.organizer_uid);
 
   // Future role rules for Community Details:
   // member: view community, join community, leave community
-  // organizer: view community, join community, edit community, manage community, create events
-  // admin: full access
+  // owner: view community, join community, edit community, manage community, create events
 
   // Future Firestore structure:
   // communities collection
@@ -847,9 +854,9 @@ async function renderCommunityDetail(c) {
              👥 Join Community
              ⭐ Following
              📅 View Events -->
-        <button class="btn btn-primary" onclick="joinCommunity('${c.id}','${c.name}')">🌟 Join Community</button>
+        <button class="btn btn-primary" onclick='joinCommunity(${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>🌟 Join Community</button>
         <button class="btn btn-ghost btn-icon" title="Share">🔗</button>
-        <!-- These organizer controls should only be visible to role = "organizer" or role = "admin".
+           <!-- These owner controls should only be visible to the community owner.
              Members should never see them.
 
              Future organizer-only actions:
@@ -858,7 +865,10 @@ async function renderCommunityDetail(c) {
              📊 Community Analytics
              📅 Create Event
              🗑️ Delete Community -->
-        ${canManage ? `<button class="btn btn-outline btn-sm" onclick="window.location='create-event.html?community=${c.id}'">+ Create Event</button>` : ''}
+        ${canManage ? `
+          <button class="btn btn-outline btn-sm" onclick="window.location='${getCommunityEditUrl(c.id)}'">✏️ Edit Community</button>
+          <button class="btn btn-outline btn-sm" onclick="window.location='create-event.html?community=${encodeURIComponent(c.id)}'">+ Create Event</button>
+        ` : ''}
       </div>
     </div>
 
@@ -955,12 +965,85 @@ async function renderCommunityDetail(c) {
 // ── Create Community Page ─────────────────────
 function initCreateCommunityPage() {
   const user = getCurrentUser();
-  if (user?.role === 'member') {
+  if (typeof canUseOrganizerFeatures === 'function' ? !canUseOrganizerFeatures(user) : user?.role === 'member') {
     toast.warning('Restricted', 'Only organizers can create communities.');
   }
 
   const form = document.getElementById('create-community-form');
   if (!form) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const editCommunityId = params.get('edit');
+  const isEditMode = !!editCommunityId;
+  const pageTitle = document.querySelector('h1');
+  const pageSubtitle = document.querySelector('.text-secondary.text-sm.mt-1');
+  const submitBtn = form.querySelector('[type=submit]');
+  const btnText = submitBtn?.querySelector('.btn-text');
+
+  if (isEditMode) {
+    if (pageTitle) pageTitle.textContent = 'Edit Community ✏️';
+    if (pageSubtitle) pageSubtitle.textContent = 'Update your community details. Changes are saved directly.';
+    if (btnText) btnText.textContent = '💾 Save Changes';
+  }
+
+  async function loadCommunityForEdit() {
+    if (!isEditMode) return;
+    if (!db) {
+      toast.error('Load failed', 'Firestore is unavailable right now.');
+      window.location.href = 'communities.html';
+      return;
+    }
+
+    try {
+      const snapshot = await db.collection('communities').doc(editCommunityId).get();
+      if (!snapshot.exists) {
+        toast.error('Community not found', 'Unable to load this community for editing.');
+        window.location.href = 'communities.html';
+        return;
+      }
+
+      const data = snapshot.data() || {};
+      const isOwner = user?.uid && (user.uid === data.organizerId || user.uid === data.organizer_uid);
+      if (!isOwner) {
+        toast.error('Restricted', 'Only the community owner can edit this community.');
+        window.location.href = 'communities.html';
+        return;
+      }
+
+      const values = {
+        '#c-name': data.name || '',
+        '#c-category': data.category || '',
+        '#c-emoji': data.emoji || '',
+        '#c-desc': data.description || data.desc || '',
+        '#c-website': data.website || '',
+        '#c-linkedin': data.linkedin || '',
+        '#c-instagram': data.instagram || '',
+        '#c-github': data.github || '',
+        '#c-tags': Array.isArray(data.tags) ? data.tags.join(', ') : '',
+        '#c-college': data.college || '',
+        '#c-city': data.city || '',
+      };
+
+      Object.entries(values).forEach(([selector, value]) => {
+        const field = form.querySelector(selector);
+        if (field) field.value = value;
+      });
+
+      const previewName = document.getElementById('preview-name');
+      const previewCategory = document.getElementById('preview-category');
+      const previewEmoji = document.getElementById('preview-emoji');
+      const previewDesc = document.getElementById('preview-desc');
+      if (previewName) previewName.textContent = data.name || 'Community Name';
+      if (previewCategory) previewCategory.innerHTML = `<span class="badge badge-purple">${data.category || 'Category'}</span>`;
+      if (previewEmoji) previewEmoji.textContent = data.emoji || '🌐';
+      if (previewDesc) previewDesc.textContent = data.description || data.desc || 'Your description will appear here...';
+    } catch (error) {
+      toast.error('Load failed', error?.message || 'Unable to load community data.');
+      window.location.href = 'communities.html';
+    }
+  }
+
+  loadCommunityForEdit();
 
   function validateCreateCommunityForm() {
     const requiredFields = [
@@ -1021,9 +1104,6 @@ function initCreateCommunityPage() {
       organizerName: user?.name || '',
       organizerEmail: user?.email || '',
       memberCount: 1,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      status: 'pending',
-      isApproved: false,
     };
   }
 
@@ -1036,8 +1116,6 @@ function initCreateCommunityPage() {
       return;
     }
 
-    const submitBtn = form.querySelector('[type=submit]');
-    const btnText = submitBtn?.querySelector('.btn-text');
     if (!submitBtn) return;
 
     submitBtn.classList.add('loading');
@@ -1046,19 +1124,45 @@ function initCreateCommunityPage() {
 
     try {
       const payload = buildCommunityPayload();
-      await db.collection('communities').add(payload);
+      if (isEditMode) {
+        const existingSnapshot = await db.collection('communities').doc(editCommunityId).get();
+        if (!existingSnapshot.exists) {
+          throw new Error('Community not found.');
+        }
 
-      toast.success(
-        'Community Submitted 🚀',
-        'Your community has been submitted for admin review.'
-      );
+        const existingData = existingSnapshot.data() || {};
+        await db.collection('communities').doc(editCommunityId).update({
+          ...payload,
+          memberCount: typeof existingData.memberCount === 'number' ? existingData.memberCount : payload.memberCount,
+          createdAt: existingData.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
+          status: existingData.status || 'pending',
+          isApproved: typeof existingData.isApproved === 'boolean' ? existingData.isApproved : false,
+          organizerId: existingData.organizerId || payload.organizerId,
+          organizerName: existingData.organizerName || payload.organizerName,
+          organizerEmail: existingData.organizerEmail || payload.organizerEmail,
+        });
+
+        toast.success('Community Updated ✨', 'Your changes were saved successfully.');
+      } else {
+        await db.collection('communities').add({
+          ...payload,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          status: 'pending',
+          isApproved: false,
+        });
+
+        toast.success(
+          'Community Submitted 🚀',
+          'Your community has been submitted for admin review.'
+        );
+      }
       window.location.href = 'communities.html';
     } catch (error) {
-      toast.error('Submission Failed', error?.message || 'Unable to submit community.');
+      toast.error(isEditMode ? 'Update Failed' : 'Submission Failed', error?.message || (isEditMode ? 'Unable to update community.' : 'Unable to submit community.'));
     } finally {
       submitBtn.classList.remove('loading');
       submitBtn.disabled = false;
-      if (btnText) btnText.textContent = '🚀 Submit for Review';
+      if (btnText) btnText.textContent = isEditMode ? '💾 Save Changes' : '🚀 Submit for Review';
     }
   });
 }

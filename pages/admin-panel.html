@@ -9,6 +9,63 @@
   <link rel="stylesheet" href="../css/community.css" />
   <style>
     .admin-panel-page .navbar-left { gap: 10px; }
+    #organizer-reject-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 20, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      padding: 20px;
+    }
+    #organizer-reject-modal .modal-card {
+      width: min(520px, 100%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
+    #admin-user-edit-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 20, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      padding: 20px;
+    }
+    #admin-user-edit-modal .modal-card {
+      width: min(560px, 100%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
+    #admin-user-suspend-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 20, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      padding: 20px;
+    }
+    #admin-user-suspend-modal .modal-card {
+      width: min(560px, 100%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
   </style>
 </head>
 <body class="admin-panel-page">
@@ -102,19 +159,19 @@
         <div class="grid-3 mt-4">
           <div class="stat-card" style="text-align:center">
             <div style="font-size:32px;margin-bottom:8px">👤</div>
-            <div class="stat-value">3,421</div>
+            <div class="stat-value" id="admin-member-count">0</div>
             <div class="stat-label">Members</div>
             <span class="badge badge-blue mt-2" style="display:inline-flex">Members</span>
           </div>
           <div class="stat-card" style="text-align:center">
             <div style="font-size:32px;margin-bottom:8px">⚡</div>
-            <div class="stat-value">389</div>
+            <div class="stat-value" id="admin-organizer-count">0</div>
             <div class="stat-label">Organizers</div>
             <span class="badge badge-purple mt-2" style="display:inline-flex">Organizers</span>
           </div>
           <div class="stat-card" style="text-align:center">
             <div style="font-size:32px;margin-bottom:8px">🛡️</div>
-            <div class="stat-value">37</div>
+            <div class="stat-value" id="admin-admin-count">0</div>
             <div class="stat-label">Admins</div>
             <span class="badge badge-yellow mt-2" style="display:inline-flex">Admins</span>
           </div>
@@ -129,47 +186,7 @@
             <div class="text-secondary text-sm mt-1">Review member requests for organizer access.</div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="card">
-            <div class="approval-card" style="margin:0;border:0;padding:0;box-shadow:none;background:transparent">
-              <div style="font-size:28px">⚡</div>
-              <div class="approval-info">
-                <div class="approval-name">Harish Reddy</div>
-                <div class="approval-meta">harishreddy2k05@gmail.com · Requested Today</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">Reason: “I want to organize workshops and events under NEXOVERSE.”</div>
-              </div>
-              <div class="approval-actions">
-                <button class="btn btn-primary btn-sm" onclick="handleOrganizerRequest('approve', this)">✅ Approve</button>
-                <button class="btn btn-danger btn-sm" onclick="handleOrganizerRequest('reject', this)">❌ Reject</button>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="approval-card" style="margin:0;border:0;padding:0;box-shadow:none;background:transparent">
-              <div style="font-size:28px">⚡</div>
-              <div class="approval-info">
-                <div class="approval-name">Priya Sharma</div>
-                <div class="approval-meta">priyasharma@gmail.com · Requested Yesterday</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">Reason: “I lead the Google Developer Group chapter at my college.”</div>
-              </div>
-              <div class="approval-actions">
-                <button class="btn btn-primary btn-sm" onclick="handleOrganizerRequest('approve', this)">✅ Approve</button>
-                <button class="btn btn-danger btn-sm" onclick="handleOrganizerRequest('reject', this)">❌ Reject</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Future Firestore Integration:
-             organizer_requests collection
-             {
-               uid: "",
-               name: "",
-               email: "",
-               role: "member",
-               requestedAt: "",
-               status: "pending"
-             }
-        -->
+        <div id="admin-organizer-requests-list" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
 
       <!-- Reports Tab -->
@@ -310,6 +327,63 @@
 
 <div id="toast-container"></div>
 
+<div id="organizer-reject-modal" role="dialog" aria-modal="true" aria-labelledby="organizer-reject-modal-title">
+  <div class="modal-card">
+    <div class="section-title" id="organizer-reject-modal-title">Reject organizer request?</div>
+    <div class="text-secondary text-sm mt-1">Add a reason so the member knows what to fix before requesting again.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Reject reason</label>
+      <textarea id="organizer-reject-reason" class="input-field" rows="4" placeholder="Write the reason here..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeOrganizerRejectModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="submitOrganizerRejectModal()">Reject Request</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-user-edit-modal" role="dialog" aria-modal="true" aria-labelledby="admin-user-edit-modal-title">
+  <div class="modal-card">
+    <div class="section-title" id="admin-user-edit-modal-title">Edit user</div>
+    <div class="text-secondary text-sm mt-1">Update name, email, and role for this account.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Full Name</label>
+      <input id="admin-user-edit-name" class="input-field" type="text" placeholder="Enter full name" />
+    </div>
+    <div class="input-group mt-3">
+      <label class="input-label">Email</label>
+      <input id="admin-user-edit-email" class="input-field" type="email" placeholder="Enter email" />
+    </div>
+    <div class="input-group mt-3">
+      <label class="input-label">Role</label>
+      <select id="admin-user-edit-role" class="input-field">
+        <option value="member">Member</option>
+        <option value="organizer">Organizer</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeAdminUserEditModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitAdminUserEditModal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-user-suspend-modal" role="dialog" aria-modal="true" aria-labelledby="admin-user-suspend-modal-title">
+  <div class="modal-card">
+    <div class="section-title" id="admin-user-suspend-modal-title">Suspend account?</div>
+    <div class="text-secondary text-sm mt-1">Add a reason if you are suspending this account.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Reason</label>
+      <textarea id="admin-user-suspend-reason" class="input-field" rows="4" placeholder="Write the suspension reason here..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeAdminUserSuspendModal()">Cancel</button>
+      <button id="admin-user-suspend-confirm-btn" class="btn btn-danger btn-sm" onclick="submitAdminUserSuspendModal()">Suspend Account</button>
+    </div>
+  </div>
+</div>
+
 <script src="../js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -342,29 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
     basePath:   '../'
   });
 });
-
-function switchAdminTab(tab, btn) {
-  ['approvals','users','organizer-requests','reports','platform'].forEach(t => {
-    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
-    document.getElementById('tab-' + t).classList.remove('active');
-  });
-  btn.classList.add('active');
-}
-
-function handleOrganizerRequest(action, btn) {
-  const card = btn.closest('.card');
-  if (card) {
-    card.style.opacity = '0';
-    card.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => card.remove(), 300);
-  }
-
-  if (action === 'approve') {
-    toast.success('Organizer request approved successfully.');
-  } else {
-    toast.info('Organizer request rejected.');
-  }
-}
 
 function filterAdminUsers(query) {
   const rows = document.querySelectorAll('#admin-users-list .admin-user-row');

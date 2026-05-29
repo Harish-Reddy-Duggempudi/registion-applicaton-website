@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //   showCreateCommunityButton();
   // }
   const user = getCurrentUser();
-  const canCreateCommunity = user?.role === 'organizer' || user?.role === 'admin';
+  const canCreateCommunity = typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user?.role === 'organizer' || user?.role === 'admin');
   const createCommunityAction = document.querySelector('a[href="create-community.html"]')?.closest('div[style*="gap:10px"]');
   if (createCommunityAction) {
     createCommunityAction.style.display = canCreateCommunity ? 'flex' : 'none';

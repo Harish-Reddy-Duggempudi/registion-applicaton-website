@@ -71,6 +71,10 @@ function getCurrentUser() {
   return null;
 }
 
+function canUseOrganizerFeatures(user = getCurrentUser()) {
+  return !!user && (user.role === 'organizer' || user.role === 'admin' || user.organizerAccess === true);
+}
+
 // ── Auth State ────────────────────────────────
 function onAuthChange(callback) {
   const user = getCurrentUser();

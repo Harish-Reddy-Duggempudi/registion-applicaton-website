@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDashboardLayout({ activePage:'events', pageTitle:'Events', basePath:'../' });
 
   const user = getCurrentUser();
-  if (user?.role === 'organizer' || user?.role === 'admin') {
+  if (typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user?.role === 'organizer' || user?.role === 'admin')) {
     document.getElementById('event-header-actions').innerHTML =
       `<a href="create-event.html" class="btn btn-primary">+ Create Event</a>`;
   }

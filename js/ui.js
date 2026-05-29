@@ -245,12 +245,39 @@ function copyToClipboard(text) {
 }
 
 // ── Format date ───────────────────────────────
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
+function toSafeDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value.toDate === 'function') {
+    const converted = value.toDate();
+    return converted instanceof Date && !Number.isNaN(converted.getTime()) ? converted : null;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDate(value) {
+  const d = toSafeDate(value);
+  if (!d) return 'Recently';
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-function formatRelative(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
+
+function formatDateTime(value) {
+  const d = toSafeDate(value);
+  if (!d) return 'Recently';
+  return d.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatRelative(value) {
+  const d = toSafeDate(value);
+  if (!d) return 'just now';
+  const diff = Date.now() - d.getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1)   return 'just now';
   if (mins < 60)  return `${mins}m ago`;

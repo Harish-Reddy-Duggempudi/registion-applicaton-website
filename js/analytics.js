@@ -24,6 +24,259 @@ const adminPanelState = {
   },
 };
 
+function countUsersByRole(users = []) {
+  return users.reduce((counts, user) => {
+    const role = (user.role || 'member').toLowerCase();
+    if (role === 'admin') counts.admins += 1;
+    else if (role === 'organizer') counts.organizers += 1;
+    else counts.members += 1;
+    return counts;
+  }, { members: 0, organizers: 0, admins: 0 });
+}
+
+function renderAdminRoleBreakdown() {
+  const counts = countUsersByRole(adminPanelState.users);
+  const memberEl = document.getElementById('admin-member-count');
+  const organizerEl = document.getElementById('admin-organizer-count');
+  const adminEl = document.getElementById('admin-admin-count');
+
+  if (memberEl) memberEl.textContent = counts.members.toLocaleString();
+  if (organizerEl) organizerEl.textContent = counts.organizers.toLocaleString();
+  if (adminEl) adminEl.textContent = counts.admins.toLocaleString();
+}
+
+function getAdminUserById(id) {
+  return adminPanelState.users.find(user => user.id === id);
+}
+
+let pendingAdminEditUserId = null;
+let pendingAdminSuspendUserId = null;
+
+function normalizeAdminRole(role) {
+  const value = String(role || 'member').trim().toLowerCase();
+  if (value === 'admin' || value === 'organizer' || value === 'member') return value;
+  return 'member';
+}
+
+function openAdminUserEditModal(id) {
+  const user = getAdminUserById(id);
+  if (!user) {
+    toast.error('Edit failed', 'User not found.');
+    return;
+  }
+
+  pendingAdminEditUserId = id;
+
+  const modal = document.getElementById('admin-user-edit-modal');
+  const title = document.getElementById('admin-user-edit-modal-title');
+  const nameInput = document.getElementById('admin-user-edit-name');
+  const emailInput = document.getElementById('admin-user-edit-email');
+  const roleInput = document.getElementById('admin-user-edit-role');
+
+  if (title) title.textContent = `Edit ${user.name}`;
+  if (nameInput) nameInput.value = user.name || '';
+  if (emailInput) emailInput.value = user.email || '';
+  if (roleInput) roleInput.value = normalizeAdminRole(user.role);
+  if (modal) modal.style.display = 'flex';
+  if (nameInput) setTimeout(() => nameInput.focus(), 50);
+}
+
+function closeAdminUserEditModal() {
+  pendingAdminEditUserId = null;
+  const modal = document.getElementById('admin-user-edit-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function openAdminUserSuspendModal(id) {
+  const user = getAdminUserById(id);
+  if (!user) {
+    toast.error('Action failed', 'User not found.');
+    return;
+  }
+
+  pendingAdminSuspendUserId = id;
+
+  const modal = document.getElementById('admin-user-suspend-modal');
+  const title = document.getElementById('admin-user-suspend-modal-title');
+  const reasonInput = document.getElementById('admin-user-suspend-reason');
+  const confirmBtn = document.getElementById('admin-user-suspend-confirm-btn');
+  const isSuspended = user.status === 'suspended';
+
+  if (title) title.textContent = isSuspended ? `Restore ${user.name}?` : `Suspend ${user.name}?`;
+  if (reasonInput) {
+    reasonInput.value = '';
+    reasonInput.placeholder = isSuspended
+      ? 'Optional note for restoring this account...'
+      : 'Add a reason for suspension (visible in admin records)...';
+  }
+  if (confirmBtn) {
+    confirmBtn.textContent = isSuspended ? 'Restore Account' : 'Suspend Account';
+    confirmBtn.className = isSuspended ? 'btn btn-primary btn-sm' : 'btn btn-danger btn-sm';
+  }
+  if (modal) modal.style.display = 'flex';
+  if (reasonInput) setTimeout(() => reasonInput.focus(), 50);
+}
+
+function closeAdminUserSuspendModal() {
+  pendingAdminSuspendUserId = null;
+  const modal = document.getElementById('admin-user-suspend-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitAdminUserSuspendModal() {
+  if (!pendingAdminSuspendUserId) return;
+
+  const user = getAdminUserById(pendingAdminSuspendUserId);
+  if (!user) {
+    closeAdminUserSuspendModal();
+    toast.error('Action failed', 'User not found.');
+    return;
+  }
+
+  const reasonInput = document.getElementById('admin-user-suspend-reason');
+  const reason = reasonInput?.value.trim() || '';
+  const isSuspended = user.status === 'suspended';
+  const nextStatus = isSuspended ? 'active' : 'suspended';
+
+  try {
+    await saveAdminUserChanges(pendingAdminSuspendUserId, {
+      status: nextStatus,
+      suspended: nextStatus === 'suspended',
+      suspensionReason: nextStatus === 'suspended' ? reason : '',
+      suspendedAt: nextStatus === 'suspended' ? firebase.firestore.FieldValue.serverTimestamp() : null,
+      restoredAt: nextStatus === 'active' ? firebase.firestore.FieldValue.serverTimestamp() : null,
+    });
+
+    if (getCurrentUser()?.uid === user.id) {
+      const current = getCurrentUser();
+      setCurrentUser({
+        ...current,
+        status: nextStatus,
+        suspended: nextStatus === 'suspended',
+        suspensionReason: nextStatus === 'suspended' ? reason : '',
+      });
+      populateUserInfo();
+    }
+
+    closeAdminUserSuspendModal();
+    loadAdminUsers();
+    renderAdminStats();
+    toast.success(nextStatus === 'suspended' ? 'Account suspended' : 'Account restored', `${user.name} is now ${nextStatus}.`);
+  } catch (error) {
+    toast.error('Action failed', error?.message || 'Unable to update account status.');
+  }
+}
+
+async function submitAdminUserEditModal() {
+  if (!pendingAdminEditUserId) return;
+
+  const nameInput = document.getElementById('admin-user-edit-name');
+  const emailInput = document.getElementById('admin-user-edit-email');
+  const roleInput = document.getElementById('admin-user-edit-role');
+  const user = getAdminUserById(pendingAdminEditUserId);
+  if (!user) {
+    closeAdminUserEditModal();
+    toast.error('Edit failed', 'User not found.');
+    return;
+  }
+
+  const normalizedName = nameInput?.value.trim() || '';
+  const normalizedEmail = emailInput?.value.trim() || '';
+  const normalizedRole = normalizeAdminRole(roleInput?.value);
+
+  if (!normalizedName || !normalizedEmail) {
+    toast.warning('Missing details', 'Name and email are required.');
+    return;
+  }
+
+  try {
+    await saveAdminUserChanges(pendingAdminEditUserId, {
+      name: normalizedName,
+      email: normalizedEmail,
+      role: normalizedRole,
+      suspended: user.status === 'suspended',
+      status: user.status || 'active',
+    });
+
+    closeAdminUserEditModal();
+    loadAdminUsers();
+    renderAdminStats();
+    toast.success('User updated', `${normalizedName} has been saved.`);
+  } catch (error) {
+    toast.error('Edit failed', error?.message || 'Unable to update user.');
+  }
+}
+
+async function saveAdminUserChanges(id, changes) {
+  if (!db) throw new Error('Firestore unavailable.');
+  await db.collection('users').doc(id).set(changes, { merge: true });
+
+  const current = getCurrentUser();
+  if (current?.uid === id) {
+    setCurrentUser({
+      ...current,
+      ...changes,
+    });
+    populateUserInfo();
+  }
+}
+
+async function editAdminUser(id) {
+  const user = getAdminUserById(id);
+  if (!user) {
+    toast.error('Edit failed', 'User not found.');
+    return;
+  }
+  openAdminUserEditModal(id);
+}
+
+async function toggleAdminUserSuspend(id) {
+  openAdminUserSuspendModal(id);
+}
+
+const organizerRequestState = {
+  requests: [],
+  loading: false,
+  initialized: false,
+};
+
+let organizerRequestsUnsubscribe = null;
+let pendingOrganizerReject = null;
+
+async function requestOrganizerAccess(reason = '') {
+  const user = getCurrentUser();
+  if (!user) throw new Error('Login required.');
+  if (!db) throw new Error('Firestore is unavailable right now.');
+  if (typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user.role === 'organizer' || user.role === 'admin' || user.organizerAccess)) {
+    return { status: 'approved' };
+  }
+
+  const requestData = {
+    uid: user.uid,
+    name: user.name || 'User',
+    email: user.email || '',
+    reason: reason || 'I want to create communities and events on NEXOVERSE.',
+    requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    status: 'pending',
+  };
+
+  await db.collection('organizer_requests').doc(user.uid).set(requestData, { merge: true });
+  await db.collection('users').doc(user.uid).set({
+    organizerRequestStatus: 'pending',
+    organizerRequestReason: requestData.reason,
+  }, { merge: true });
+
+  const updatedUser = {
+    ...user,
+    organizerRequestStatus: 'pending',
+    organizerRequestReason: requestData.reason,
+  };
+  setCurrentUser(updatedUser);
+  populateUserInfo();
+
+  return { status: 'pending', reason: requestData.reason };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
 
@@ -490,6 +743,159 @@ function initSettingsPage() {
     });
   }
 
+  const organizerSection = document.getElementById('organizer-access-section');
+  const organizerStatus = document.getElementById('organizer-access-status');
+  const requestOrganizerBtn = document.getElementById('request-organizer-access-btn');
+  const organizerRequestModal = document.getElementById('settings-organizer-request-modal');
+  const organizerRequestReasonModal = document.getElementById('settings-organizer-request-reason-modal');
+  const organizerRequestTitle = document.getElementById('settings-organizer-request-title');
+
+  function openSettingsOrganizerRequestModal(mode = 'new') {
+    if (!organizerRequestModal) return;
+
+    if (organizerRequestTitle) {
+      organizerRequestTitle.textContent = mode === 'retry' ? 'Request again' : 'Request organizer access';
+    }
+    if (organizerRequestReasonModal) {
+      organizerRequestReasonModal.value = '';
+      setTimeout(() => organizerRequestReasonModal.focus(), 50);
+    }
+    organizerRequestModal.style.display = 'flex';
+  }
+
+  function closeSettingsOrganizerRequestModal() {
+    if (organizerRequestModal) {
+      organizerRequestModal.style.display = 'none';
+    }
+  }
+
+  async function submitSettingsOrganizerRequestModal() {
+    const reason = organizerRequestReasonModal?.value.trim() || 'I want to create communities and events on NEXOVERSE.';
+    closeSettingsOrganizerRequestModal();
+
+    if (requestOrganizerBtn) {
+      requestOrganizerBtn.classList.add('loading');
+      requestOrganizerBtn.disabled = true;
+    }
+
+    try {
+      await requestOrganizerAccess(reason);
+      if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-yellow">Request pending admin approval</span>';
+      toast.success('Request submitted', 'An admin will review your organizer access request.');
+    } catch (error) {
+      toast.error('Request failed', error?.message || 'Unable to submit organizer request.');
+      if (requestOrganizerBtn) requestOrganizerBtn.disabled = false;
+    } finally {
+      if (requestOrganizerBtn) requestOrganizerBtn.classList.remove('loading');
+      await loadOrganizerRequestStatus();
+    }
+  }
+
+  async function loadOrganizerRequestStatus() {
+    if (!organizerSection) return;
+
+    const hasOrganizerAccess = typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user.role === 'organizer' || user.role === 'admin' || user.organizerAccess === true);
+    if (hasOrganizerAccess) {
+      if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-green">Organizer access approved</span>';
+      if (requestOrganizerBtn) requestOrganizerBtn.disabled = true;
+      return;
+    }
+
+    if (!db || !user?.uid) {
+      if (organizerStatus) organizerStatus.textContent = 'You can request organizer access from here.';
+      return;
+    }
+
+    const userRef = db.collection('users').doc(user.uid);
+    if (organizerSection.dataset.liveSyncAttached !== 'true') {
+      organizerSection.dataset.liveSyncAttached = 'true';
+      userRef.onSnapshot(snapshot => {
+        if (!snapshot.exists) return;
+
+        const liveProfile = snapshot.data() || {};
+        const current = getCurrentUser() || user;
+
+        if (liveProfile.organizerRequestStatus === 'approved' && current && (current.role !== 'organizer' || current.organizerAccess !== true)) {
+          const upgradedUser = {
+            ...current,
+            ...liveProfile,
+            role: 'organizer',
+            organizerAccess: true,
+            organizerRequestStatus: 'approved',
+          };
+          setCurrentUser(upgradedUser);
+          populateUserInfo();
+          if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-green">Organizer access approved</span>';
+          if (requestOrganizerBtn) requestOrganizerBtn.disabled = true;
+          return;
+        }
+
+        if (liveProfile.organizerRequestStatus === 'pending') {
+          if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-yellow">Request pending admin approval</span>';
+          if (requestOrganizerBtn) requestOrganizerBtn.disabled = true;
+        } else if (liveProfile.organizerRequestStatus === 'rejected') {
+          if (organizerStatus) organizerStatus.innerHTML = `<span class="badge badge-pink">Request rejected — ${escapeHtml(liveProfile.organizerRequestRejectionReason || 'request again')}</span>`;
+          if (requestOrganizerBtn) requestOrganizerBtn.disabled = false;
+          if (requestOrganizerBtn) requestOrganizerBtn.textContent = '⚡ Request Again';
+        }
+      });
+    }
+
+    try {
+      const snapshot = await userRef.get();
+      const requestData = snapshot.exists ? (snapshot.data() || {}) : null;
+      if (!requestData) {
+        if (organizerStatus) organizerStatus.textContent = 'No request submitted yet.';
+        return;
+      }
+
+      if (requestData.organizerRequestStatus === 'pending') {
+        if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-yellow">Request pending admin approval</span>';
+        if (requestOrganizerBtn) requestOrganizerBtn.disabled = true;
+        if (requestOrganizerBtn) requestOrganizerBtn.textContent = '⚡ Request Organizer Access';
+      } else if (requestData.organizerRequestStatus === 'approved') {
+        if (organizerStatus) organizerStatus.innerHTML = '<span class="badge badge-green">Organizer access approved</span>';
+        if (typeof canUseOrganizerFeatures === 'function' ? !canUseOrganizerFeatures(user) : (user.role !== 'organizer' && user.role !== 'admin' && !user.organizerAccess)) {
+          const upgradedUser = {
+            ...user,
+            ...requestData,
+            role: 'organizer',
+            organizerAccess: true,
+            organizerRequestStatus: 'approved',
+          };
+          setCurrentUser(upgradedUser);
+          populateUserInfo();
+        }
+      } else if (requestData.organizerRequestStatus === 'rejected') {
+        if (organizerStatus) organizerStatus.innerHTML = `<span class="badge badge-pink">Request rejected — ${escapeHtml(requestData.organizerRequestRejectionReason || 'request again')}</span>`;
+        if (requestOrganizerBtn) {
+          requestOrganizerBtn.disabled = false;
+          requestOrganizerBtn.textContent = '⚡ Request Again';
+        }
+      }
+    } catch (error) {
+      if (organizerStatus) organizerStatus.textContent = 'Unable to load request status right now.';
+    }
+  }
+
+  if (requestOrganizerBtn) {
+    requestOrganizerBtn.addEventListener('click', async () => {
+      if (typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user.role === 'organizer' || user.role === 'admin' || user.organizerAccess)) {
+        toast.info('Already approved', 'You already have organizer access.');
+        return;
+      }
+
+      const currentUser = getCurrentUser() || user;
+      openSettingsOrganizerRequestModal(currentUser?.organizerRequestStatus === 'rejected' ? 'retry' : 'new');
+    });
+  }
+
+  window.openSettingsOrganizerRequestModal = openSettingsOrganizerRequestModal;
+  window.closeSettingsOrganizerRequestModal = closeSettingsOrganizerRequestModal;
+  window.submitSettingsOrganizerRequestModal = submitSettingsOrganizerRequestModal;
+
+  loadOrganizerRequestStatus();
+
   // Toggles
   initToggles();
 
@@ -505,6 +911,7 @@ function initAdminPage() {
   loadAdminUsers();
   loadAdminStats();
   loadAdminCommunityApprovals();
+  startOrganizerRequestsListener();
   renderAdminStats();
 
   setTimeout(() => {
@@ -512,6 +919,26 @@ function initAdminPage() {
       animateCounter(el, parseInt(el.dataset.count));
     });
   }, 300);
+}
+
+function switchAdminTab(tabName, buttonEl) {
+  const tabIds = ['approvals', 'users', 'organizer-requests', 'reports', 'platform'];
+  tabIds.forEach(id => {
+    const panel = document.getElementById(`panel-${id}`);
+    const tab = document.getElementById(`tab-${id}`);
+    if (panel) panel.style.display = id === tabName ? '' : 'none';
+    if (tab) tab.classList.toggle('active', id === tabName);
+  });
+
+  if (buttonEl) {
+    buttonEl.classList.add('active');
+  }
+
+  if (tabName === 'organizer-requests') {
+    renderOrganizerRequests();
+  } else if (tabName === 'approvals') {
+    renderAdminApprovals();
+  }
 }
 
 async function loadAdminCommunityApprovals() {
@@ -601,11 +1028,26 @@ function normalizeCommunityApprovalDoc(doc) {
   };
 }
 
+function normalizeOrganizerRequestDoc(doc) {
+  const data = doc.data() || {};
+  return {
+    id: doc.id,
+    uid: data.uid || doc.id,
+    name: data.name || 'User',
+    email: data.email || 'No email',
+    reason: data.reason || 'No reason provided',
+    status: data.status || 'pending',
+    requestedAt: data.requestedAt || null,
+  };
+}
+
 function renderAdminStats() {
   const el = document.getElementById('admin-stats');
   if (!el) return;
   const stats = adminPanelState.statsLoading ? null : adminPanelState.stats;
-  const pendingCount = adminCommunityApprovalState.loading ? '...' : adminCommunityApprovalState.pendingCommunities.length;
+  const pendingCount = adminCommunityApprovalState.loading || organizerRequestState.loading
+    ? '...'
+    : adminCommunityApprovalState.pendingCommunities.length + organizerRequestState.requests.length;
   el.innerHTML = [
     { label:'Total Users',    value: stats ? stats.totalUsers : '...',         icon:'👥', color:'purple' },
     { label:'Communities',    value: stats ? stats.totalCommunities : '...',   icon:'🌐', color:'blue' },
@@ -619,6 +1061,110 @@ function renderAdminStats() {
       <div class="stat-value" data-count="${typeof s.value === 'number' ? s.value : 0}">${typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
       <div class="stat-label">${s.label}</div>
     </div>`).join('');
+}
+
+function startOrganizerRequestsListener() {
+  if (organizerRequestsUnsubscribe) {
+    organizerRequestsUnsubscribe();
+    organizerRequestsUnsubscribe = null;
+  }
+
+  organizerRequestState.loading = true;
+  renderOrganizerRequests();
+
+  if (!db) {
+    organizerRequestState.requests = [];
+    organizerRequestState.loading = false;
+    renderOrganizerRequests();
+    renderAdminStats();
+    return;
+  }
+
+  const query = db.collection('organizer_requests').where('status', '==', 'pending');
+  organizerRequestsUnsubscribe = query.onSnapshot(snapshot => {
+    const previousIds = new Set(organizerRequestState.requests.map(request => request.uid));
+    organizerRequestState.requests = snapshot.docs.map(normalizeOrganizerRequestDoc).sort((a, b) => {
+      const aTime = a.requestedAt?.toMillis ? a.requestedAt.toMillis() : 0;
+      const bTime = b.requestedAt?.toMillis ? b.requestedAt.toMillis() : 0;
+      return bTime - aTime;
+    });
+    organizerRequestState.loading = false;
+    renderOrganizerRequests();
+    renderAdminStats();
+
+    if (organizerRequestState.initialized) {
+      organizerRequestState.requests.forEach(request => {
+        if (!previousIds.has(request.uid)) {
+          toast.info('New organizer request', `${request.name} requested organizer access.`);
+        }
+      });
+    } else {
+      organizerRequestState.initialized = true;
+    }
+  }, error => {
+    organizerRequestState.requests = [];
+    organizerRequestState.loading = false;
+    renderOrganizerRequests();
+    renderAdminStats();
+    toast.error('Requests unavailable', error?.message || 'Unable to watch organizer requests.');
+  });
+}
+
+function renderOrganizerRequests() {
+  const el = document.getElementById('admin-organizer-requests-list');
+  if (!el) return;
+
+  if (organizerRequestState.loading) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading organizer requests...</div><div class="empty-desc">Please wait while Firestore data loads.</div></div>`;
+    return;
+  }
+
+  if (organizerRequestState.requests.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No pending organizer requests.</div><div class="empty-desc">New requests from members will appear here.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = organizerRequestState.requests.map(request => `
+    <div class="approval-card">
+      <div style="font-size:28px">⚡</div>
+      <div class="approval-info">
+        <div class="approval-name">${escapeHtml(request.name)}</div>
+        <div class="approval-meta">${escapeHtml(request.email)} · Requested ${formatAdminJoinedDate(request.requestedAt)}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">Reason: “${escapeHtml(request.reason)}”</div>
+      </div>
+      <div class="approval-actions">
+        <button class="btn btn-primary btn-sm" onclick='handleOrganizerRequest("approve", ${JSON.stringify(request.uid)}, ${JSON.stringify(request.name)})'>✅ Approve</button>
+        <button class="btn btn-danger btn-sm" onclick='openOrganizerRejectModal(${JSON.stringify(request.uid)}, ${JSON.stringify(request.name)})'>❌ Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openOrganizerRejectModal(uid, name) {
+  pendingOrganizerReject = { uid, name };
+  const modal = document.getElementById('organizer-reject-modal');
+  const title = document.getElementById('organizer-reject-modal-title');
+  const reasonInput = document.getElementById('organizer-reject-reason');
+
+  if (title) title.textContent = `Reject ${name}?`;
+  if (reasonInput) reasonInput.value = '';
+  if (modal) modal.style.display = 'flex';
+  if (reasonInput) setTimeout(() => reasonInput.focus(), 50);
+}
+
+function closeOrganizerRejectModal() {
+  pendingOrganizerReject = null;
+  const modal = document.getElementById('organizer-reject-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitOrganizerRejectModal() {
+  if (!pendingOrganizerReject) return;
+  const reasonInput = document.getElementById('organizer-reject-reason');
+  const reason = reasonInput?.value.trim() || '';
+  const { uid, name } = pendingOrganizerReject;
+  closeOrganizerRejectModal();
+  await handleOrganizerRequest('reject', uid, name, reason);
 }
 
 async function loadAdminUsers() {
@@ -643,12 +1189,12 @@ async function loadAdminUsers() {
     });
   } catch (error) {
     adminPanelState.users = [
-      { name:'Aarav Mehta',  email:'aarav@iiith.ac.in',  role:'member',   joined:'Jul 28, 2025', status:'active' },
-      { name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
-      { name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
-      { name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'member',   joined:'Jul 10, 2025', status:'active' },
-      { name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
-      { name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
+      { id:'demo-aarav', name:'Aarav Mehta',  email:'aarav@iiith.ac.in',  role:'member',   joined:'Jul 28, 2025', status:'active' },
+      { id:'demo-priya', name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
+      { id:'demo-karthik', name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
+      { id:'demo-sneha', name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'member',   joined:'Jul 10, 2025', status:'active' },
+      { id:'demo-rohan', name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
+      { id:'demo-ananya', name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
     ];
   } finally {
     adminPanelState.usersLoading = false;
@@ -662,10 +1208,11 @@ async function loadAdminUsers() {
       <span class="badge ${u.role==='admin'?'badge-yellow':u.role==='organizer'?'badge-purple':'badge-blue'}">${u.role}</span>
       <span class="badge ${u.status==='active'?'badge-green':'badge-pink'}" style="margin-left:8px">${u.status}</span>
       <div class="admin-user-actions" style="margin-left:12px">
-        <button class="btn btn-ghost btn-sm" onclick="toast.info('Coming soon','User management launching next sprint')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="toast.warning('Action required','Confirm to suspend this user')">🚫</button>
+        <button class="btn btn-ghost btn-sm" onclick='openAdminUserEditModal(${JSON.stringify(u.id)})'>✏️</button>
+        <button class="btn btn-danger btn-sm" onclick='toggleAdminUserSuspend(${JSON.stringify(u.id)})'>${u.status === 'suspended' ? '✅' : '🚫'}</button>
       </div>
     </div>`).join('');
+    renderAdminRoleBreakdown();
   }
 }
 
@@ -688,14 +1235,14 @@ function renderAdminApprovals() {
     <div class="approval-card mb-3" id="approval-${item.id}">
       <div style="font-size:28px">${item.emoji}</div>
       <div class="approval-info">
-        <div class="approval-name">${item.name}</div>
-        <div class="approval-meta">Community · ${item.category} · By ${item.organizerName}</div>
+        <div class="approval-name">${escapeHtml(item.name)}</div>
+        <div class="approval-meta">Community · ${escapeHtml(item.category)} · By ${escapeHtml(item.organizerName)}</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Created ${formatDate(item.createdAt)}</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Status · ${item.status}</div>
       </div>
       <div class="approval-actions">
-        <button class="btn btn-primary btn-sm" onclick="adminApprove('${item.id}','${item.name}')">✅ Approve</button>
-        <button class="btn btn-danger btn-sm"  onclick="adminReject('${item.id}')">✕ Reject</button>
+        <button class="btn btn-primary btn-sm" onclick='adminApprove(${JSON.stringify(item.id)}, ${JSON.stringify(item.name)})'>✅ Approve</button>
+        <button class="btn btn-danger btn-sm"  onclick='adminReject(${JSON.stringify(item.id)})'>✕ Reject</button>
       </div>
     </div>`).join('');
 }
@@ -721,7 +1268,7 @@ function renderRecentApprovedCommunities() {
       <div class="activity-body">
         <div class="activity-title">${item.name} <span class="badge badge-green" style="font-size:9px">Community</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">By ${item.organizerName}</div>
-        <div class="activity-time">${formatDate(item.createdAt)}</div>
+        <div class="activity-time">${formatDateTime(item.createdAt)}</div>
       </div>
       <div style="color:var(--green-400);font-size:18px">✅</div>
     </div>
@@ -800,3 +1347,85 @@ async function approveAllCommunityApprovals() {
   }
   toast.success('All Approved! ✅', `${pending.length} community item(s) approved and are now live.`);
 }
+
+async function handleOrganizerRequest(action, uid, name = 'User', rejectionReason = '') {
+  if (!db) {
+    toast.error('Request failed', 'Firestore is unavailable right now.');
+    return;
+  }
+
+  try {
+    const requestRef = db.collection('organizer_requests').doc(uid);
+    const userRef = db.collection('users').doc(uid);
+
+    if (action === 'approve') {
+      await requestRef.set({
+        uid,
+        name,
+        status: 'approved',
+        rejectionReason: '',
+        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      await userRef.set({
+        role: 'organizer',
+        organizerAccess: true,
+        organizerRequestStatus: 'approved',
+        organizerRequestRejectionReason: '',
+      }, { merge: true });
+
+      const current = getCurrentUser();
+      if (current?.uid === uid) {
+        setCurrentUser({
+          ...current,
+          role: 'organizer',
+          organizerAccess: true,
+          organizerRequestStatus: 'approved',
+          organizerRequestRejectionReason: '',
+        });
+      }
+
+      toast.success('Approved', `${name} can now create communities and events.`);
+    } else {
+      await requestRef.set({
+        uid,
+        name,
+        status: 'rejected',
+        rejectionReason,
+        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      await userRef.set({
+        organizerRequestStatus: 'rejected',
+        organizerRequestRejectionReason: rejectionReason,
+      }, { merge: true });
+
+      toast.error('Rejected', `${name}'s organizer request was rejected.`);
+    }
+
+    startOrganizerRequestsListener();
+    loadAdminUsers();
+  } catch (error) {
+    toast.error('Request review failed', error?.message || 'Unable to review organizer request.');
+  }
+}
+
+window.adminApprove = adminApprove;
+window.adminReject = adminReject;
+window.handleOrganizerRequest = handleOrganizerRequest;
+window.openOrganizerRejectModal = openOrganizerRejectModal;
+window.closeOrganizerRejectModal = closeOrganizerRejectModal;
+window.submitOrganizerRejectModal = submitOrganizerRejectModal;
+window.requestOrganizerAccess = requestOrganizerAccess;
+window.switchAdminTab = switchAdminTab;
+window.startOrganizerRequestsListener = startOrganizerRequestsListener;
+window.renderOrganizerRequests = renderOrganizerRequests;
+window.approveAllCommunityApprovals = approveAllCommunityApprovals;
+window.editAdminUser = editAdminUser;
+window.toggleAdminUserSuspend = toggleAdminUserSuspend;
+window.openAdminUserEditModal = openAdminUserEditModal;
+window.closeAdminUserEditModal = closeAdminUserEditModal;
+window.submitAdminUserEditModal = submitAdminUserEditModal;
+window.openAdminUserSuspendModal = openAdminUserSuspendModal;
+window.closeAdminUserSuspendModal = closeAdminUserSuspendModal;
+window.submitAdminUserSuspendModal = submitAdminUserSuspendModal;
