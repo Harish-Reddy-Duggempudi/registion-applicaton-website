@@ -6,10 +6,19 @@
 function showPageLoader() {
   let loader = document.getElementById('page-loader');
   if (!loader) {
+    const logoPath = window.location.pathname.includes('/pages/')
+      ? '../assets/logos/logo-placeholder.svg'
+      : 'assets/logos/logo-placeholder.svg';
     loader = document.createElement('div');
     loader.id = 'page-loader';
     loader.innerHTML = `
-      <div class="loader-logo">NEXOVERSE</div>
+      <div class="loader-logo">
+        <img class="loader-logo-image" src="${logoPath}" alt="NEXOVERSE logo placeholder" />
+        <div class="loader-logo-copy">
+          <div class="loader-logo-name">NEXOVERSE</div>
+          <div class="loader-logo-subtitle">The Student Ecosystem Platform</div>
+        </div>
+      </div>
       <div class="loader-spinner"></div>
       <div class="loader-bar"><div class="loader-bar-fill"></div></div>
     `;

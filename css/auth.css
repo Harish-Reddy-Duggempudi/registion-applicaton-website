@@ -9,7 +9,8 @@
   justify-content: center;
   padding: 20px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Geometric grid lines in bg */
@@ -47,30 +48,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 36px;
 }
-.auth-logo-mark {
-  width: 44px; height: 44px;
-  background: var(--gradient-primary);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 22px;
-  color: #fff;
-  box-shadow: 0 0 30px rgba(168,85,247,0.5);
+.auth-logo-image {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 50%;
 }
-.auth-logo-text {
+.auth-logo-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.auth-logo-name {
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 800;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.auth-logo-subtitle {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .auth-heading {
@@ -208,6 +213,10 @@
 .password-toggle:hover { color: var(--text-secondary); }
 
 @media (max-width: 480px) {
+  .auth-page {
+    align-items: flex-start;
+    padding: 16px 16px 32px;
+  }
   .auth-card { padding: 32px 24px; }
   .role-select-grid { grid-template-columns: 1fr; }
 }

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation — NEXOVERSE</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/landing.css" />
+  <style>
+    .resource-shell { padding-top: 120px; }
+    .resource-hero { max-width: 1200px; margin: 0 auto; padding: 0 32px 36px; }
+    .resource-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .resource-list { display: flex; flex-direction: column; gap: 12px; }
+    .resource-item { padding: 16px 18px; background: rgba(255,255,255,0.035); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+    .resource-item h3 { font-family: var(--font-display); font-size: 16px; margin-bottom: 6px; }
+    .resource-item p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+    .resource-note { margin-top: 18px; color: var(--text-muted); font-size: 13px; }
+    @media (max-width: 768px) {
+      .resource-shell { padding-top: 96px; }
+      .resource-hero { padding: 0 16px 28px; }
+      .resource-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="aurora-bg">
+    <div class="aurora-blob"></div>
+    <div class="aurora-blob"></div>
+    <div class="aurora-blob"></div>
+  </div>
+
+  <nav class="landing-nav scrolled" aria-label="Primary">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <img class="nav-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" />
+        <div class="nav-logo-copy">
+          <div class="nav-logo-name">NEXOVERSE</div>
+          <div class="nav-logo-subtitle">The Student Ecosystem Platform</div>
+        </div>
+      </div>
+      <div class="nav-cta">
+        <a href="../index.html" class="btn btn-ghost btn-sm">Home</a>
+        <a href="../signup.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="resource-shell">
+    <section class="resource-hero">
+      <div class="section-eyebrow">Documentation</div>
+      <h1 class="hero-title" style="max-width:860px;margin-left:0;margin-bottom:16px;animation:none;opacity:1">Build faster with NEXOVERSE docs</h1>
+      <p class="section-subtitle" style="max-width:760px">A practical guide to getting started, understanding the platform, and setting up the core workflows for students, organizers, and admins.</p>
+    </section>
+
+    <section class="section">
+      <div class="resource-grid">
+        <div class="card saas-card saas-card-hover saas-card-glow">
+          <div class="section-eyebrow">Start Here</div>
+          <div class="resource-list">
+            <div class="resource-item"><h3>Quick start</h3><p>Open the landing page, create an account, and explore the dashboard flow in minutes.</p></div>
+            <div class="resource-item"><h3>Role-based access</h3><p>Understand how students, organizers, and admins each get a tailored experience.</p></div>
+            <div class="resource-item"><h3>Navigation map</h3><p>Learn where communities, events, registrations, analytics, and AI tools live.</p></div>
+          </div>
+        </div>
+        <div class="card saas-card saas-card-hover saas-card-glow">
+          <div class="section-eyebrow">Setup</div>
+          <div class="resource-list">
+            <div class="resource-item"><h3>Local development</h3><p>Run the project with Live Server or a local HTTP server and browse the full UI.</p></div>
+            <div class="resource-item"><h3>Firebase integration</h3><p>Connect authentication and Firestore when you are ready to move beyond demo mode.</p></div>
+            <div class="resource-item"><h3>Data model</h3><p>Review how users, communities, events, and registrations are structured in the app.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="resource-note">Need implementation help? Start with the dashboard and community pages, then wire data flows into the modules under <span class="text-primary">js/</span>.</div>
+    </section>
+  </main>
+
+  <footer class="landing-footer">
+    <div class="footer-inner premium-footer">
+      <div class="footer-col brand-col">
+        <div class="footer-brand-row">
+          <img class="footer-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" />
+          <div class="footer-logo-copy">
+            <div class="footer-logo-name">NEXOVERSE</div>
+            <div class="footer-logo-subtitle">The Student Ecosystem Platform</div>
+          </div>
+        </div>
+        <div class="footer-brand-desc">Empowering student communities and organizers through one unified ecosystem.</div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Platform</div>
+        <a class="footer-link" href="../index.html#features">Features</a>
+        <a class="footer-link" href="../index.html#communities">Communities</a>
+        <a class="footer-link" href="../index.html#events">Events</a>
+        <a class="footer-link" href="../dashboard.html">Dashboard</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Resources</div>
+        <a class="footer-link" href="documentation.html">Documentation</a>
+        <a class="footer-link" href="help-center.html">Help Center</a>
+        <a class="footer-link" href="privacy-policy.html">Privacy Policy</a>
+        <a class="footer-link" href="terms-of-service.html">Terms of Service</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Contact</div>
+        <a class="footer-link footer-email" href="mailto:support@nexoverse.dev">support@nexoverse.dev</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <div class="footer-copyright">© <span id="year-range">2026</span> NEXOVERSE. All rights reserved.</div>
+        <div class="footer-built">Built for the student universe 🚀</div>
+        <div class="footer-made">Made with <span class="text-pink">❤️</span> by student builders</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const year = document.getElementById('year-range');
+      if (year) year.textContent = new Date().getFullYear();
+    })();
+  </script>
+</body>
+</html>

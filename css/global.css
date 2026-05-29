@@ -2,7 +2,7 @@
   NEXOVERSE — Global Design System
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 /* ── CSS Variables ── */
 :root {
@@ -60,6 +60,22 @@
   --radius-lg:  16px;
   --radius-xl:  24px;
   --radius-full:9999px;
+
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+
+  --section-padding-desktop: 120px;
+  --section-padding-tablet: 80px;
+  --section-padding-mobile: 64px;
+
+  --card-radius: var(--radius-xl);
+  --card-padding: 24px;
+  --card-shadow: var(--shadow-sm);
+  --card-shadow-hover: var(--shadow-md);
+  --card-transition: all var(--transition-base);
 
   --sidebar-w:  240px;
   --navbar-h:   64px;
@@ -190,8 +206,43 @@ h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); font-weight: 700; line-hei
 }
 
 .btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-md { padding: 9px 18px; font-size: 13px; }
 .btn-lg { padding: 14px 28px; font-size: 16px; }
 .btn-icon { padding: 10px; width: 40px; height: 40px; justify-content: center; }
+
+/* ── Reusable SaaS Card System ── */
+.saas-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  backdrop-filter: blur(14px);
+  position: relative;
+  overflow: hidden;
+  transition: var(--card-transition);
+  box-shadow: var(--card-shadow);
+}
+.saas-card-hover {
+  transition: var(--card-transition);
+}
+.saas-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: var(--card-shadow-hover);
+  background: var(--bg-card-hover);
+}
+.saas-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(168,85,247,0.18), transparent 55%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
+}
+.saas-card-glow:hover::before {
+  opacity: 1;
+}
 
 /* ── Cards ── */
 .card {
@@ -424,13 +475,37 @@ textarea.input-field { resize: vertical; min-height: 100px; }
 }
 #page-loader.hidden { opacity: 0; visibility: hidden; }
 .loader-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: left;
+}
+.loader-logo-image {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.loader-logo-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.loader-logo-name {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 800;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.loader-logo-subtitle {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .loader-spinner {
   width: 40px; height: 40px;
@@ -681,12 +756,28 @@ textarea.input-field { resize: vertical; min-height: 100px; }
 .mb-1 { margin-bottom: 6px; }
 .mb-2 { margin-bottom: 8px; }
 .mb-3 { margin-bottom: 12px; }
+.mb-8 { margin-bottom: 32px; }
 .my-3 { margin: 12px 0; }
 .mt-10 { margin-top: 40px; }
 .mt-12 { margin-top: 48px; }
+.mt-8 { margin-top: 32px; }
 .text-center { text-align: center; }
 .flex-wrap { flex-wrap: wrap; }
 .shrink-0 { flex-shrink: 0; }
+.line-clamp-2 {
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  line-clamp: 3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* ── Glow Effects ── */
 .glow-purple { box-shadow: 0 0 20px rgba(168,85,247,0.3); }
@@ -750,13 +841,23 @@ textarea.input-field { resize: vertical; min-height: 100px; }
 .preview-greeting { font-size:9px; color: rgba(148,163,184,0.7); margin-bottom:8px; font-family: 'DM Sans', sans-serif; }
 
 /* small container utility used on a few sections */
-.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+.container { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
 
 /* section variant that keeps same muted background + borders used on communities */
 .section-muted { background: rgba(255,255,255,0.01); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
 
 /* small descriptive text used in cards (preserve original sizing & spacing) */
 .muted-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; }
+
+/* ── Motion Preferences ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {

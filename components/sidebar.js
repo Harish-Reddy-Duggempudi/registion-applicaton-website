@@ -40,8 +40,11 @@ function buildSidebar(activePage, basePath = '') {
   return `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
-        <div class="sidebar-logo-mark">N</div>
-        <div class="sidebar-logo-text">NEXOVERSE</div>
+        <img class="sidebar-logo-image" src="${basePath}assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" />
+        <div class="sidebar-logo-copy">
+          <div class="sidebar-logo-text">NEXOVERSE</div>
+          <div class="sidebar-logo-subtitle">The Student Ecosystem Platform</div>
+        </div>
       </div>
 
       <div class="role-badge ${role}" data-user-role>${role.toUpperCase()}</div>
