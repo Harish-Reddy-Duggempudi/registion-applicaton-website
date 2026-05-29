@@ -341,7 +341,7 @@ function shareEvent(id) {
 // ── Create Event Page ─────────────────────────
 function initCreateEventPage() {
   const user = getCurrentUser();
-  if (user?.role === 'student') {
+  if (user?.role === 'member') {
     toast.warning('Restricted', 'Only organizers can create events.');
   }
 

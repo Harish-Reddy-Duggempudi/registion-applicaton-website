@@ -5,6 +5,25 @@
 // ============================================================
 // ANALYTICS
 // ============================================================
+const adminCommunityApprovalState = {
+  pendingCommunities: [],
+  approvedCommunities: [],
+  loading: false,
+};
+
+const adminPanelState = {
+  users: [],
+  usersLoading: false,
+  statsLoading: false,
+  stats: {
+    totalUsers: '...',
+    totalCommunities: '...',
+    totalEvents: '...',
+    totalRegistrations: '...',
+    reportsOpen: '...',
+  },
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
 
@@ -483,8 +502,9 @@ function initSettingsPage() {
 // ADMIN PANEL
 // ============================================================
 function initAdminPage() {
-  renderAdminUsers();
-  renderAdminApprovals();
+  loadAdminUsers();
+  loadAdminStats();
+  loadAdminCommunityApprovals();
   renderAdminStats();
 
   setTimeout(() => {
@@ -494,38 +514,145 @@ function initAdminPage() {
   }, 300);
 }
 
+async function loadAdminCommunityApprovals() {
+  adminCommunityApprovalState.loading = true;
+  renderAdminApprovals();
+  renderRecentApprovedCommunities();
+
+  try {
+    if (!db) throw new Error('Firestore unavailable.');
+    const pendingSnapshot = await db.collection('communities').where('status', '==', 'pending').get();
+    const approvedSnapshot = await db.collection('communities').where('status', '==', 'approved').get();
+
+    adminCommunityApprovalState.pendingCommunities = pendingSnapshot.docs.map(normalizeCommunityApprovalDoc).sort((a, b) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    });
+    adminCommunityApprovalState.approvedCommunities = approvedSnapshot.docs.map(normalizeCommunityApprovalDoc).sort((a, b) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    }).slice(0, 4);
+  } catch (error) {
+    adminCommunityApprovalState.pendingCommunities = [];
+    adminCommunityApprovalState.approvedCommunities = [];
+  } finally {
+    adminCommunityApprovalState.loading = false;
+    renderAdminApprovals();
+    renderRecentApprovedCommunities();
+    renderAdminStats();
+  }
+}
+
+async function loadAdminStats() {
+  adminPanelState.statsLoading = true;
+  renderAdminStats();
+
+  try {
+    if (!db) throw new Error('Firestore unavailable.');
+
+    const [usersSnapshot, communitiesSnapshot, eventsSnapshot, registrationsSnapshot, reportsSnapshot] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('communities').get(),
+      db.collection('events').get(),
+      db.collection('registrations').get(),
+      db.collection('reports').get(),
+    ]);
+
+    adminPanelState.stats = {
+      totalUsers: usersSnapshot.size,
+      totalCommunities: communitiesSnapshot.size,
+      totalEvents: eventsSnapshot.size,
+      totalRegistrations: registrationsSnapshot.size,
+      reportsOpen: reportsSnapshot.size,
+    };
+  } catch (error) {
+    const fallback = DataStore.getDashboardStats('admin');
+    adminPanelState.stats = {
+      totalUsers: fallback.totalUsers,
+      totalCommunities: fallback.totalCommunities,
+      totalEvents: fallback.totalEvents,
+      totalRegistrations: fallback.totalRegistrations,
+      reportsOpen: fallback.reportsOpen,
+    };
+  } finally {
+    adminPanelState.statsLoading = false;
+    renderAdminStats();
+  }
+}
+
+function formatAdminJoinedDate(value) {
+  if (!value) return 'Recently';
+  if (value.toDate) return formatDate(value.toDate());
+  return formatDate(value);
+}
+
+function normalizeCommunityApprovalDoc(doc) {
+  const data = doc.data() || {};
+  return {
+    id: doc.id,
+    name: data.name || 'Untitled Community',
+    category: data.category || 'Other',
+    organizerName: data.organizerName || data.organizer || 'NEXOVERSE',
+    createdAt: data.createdAt || null,
+    status: data.status || (data.isApproved ? 'approved' : 'pending'),
+    emoji: data.emoji || '🌐',
+  };
+}
+
 function renderAdminStats() {
   const el = document.getElementById('admin-stats');
   if (!el) return;
-  const stats = DataStore.getDashboardStats('admin');
+  const stats = adminPanelState.statsLoading ? null : adminPanelState.stats;
+  const pendingCount = adminCommunityApprovalState.loading ? '...' : adminCommunityApprovalState.pendingCommunities.length;
   el.innerHTML = [
-    { label:'Total Users',    value: stats.totalUsers,         icon:'👥', color:'purple' },
-    { label:'Communities',    value: stats.totalCommunities,   icon:'🌐', color:'blue' },
-    { label:'Total Events',   value: stats.totalEvents,        icon:'🎯', color:'cyan' },
-    { label:'Registrations',  value: stats.totalRegistrations, icon:'🎫', color:'pink' },
-    { label:'Pending Items',  value: stats.pendingApprovals,   icon:'⏳', color:'yellow' },
-    { label:'Open Reports',   value: stats.reportsOpen,        icon:'🚨', color:'red' },
+    { label:'Total Users',    value: stats ? stats.totalUsers : '...',         icon:'👥', color:'purple' },
+    { label:'Communities',    value: stats ? stats.totalCommunities : '...',   icon:'🌐', color:'blue' },
+    { label:'Total Events',   value: stats ? stats.totalEvents : '...',        icon:'🎯', color:'cyan' },
+    { label:'Registrations',  value: stats ? stats.totalRegistrations : '...', icon:'🎫', color:'pink' },
+    { label:'Pending Items',  value: pendingCount,             icon:'⏳', color:'yellow' },
+    { label:'Open Reports',   value: stats ? stats.reportsOpen : '...',        icon:'🚨', color:'red' },
   ].map(s => `
     <div class="stat-card">
       <div style="font-size:28px;margin-bottom:8px">${s.icon}</div>
-      <div class="stat-value" data-count="${s.value}">${s.value.toLocaleString()}</div>
+      <div class="stat-value" data-count="${typeof s.value === 'number' ? s.value : 0}">${typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
       <div class="stat-label">${s.label}</div>
     </div>`).join('');
 }
 
-function renderAdminUsers() {
+async function loadAdminUsers() {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
-  const users = [
-    { name:'Aarav Mehta',  email:'aarav@iiith.ac.in',  role:'student',   joined:'Jul 28, 2025', status:'active' },
-    { name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
-    { name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
-    { name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'student',   joined:'Jul 10, 2025', status:'active' },
-    { name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
-    { name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
-  ];
+  adminPanelState.usersLoading = true;
+  el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading users...</div><div class="empty-desc">Fetching user profiles from Firestore.</div></div>`;
 
-  el.innerHTML = users.map(u => `
+  try {
+    if (!db) throw new Error('Firestore unavailable.');
+    const snapshot = await db.collection('users').get();
+    adminPanelState.users = snapshot.docs.map(doc => {
+      const data = doc.data() || {};
+      return {
+        id: doc.id,
+        name: data.name || 'User',
+        email: data.email || 'No email',
+        role: data.role || 'member',
+        joined: formatAdminJoinedDate(data.joinedAt || data.createdAt),
+        status: data.status || (data.suspended ? 'suspended' : 'active'),
+      };
+    });
+  } catch (error) {
+    adminPanelState.users = [
+      { name:'Aarav Mehta',  email:'aarav@iiith.ac.in',  role:'member',   joined:'Jul 28, 2025', status:'active' },
+      { name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
+      { name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
+      { name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'member',   joined:'Jul 10, 2025', status:'active' },
+      { name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
+      { name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
+    ];
+  } finally {
+    adminPanelState.usersLoading = false;
+    el.innerHTML = adminPanelState.users.map(u => `
     <div class="admin-user-row">
       <div class="avatar avatar-md" style="background:var(--gradient-primary)">${u.name.split(' ').map(w=>w[0]).join('')}</div>
       <div class="admin-user-info flex-1">
@@ -539,19 +666,21 @@ function renderAdminUsers() {
         <button class="btn btn-danger btn-sm" onclick="toast.warning('Action required','Confirm to suspend this user')">🚫</button>
       </div>
     </div>`).join('');
+  }
 }
 
 function renderAdminApprovals() {
   const el = document.getElementById('admin-approvals-list');
   if (!el) return;
-  const pending = DataStore.getPendingApprovals();
-  const all = [
-    ...pending.communities.map(c => ({ ...c, type:'Community' })),
-    ...pending.events.map(e => ({ ...e, type:'Event' })),
-  ];
+  if (adminCommunityApprovalState.loading) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading pending communities...</div><div class="empty-desc">Please wait while Firestore data loads.</div></div>`;
+    return;
+  }
+
+  const all = adminCommunityApprovalState.pendingCommunities;
 
   if (all.length === 0) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All caught up!</div><div class="empty-desc">No pending approvals.</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No pending community approvals.</div><div class="empty-desc">New community submissions will appear here.</div></div>`;
     return;
   }
 
@@ -559,28 +688,115 @@ function renderAdminApprovals() {
     <div class="approval-card mb-3" id="approval-${item.id}">
       <div style="font-size:28px">${item.emoji}</div>
       <div class="approval-info">
-        <div class="approval-name">${item.name || item.title}</div>
-        <div class="approval-meta">${item.type} · ${item.category || ''} · By ${item.organizer}</div>
+        <div class="approval-name">${item.name}</div>
+        <div class="approval-meta">Community · ${item.category} · By ${item.organizerName}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Created ${formatDate(item.createdAt)}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">Status · ${item.status}</div>
       </div>
       <div class="approval-actions">
-        <button class="btn btn-primary btn-sm" onclick="adminApprove('${item.id}','${item.type}','${item.name || item.title}')">✅ Approve</button>
+        <button class="btn btn-primary btn-sm" onclick="adminApprove('${item.id}','${item.name}')">✅ Approve</button>
         <button class="btn btn-danger btn-sm"  onclick="adminReject('${item.id}')">✕ Reject</button>
       </div>
     </div>`).join('');
 }
 
-function adminApprove(id, type, name) {
-  const el = document.getElementById('approval-'+id);
-  if (el) el.remove();
-  if (type === 'Community') {
-    const c = DataStore.getCommunity(id);
-    if (c) c.isApproved = true;
+function renderRecentApprovedCommunities() {
+  const el = document.getElementById('admin-recent-approved-list');
+  if (!el) return;
+
+  if (adminCommunityApprovalState.loading) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading recent approvals...</div><div class="empty-desc">Please wait while Firestore data loads.</div></div>`;
+    return;
   }
-  toast.success(`${type} Approved! ✅`, `"${name}" is now live on the platform.`);
+
+  const items = adminCommunityApprovalState.approvedCommunities;
+  if (items.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🌐</div><div class="empty-title">No recent approvals.</div><div class="empty-desc">Approved communities will appear here.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(item => `
+    <div class="activity-item">
+      <div class="activity-icon-wrap" style="background:rgba(74,222,128,0.1);font-size:18px">${item.emoji}</div>
+      <div class="activity-body">
+        <div class="activity-title">${item.name} <span class="badge badge-green" style="font-size:9px">Community</span></div>
+        <div style="font-size:12px;color:var(--text-secondary)">By ${item.organizerName}</div>
+        <div class="activity-time">${formatDate(item.createdAt)}</div>
+      </div>
+      <div style="color:var(--green-400);font-size:18px">✅</div>
+    </div>
+  `).join('');
 }
 
-function adminReject(id) {
+async function adminApprove(id, name, options = {}) {
+  const silent = !!options.silent;
   const el = document.getElementById('approval-'+id);
-  if (el) { el.style.opacity='0.4'; el.style.pointerEvents='none'; }
-  toast.error('Rejected', 'The request has been declined.');
+  if (!db) {
+    toast.error('Approval failed', 'Firestore is unavailable right now.');
+    return;
+  }
+
+  const item = adminCommunityApprovalState.pendingCommunities.find(c => c.id === id);
+
+  try {
+    await db.collection('communities').doc(id).update({
+      status: 'approved',
+      isApproved: true,
+    });
+    adminCommunityApprovalState.pendingCommunities = adminCommunityApprovalState.pendingCommunities.filter(item => item.id !== id);
+    if (item) {
+      adminCommunityApprovalState.approvedCommunities = [{
+        ...item,
+        status: 'approved',
+        createdAt: item.createdAt || new Date(),
+      }, ...adminCommunityApprovalState.approvedCommunities].slice(0, 4);
+    }
+    if (el) {
+      el.remove();
+    }
+    renderAdminStats();
+    renderRecentApprovedCommunities();
+    if (!silent) {
+      toast.success('Approved!', `${name} is now live on the platform.`);
+    }
+  } catch (error) {
+    toast.error('Approval failed', error?.message || 'Unable to approve community.');
+  }
+}
+
+async function adminReject(id) {
+  const el = document.getElementById('approval-'+id);
+  const item = adminCommunityApprovalState.pendingCommunities.find(c => c.id === id);
+  if (!db) {
+    toast.error('Rejection failed', 'Firestore is unavailable right now.');
+    return;
+  }
+
+  try {
+    await db.collection('communities').doc(id).update({
+      status: 'rejected',
+      isApproved: false,
+    });
+    adminCommunityApprovalState.pendingCommunities = adminCommunityApprovalState.pendingCommunities.filter(c => c.id !== id);
+    if (el) {
+      el.remove();
+    }
+    renderAdminStats();
+    toast.error('Rejected', `${item?.name || 'Community'} has been declined.`);
+  } catch (error) {
+    toast.error('Rejection failed', error?.message || 'Unable to reject community.');
+  }
+}
+
+async function approveAllCommunityApprovals() {
+  const pending = [...adminCommunityApprovalState.pendingCommunities];
+  if (pending.length === 0) {
+    toast.info('Nothing pending', 'No pending community approvals.');
+    return;
+  }
+
+  for (const item of pending) {
+    await adminApprove(item.id, item.name, { silent: true });
+  }
+  toast.success('All Approved! ✅', `${pending.length} community item(s) approved and are now live.`);
 }

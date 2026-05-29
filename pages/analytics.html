@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/community.css" />
 </head>
-<body>
+<body class="analytics-page">
 
 <div class="aurora-bg">
   <div class="aurora-blob"></div>
@@ -30,7 +30,7 @@
     <div class="page-content">
 
       <!-- Header -->
-      <div class="analytics-header">
+      <div class="section-header mb-6">
         <div>
           <h1 style="font-size:24px;font-weight:800">Analytics 📊</h1>
           <div class="text-secondary text-sm mt-1">Track your growth, engagement, and impact</div>
@@ -115,24 +115,51 @@
             <div class="section-title">🔥 Top Events by Registrations</div>
           </div>
           <div id="top-events-list">
-            ${[
-              { emoji:'🌐', title:'Google I/O Extended Hyderabad', regs:843, pct:84 },
-              { emoji:'🏆', title:'HackHyderabad 3.0',             regs:487, pct:81 },
-              { emoji:'🎨', title:'UI/UX Design Bootcamp',         regs:234, pct:78 },
-              { emoji:'☁️', title:'Cloud Computing with Azure',    regs:156, pct:62 },
-              { emoji:'💡', title:'Startup Pitch Night',           regs:312, pct:78 },
-            ].map((e,i) => `
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${i+1}</div>
-                <div style="font-size:20px">${e.emoji}</div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
-                  <div class="progress-bar" style="margin-top:6px">
-                    <div class="progress-fill" style="width:${e.pct}%"></div>
-                  </div>
-                </div>
-                <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">${e.regs.toLocaleString()}</div>
-              </div>`).join('')}
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#1</div>
+              <div style="font-size:20px">🌐</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Google I/O Extended Hyderabad</div>
+                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:84%"></div></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">843</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#2</div>
+              <div style="font-size:20px">🏆</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">HackHyderabad 3.0</div>
+                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:81%"></div></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">487</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#3</div>
+              <div style="font-size:20px">🎨</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">UI/UX Design Bootcamp</div>
+                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:78%"></div></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">234</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#4</div>
+              <div style="font-size:20px">☁️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Cloud Computing with Azure</div>
+                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:62%"></div></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">156</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#5</div>
+              <div style="font-size:20px">💡</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Startup Pitch Night</div>
+                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:78%"></div></div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">312</div>
+            </div>
           </div>
         </div>
 
@@ -142,22 +169,36 @@
             <div class="section-title">🌐 Top Communities by Members</div>
           </div>
           <div id="top-communities-list">
-            ${[
-              { emoji:'🌐', name:'GDG Hyderabad',    members:1240, growth:'+12%' },
-              { emoji:'🚀', name:'StartupHub Campus', members:780,  growth:'+22%' },
-              { emoji:'🔷', name:'MLSA IIIT-H',       members:890,  growth:'+8%'  },
-              { emoji:'⚙️', name:'ACM CBIT',           members:650,  growth:'+5%'  },
-              { emoji:'🔬', name:'IEEE CS Society',   members:420,  growth:'+3%'  },
-            ].map((c,i) => `
               <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${i+1}</div>
-                <div style="font-size:20px">${c.emoji}</div>
-                <div style="flex:1">
-                  <div style="font-size:13px;font-weight:600">${c.name}</div>
-                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 ${c.members.toLocaleString()} members</div>
-                </div>
-                <div class="stat-change up">${c.growth}</div>
-              </div>`).join('')}
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#1</div>
+                <div style="font-size:20px">🌐</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">GDG Hyderabad</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 1,240 members</div></div>
+                <div class="stat-change up">+12%</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#2</div>
+                <div style="font-size:20px">🚀</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">StartupHub Campus</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 780 members</div></div>
+                <div class="stat-change up">+22%</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#3</div>
+                <div style="font-size:20px">🔷</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">MLSA IIIT-H</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 890 members</div></div>
+                <div class="stat-change up">+8%</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#4</div>
+                <div style="font-size:20px">⚙️</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">ACM CBIT</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 650 members</div></div>
+                <div class="stat-change up">+5%</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#5</div>
+                <div style="font-size:20px">🔬</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:600">IEEE CS Society</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 420 members</div></div>
+                <div class="stat-change up">+3%</div>
+              </div>
           </div>
         </div>
       </div>
@@ -166,19 +207,31 @@
       <div class="card mb-5">
         <div class="section-title mb-4">⚡ Engagement Metrics</div>
         <div class="grid-4">
-          ${[
-            { label:'Avg Events per Student', value:'3.2',  icon:'🎯', change:'+0.4 from last month' },
-            { label:'Avg Community Members',  value:'682',  icon:'👥', change:'+8% growth rate'      },
-            { label:'Registration Conv. Rate',value:'73%',  icon:'📈', change:'Above industry avg'   },
-            { label:'Platform NPS Score',     value:'84',   icon:'⭐', change:'Excellent rating'      },
-          ].map(m => `
-            <div style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
-              <div style="font-size:28px;margin-bottom:8px">${m.icon}</div>
-              <div style="font-family:var(--font-display);font-size:28px;font-weight:800;background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${m.value}</div>
-              <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">${m.label}</div>
-              <div class="stat-change up" style="margin-top:8px;display:inline-flex">${m.change}</div>
-            </div>`).join('')}
-        </div>
+              <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+                <div style="font-size:28px;margin-bottom:8px">🎯</div>
+                <div class="stat-value">3.2</div>
+                <div class="stat-label">Avg Events per Member</div>
+                <div class="stat-change up mt-2">+0.4 from last month</div>
+              </div>
+              <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+                <div style="font-size:28px;margin-bottom:8px">👥</div>
+                <div class="stat-value">682</div>
+                <div class="stat-label">Avg Community Members</div>
+                <div class="stat-change up mt-2">+8% growth rate</div>
+              </div>
+              <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+                <div style="font-size:28px;margin-bottom:8px">📈</div>
+                <div class="stat-value">73%</div>
+                <div class="stat-label">Registration Conv. Rate</div>
+                <div class="stat-change up mt-2">Above industry avg</div>
+              </div>
+              <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
+                <div style="font-size:28px;margin-bottom:8px">⭐</div>
+                <div class="stat-value">84</div>
+                <div class="stat-label">Platform NPS Score</div>
+                <div class="stat-change up mt-2">Excellent rating</div>
+              </div>
+          </div>
       </div>
 
     </div>

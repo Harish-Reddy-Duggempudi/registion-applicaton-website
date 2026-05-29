@@ -10,7 +10,7 @@ const DEMO_MODE = !HAS_FIREBASE_AUTH;
 
 // ── Dummy users for demo ──────────────────────
 const DEMO_USERS = {
-  'student@nexora.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexora.dev',   role:'student',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
+  'student@nexora.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexora.dev',   role:'member',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
   'organizer@nexora.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexora.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
   'admin@nexora.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexora.dev',     role:'admin',     avatar:'RV', bio:'Nexora Platform Admin' },
 };

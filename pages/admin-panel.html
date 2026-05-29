@@ -7,8 +7,11 @@
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/community.css" />
+  <style>
+    .admin-panel-page .navbar-left { gap: 10px; }
+  </style>
 </head>
-<body>
+<body class="admin-panel-page">
 
 <div class="aurora-bg">
   <div class="aurora-blob"></div>
@@ -16,7 +19,7 @@
   <div class="aurora-blob"></div>
 </div>
 <div id="page-loader">
-  <div class="loader-logo"><img class="loader-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" /><div class="loader-logo-copy"><div class="loader-logo-name">NEXOVERSE</div><div class="loader-logo-subtitle">The Student Ecosystem Platform</div></div></div>
+  <div class="loader-logo"><img class="loader-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" /><div class="loader-logo-copy"><div class="loader-logo-name">NEXOVERSE</div><div class="loader-logo-subtitle">The Member Ecosystem Platform</div></div></div>
   <div class="loader-spinner"></div>
   <div class="loader-bar"><div class="loader-bar-fill"></div></div>
 </div>
@@ -48,6 +51,7 @@
       <div style="display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content;flex-wrap:wrap">
         <button class="tab-btn active" id="tab-approvals" onclick="switchAdminTab('approvals',this)">⏳ Approvals</button>
         <button class="tab-btn" id="tab-users"     onclick="switchAdminTab('users',this)">👥 Users</button>
+        <button class="tab-btn" id="tab-organizer-requests" onclick="switchAdminTab('organizer-requests',this)">⚡ Organizer Requests</button>
         <button class="tab-btn" id="tab-reports"   onclick="switchAdminTab('reports',this)">🚨 Reports</button>
         <button class="tab-btn" id="tab-platform"  onclick="switchAdminTab('platform',this)">⚙️ Platform</button>
       </div>
@@ -57,7 +61,7 @@
         <div class="section-header mb-4">
           <div class="section-title">⏳ Pending Approvals</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary btn-sm" onclick="approveAllVisible()">✅ Approve All</button>
+            <button class="btn btn-primary btn-sm" onclick="approveAllCommunityApprovals()">✅ Approve All</button>
             <button class="btn btn-outline btn-sm" onclick="toast.info('Filtered','Showing only community approvals')">Filter</button>
           </div>
         </div>
@@ -68,21 +72,7 @@
           <div class="section-title">✅ Recently Approved</div>
         </div>
         <div class="card">
-          ${[
-            { emoji:'🌐', name:'GDG Hyderabad',    type:'Community', by:'Priya Sharma',  date:'Jul 28' },
-            { emoji:'🏆', name:'HackHyderabad 3.0', type:'Event',     by:'ACM CBIT',      date:'Jul 25' },
-            { emoji:'🔷', name:'MLSA IIIT-H',       type:'Community', by:'Rahul Singh',   date:'Jul 20' },
-            { emoji:'☁️', name:'Azure Workshop',    type:'Event',     by:'MLSA IIIT-H',   date:'Jul 18' },
-          ].map(item => `
-            <div class="activity-item">
-              <div class="activity-icon-wrap" style="background:rgba(74,222,128,0.1);font-size:18px">${item.emoji}</div>
-              <div class="activity-body">
-                <div class="activity-title">${item.name} <span class="badge badge-green" style="font-size:9px">${item.type}</span></div>
-                <div style="font-size:12px;color:var(--text-secondary)">By ${item.by}</div>
-                <div class="activity-time">${item.date}</div>
-              </div>
-              <div style="color:var(--green-400);font-size:18px">✅</div>
-            </div>`).join('')}
+          <div id="admin-recent-approved-list"></div>
         </div>
       </div>
 
@@ -98,7 +88,7 @@
             </div>
             <select class="input-field" style="width:auto;padding:8px 12px;border-radius:8px" onchange="filterByRole(this.value)">
               <option value="all">All Roles</option>
-              <option value="student">Students</option>
+              <option value="member">Members</option>
               <option value="organizer">Organizers</option>
               <option value="admin">Admins</option>
             </select>
@@ -110,18 +100,76 @@
 
         <!-- Role Breakdown -->
         <div class="grid-3 mt-4">
-          ${[
-            { role:'Students',   count:3421, icon:'🎓', color:'badge-blue'   },
-            { role:'Organizers', count:389,  icon:'⚡', color:'badge-purple' },
-            { role:'Admins',     count:37,   icon:'🛡️', color:'badge-yellow' },
-          ].map(r => `
-            <div class="stat-card" style="text-align:center">
-              <div style="font-size:32px;margin-bottom:8px">${r.icon}</div>
-              <div class="stat-value">${r.count.toLocaleString()}</div>
-              <div class="stat-label">${r.role}</div>
-              <span class="badge ${r.color} mt-2" style="display:inline-flex">${r.role}</span>
-            </div>`).join('')}
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">👤</div>
+            <div class="stat-value">3,421</div>
+            <div class="stat-label">Members</div>
+            <span class="badge badge-blue mt-2" style="display:inline-flex">Members</span>
+          </div>
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">⚡</div>
+            <div class="stat-value">389</div>
+            <div class="stat-label">Organizers</div>
+            <span class="badge badge-purple mt-2" style="display:inline-flex">Organizers</span>
+          </div>
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">🛡️</div>
+            <div class="stat-value">37</div>
+            <div class="stat-label">Admins</div>
+            <span class="badge badge-yellow mt-2" style="display:inline-flex">Admins</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Organizer Requests Tab -->
+      <div id="panel-organizer-requests" style="display:none">
+        <div class="section-header mb-4">
+          <div>
+            <div class="section-title">⚡ Organizer Access Requests</div>
+            <div class="text-secondary text-sm mt-1">Review member requests for organizer access.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <div class="approval-card" style="margin:0;border:0;padding:0;box-shadow:none;background:transparent">
+              <div style="font-size:28px">⚡</div>
+              <div class="approval-info">
+                <div class="approval-name">Harish Reddy</div>
+                <div class="approval-meta">harishreddy2k05@gmail.com · Requested Today</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">Reason: “I want to organize workshops and events under NEXOVERSE.”</div>
+              </div>
+              <div class="approval-actions">
+                <button class="btn btn-primary btn-sm" onclick="handleOrganizerRequest('approve', this)">✅ Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="handleOrganizerRequest('reject', this)">❌ Reject</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="approval-card" style="margin:0;border:0;padding:0;box-shadow:none;background:transparent">
+              <div style="font-size:28px">⚡</div>
+              <div class="approval-info">
+                <div class="approval-name">Priya Sharma</div>
+                <div class="approval-meta">priyasharma@gmail.com · Requested Yesterday</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">Reason: “I lead the Google Developer Group chapter at my college.”</div>
+              </div>
+              <div class="approval-actions">
+                <button class="btn btn-primary btn-sm" onclick="handleOrganizerRequest('approve', this)">✅ Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="handleOrganizerRequest('reject', this)">❌ Reject</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Future Firestore Integration:
+             organizer_requests collection
+             {
+               uid: "",
+               name: "",
+               email: "",
+               role: "member",
+               requestedAt: "",
+               status: "pending"
+             }
+        -->
       </div>
 
       <!-- Reports Tab -->
@@ -131,22 +179,39 @@
           <span class="badge badge-pink">3 Open</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          ${[
-            { type:'Event',     title:'Suspicious Event: "Win ₹1 Lakh Daily"', reporter:'Aarav M.',  reason:'Spam / Scam content',   date:'Aug 2' },
-            { type:'Community', title:'Community: "Get Rich Quick Hacks"',     reporter:'Sneha R.',  reason:'Misleading description', date:'Aug 1' },
-            { type:'User',      title:'User: fake_organizer_2025',             reporter:'Karthik N.',reason:'Impersonation',          date:'Jul 30' },
-          ].map(r => `
-            <div class="approval-card">
-              <div style="font-size:28px">🚨</div>
-              <div class="approval-info">
-                <div class="approval-name">${r.title}</div>
-                <div class="approval-meta">${r.type} · Reported by ${r.reporter} · ${r.date} · Reason: ${r.reason}</div>
-              </div>
-              <div class="approval-actions">
-                <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
-                <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
-              </div>
-            </div>`).join('')}
+          <div class="approval-card">
+            <div style="font-size:28px">🚨</div>
+            <div class="approval-info">
+              <div class="approval-name">Suspicious Event: "Win ₹1 Lakh Daily"</div>
+              <div class="approval-meta">Event · Reported by Aarav M. · Aug 2 · Reason: Spam / Scam content</div>
+            </div>
+            <div class="approval-actions">
+              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
+              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
+            </div>
+          </div>
+          <div class="approval-card">
+            <div style="font-size:28px">🚨</div>
+            <div class="approval-info">
+              <div class="approval-name">Community: "Get Rich Quick Hacks"</div>
+              <div class="approval-meta">Community · Reported by Sneha R. · Aug 1 · Reason: Misleading description</div>
+            </div>
+            <div class="approval-actions">
+              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
+              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
+            </div>
+          </div>
+          <div class="approval-card">
+            <div style="font-size:28px">🚨</div>
+            <div class="approval-info">
+              <div class="approval-name">User: fake_organizer_2025</div>
+              <div class="approval-meta">User · Reported by Karthik N. · Jul 30 · Reason: Impersonation</div>
+            </div>
+            <div class="approval-actions">
+              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
+              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
+            </div>
+          </div>
         </div>
 
         <div class="empty-state mt-6" style="opacity:0.5">
@@ -180,8 +245,8 @@
           </div>
           <div class="settings-row">
             <div class="settings-row-info">
-              <div class="settings-row-label">Allow Student Community Creation</div>
-              <div class="settings-row-desc">Let students (not just organizers) submit new communities</div>
+              <div class="settings-row-label">Allow Member Community Creation</div>
+              <div class="settings-row-desc">Let members (not just organizers) submit new communities</div>
             </div>
             <div class="toggle"></div>
           </div>
@@ -192,7 +257,7 @@
           <div class="settings-row">
             <div class="settings-row-info">
               <div class="settings-row-label">Send Welcome Email to New Users</div>
-              <div class="settings-row-desc">Auto-send a welcome email when students sign up</div>
+              <div class="settings-row-desc">Auto-send a welcome email when members sign up</div>
             </div>
             <div class="toggle on"></div>
           </div>
@@ -217,7 +282,7 @@
           <div class="settings-row">
             <div class="settings-row-info">
               <div class="settings-row-label">Analytics Dashboard</div>
-              <div class="settings-row-desc">Show analytics page to organizers and students</div>
+              <div class="settings-row-desc">Show analytics page to organizers and members</div>
             </div>
             <div class="toggle on"></div>
           </div>
@@ -259,7 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!requireAuth()) return;
 
   const user = getCurrentUser();
-  if (user?.role !== 'admin') {
+  if (!user || !user.role) {
+    toast.error('Access Denied', 'Your account role could not be verified.');
+    setTimeout(() => window.location.href = '../dashboard.html', 1500);
+    return;
+  }
+
+  if (user.role !== 'admin') {
     toast.error('Access Denied', 'This area is restricted to admins only.');
     setTimeout(() => window.location.href = '../dashboard.html', 1500);
     return;
@@ -273,11 +344,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function switchAdminTab(tab, btn) {
-  ['approvals','users','reports','platform'].forEach(t => {
+  ['approvals','users','organizer-requests','reports','platform'].forEach(t => {
     document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
     document.getElementById('tab-' + t).classList.remove('active');
   });
   btn.classList.add('active');
+}
+
+function handleOrganizerRequest(action, btn) {
+  const card = btn.closest('.card');
+  if (card) {
+    card.style.opacity = '0';
+    card.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => card.remove(), 300);
+  }
+
+  if (action === 'approve') {
+    toast.success('Organizer request approved successfully.');
+  } else {
+    toast.info('Organizer request rejected.');
+  }
 }
 
 function filterAdminUsers(query) {
@@ -308,18 +394,6 @@ function resolveReport(btn, action) {
   }
 }
 
-function approveAllVisible() {
-  const cards = document.querySelectorAll('#admin-approvals-list .approval-card');
-  if (cards.length === 0) { toast.info('Nothing pending', 'No pending approvals to process.'); return; }
-  cards.forEach((c, i) => {
-    setTimeout(() => {
-      c.style.opacity = '0';
-      c.style.transition = 'opacity 0.3s ease';
-      setTimeout(() => c.remove(), 300);
-    }, i * 150);
-  });
-  toast.success('All Approved! ✅', `${cards.length} item(s) approved and are now live.`);
-}
 </script>
 </body>
 </html>

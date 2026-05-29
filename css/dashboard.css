@@ -24,35 +24,46 @@
 }
 .sidebar-logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
+  gap: 6px;
+  margin: 12px 12px 6px;
+  padding: 8px 0 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 .sidebar-logo-image {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  object-fit: cover;
-  border-radius: 50%;
+  object-fit: contain;
 }
 .sidebar-logo-copy {
   display: flex;
   flex-direction: column;
+  align-items: center;
   line-height: 1.05;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+  width: 100%;
+  text-align: center;
 }
 .sidebar-logo-text {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text-primary);
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 .sidebar-logo-subtitle {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 7px;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
@@ -131,7 +142,7 @@
 }
 .sidebar-user:hover { background: var(--bg-card); }
 .sidebar-user-info { flex:1; min-width:0; }
-.sidebar-user-name  { font-size: 13px; font-weight: 600; truncate; }
+.sidebar-user-name  { font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
 .sidebar-user-role  { font-size: 11px; color: var(--purple-400); }
 
 /* Role badge in sidebar */
@@ -145,7 +156,7 @@
   display: inline-block;
   margin: 0 12px 12px;
 }
-.role-badge.student  { background:rgba(34,211,238,0.15); color:var(--cyan-400); border:1px solid rgba(34,211,238,0.25); }
+.role-badge.member   { background:rgba(34,211,238,0.15); color:var(--cyan-400); border:1px solid rgba(34,211,238,0.25); }
 .role-badge.organizer{ background:rgba(168,85,247,0.15); color:var(--purple-400); border:1px solid rgba(168,85,247,0.25); }
 .role-badge.admin    { background:rgba(250,204,21,0.15); color:var(--yellow-400); border:1px solid rgba(250,204,21,0.25); }
 
@@ -157,7 +168,7 @@
   background: rgba(6,6,18,0.8);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(20px);
-  z-index: 90;
+  z-index: 110;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -173,9 +184,21 @@
   font-size: 18px;
   font-weight: 700;
 }
+
+/* Center title vertically within the navbar */
+.navbar-title {
+  height: var(--navbar-h);
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.navbar-left { align-items: center; gap: 12px; }
+.navbar-title { line-height: 1; margin-left: 4px; }
+.hamburger-btn { align-items: center; justify-content: center; }
 .hamburger-btn {
   display: none;
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -228,7 +251,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px 4px 4px;
+  padding: 6px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -284,6 +307,10 @@
 .page-content {
   padding: 28px;
   max-width: 1400px;
+}
+
+#main-grid {
+  grid-template-columns: minmax(0, 1fr) 340px !important;
 }
 
 /* ── Sidebar Overlay (mobile) ── */
@@ -484,7 +511,7 @@
 }
 .community-card-body { padding: 28px 16px 16px; }
 .community-card-name  { font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:4px; }
-.community-card-desc  { font-size:12px; color:var(--text-secondary); margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.community-card-desc  { font-size:12px; color:var(--text-secondary); margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .community-card-meta  { display:flex; align-items:center; justify-content:space-between; }
 .community-card-members { font-size:12px; color:var(--text-muted); }
 
@@ -583,7 +610,7 @@
 .ai-tool-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .app-layout {
     display: block;
   }
@@ -593,6 +620,7 @@
   }
   .sidebar {
     transform: translateX(-100%);
+    width: min(86vw, var(--sidebar-w));
   }
   .sidebar.mobile-open {
     transform: translateX(0);
@@ -610,7 +638,161 @@
     display: flex;
   }
   .page-content {
+    padding: 20px;
+  }
+
+  #main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar-logo {
+    margin: 8px 10px 4px;
+    padding-top: 4px;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
     padding: 16px;
   }
-  .welcome-title { font-size: 20px; }
+
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-title {
+    font-size: 16px;
+  }
+
+  .welcome-banner {
+    padding: 18px 16px;
+    margin-bottom: 20px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+  }
+
+  .welcome-subtitle {
+    font-size: 13px;
+  }
+
+  .welcome-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .welcome-actions {
+    gap: 8px;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .quick-action-card {
+    padding: 16px 14px;
+  }
+
+  .quick-action-label {
+    font-size: 12px;
+  }
+
+  .quick-action-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .grid-auto {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .ticket-card,
+  .event-card-footer,
+  .community-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ticket-card {
+    padding: 16px;
+  }
+
+  .event-card-banner {
+    height: 120px;
+  }
+
+  .event-card-body,
+  .community-card-body {
+    padding: 14px;
+  }
+
+  .community-card-body {
+    padding-top: 24px;
+  }
+
+  .section-header {
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .sidebar-logo {
+    margin: 6px 10px 0;
+    padding-top: 0;
+    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .sidebar-logo-image {
+    width: 34px;
+    height: 34px;
+  }
+
+  .sidebar-logo-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .sidebar-logo-text {
+    font-size: 13px;
+  }
+
+  .sidebar-logo-subtitle {
+    display: none;
+  }
+
+  .role-badge {
+    display: none;
+  }
+
+  .sidebar-nav {
+    padding-top: 6px;
+  }
+
+  .nav-section-label {
+    margin-top: 2px;
+    padding-top: 6px;
+  }
+
+  .sidebar-bottom {
+    display: none;
+  }
+
+  #main-grid {
+    gap: 16px !important;
+  }
 }

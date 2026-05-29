@@ -4,7 +4,7 @@
 
 function buildSidebar(activePage, basePath = '') {
   const user = getCurrentUser();
-  const role = user?.role || 'student';
+  const role = user?.role || 'member';
 
   const navItems = [
     { icon:'⊞',  label:'Dashboard',    href:`${basePath}dashboard.html`,          page:'dashboard' },
@@ -43,7 +43,7 @@ function buildSidebar(activePage, basePath = '') {
         <img class="sidebar-logo-image" src="${basePath}assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" />
         <div class="sidebar-logo-copy">
           <div class="sidebar-logo-text">NEXOVERSE</div>
-          <div class="sidebar-logo-subtitle">The Student Ecosystem Platform</div>
+          <div class="sidebar-logo-subtitle">The Member Ecosystem Platform</div>
         </div>
       </div>
 
@@ -87,7 +87,9 @@ function buildSidebar(activePage, basePath = '') {
 function buildNavbar(pageTitle, basePath = '') {
   const user = getCurrentUser();
   const avatarInitials = user?.avatar || user?.name?.charAt(0) || 'U';
-  const notifCount = DataStore.getNotifications(user?.uid || '').filter(n => !n.read).length;
+  const notifCount = (typeof DataStore !== 'undefined' && DataStore?.getNotifications)
+    ? DataStore.getNotifications(user?.uid || '').filter(n => !n.read).length
+    : 0;
 
   return `
     <nav class="navbar" id="navbar">
@@ -101,16 +103,9 @@ function buildNavbar(pageTitle, basePath = '') {
       </div>
 
       <div class="navbar-right">
-        <!-- Search trigger -->
-        <div class="navbar-action" title="Search" onclick="document.getElementById('global-search-modal')?.classList.add('open')">
-          🔍
-        </div>
+        <!-- Search trigger removed -->
 
-        <!-- Notifications -->
-        <div class="navbar-action" title="Notifications" onclick="openModal('notifications-modal')" style="position:relative">
-          🔔
-          ${notifCount > 0 ? `<div class="notif-dot"></div>` : ''}
-        </div>
+        <!-- Notifications removed -->
 
         <!-- Profile Dropdown -->
         <div class="profile-dropdown-wrap" id="profile-dropdown-wrap">
@@ -134,30 +129,7 @@ function buildNavbar(pageTitle, basePath = '') {
       </div>
     </nav>
 
-    <!-- Notifications Modal -->
-    <div class="modal-overlay" id="notifications-modal">
-      <div class="modal" style="max-width:420px">
-        <div class="modal-header">
-          <div class="modal-title">🔔 Notifications</div>
-          <span class="modal-close" onclick="closeModal('notifications-modal')">✕</span>
-        </div>
-        ${DataStore.getNotifications(user?.uid || '').map(n => `
-          <div class="activity-item">
-            <div class="activity-icon-wrap" style="background:rgba(168,85,247,0.1)">
-              ${n.type==='event'?'🎯':n.type==='community'?'🌐':n.type==='registration'?'🎫':'💬'}
-            </div>
-            <div class="activity-body">
-              <div class="activity-title" style="${!n.read?'font-weight:700':''}">${n.title}</div>
-              <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${n.message}</div>
-              <div class="activity-time">${n.time}</div>
-            </div>
-            ${!n.read ? `<div style="width:8px;height:8px;border-radius:50%;background:var(--purple-500);flex-shrink:0"></div>` : ''}
-          </div>`).join('')}
-        <button class="btn btn-ghost btn-sm w-full mt-3" onclick="toast.info('Marked read','All notifications cleared');closeModal('notifications-modal')">
-          Mark all as read
-        </button>
-      </div>
-    </div>
+    <!-- Notifications modal removed -->
   `;
 }
 

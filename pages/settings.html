@@ -158,9 +158,11 @@
               <div class="settings-row-desc">Choose your dashboard accent color</div>
             </div>
             <div style="display:flex;gap:8px">
-              ${['#a855f7','#3b82f6','#22d3ee','#f472b6','#4ade80'].map(c =>
-                `<div style="width:24px;height:24px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c==='#a855f7'?'white':'transparent'}" onclick="toast.info('Accent changed','Color updated to your preference')"></div>`
-              ).join('')}
+              <div style="width:24px;height:24px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid white" onclick="toast.info('Accent changed','Color updated to your preference')"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#3b82f6;cursor:pointer;border:2px solid transparent" onclick="toast.info('Accent changed','Color updated to your preference')"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#22d3ee;cursor:pointer;border:2px solid transparent" onclick="toast.info('Accent changed','Color updated to your preference')"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#f472b6;cursor:pointer;border:2px solid transparent" onclick="toast.info('Accent changed','Color updated to your preference')"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:#4ade80;cursor:pointer;border:2px solid transparent" onclick="toast.info('Accent changed','Color updated to your preference')"></div>
             </div>
           </div>
           <div class="settings-row">

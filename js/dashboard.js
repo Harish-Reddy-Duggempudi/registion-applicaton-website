@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const user  = getCurrentUser();
   populateUserInfo();
 
-  const role  = user.role;
+  const role  = user?.role || 'member';
   const stats = DataStore.getDashboardStats(role);
 
   renderWelcomeBanner(user);
@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRoleContent(role);
   renderRecentActivity();
   renderUpcomingEvents();
+
+  finalizeDashboardReady();
 
   // Animate counters after short delay
   setTimeout(() => {
@@ -27,6 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 300);
 });
 
+function finalizeDashboardReady() {
+  const hide = () => {
+    if (typeof hidePageLoader === 'function') {
+      hidePageLoader();
+    }
+  };
+
+  hide();
+  setTimeout(hide, 900);
+}
+
 // ── Welcome Banner ────────────────────────────
 function renderWelcomeBanner(user) {
   const el = document.getElementById('welcome-banner');
@@ -36,7 +49,7 @@ function renderWelcomeBanner(user) {
   const greeting = hour < 12 ? greetings[0] : hour < 17 ? greetings[1] : greetings[2];
 
   const roleMessages = {
-    student:  { sub: 'Ready to learn, grow, and connect? Let\'s go! 🚀', actions: [
+    member:   { sub: 'Ready to learn, grow, and connect? Let\'s go! 🚀', actions: [
       { label:'Explore Events', icon:'🎯', href:'pages/events.html' },
       { label:'Join Community', icon:'🌟', href:'pages/communities.html' },
     ]},
@@ -50,7 +63,7 @@ function renderWelcomeBanner(user) {
     ]},
   };
 
-  const cfg = roleMessages[user.role];
+  const cfg = roleMessages[user?.role] || roleMessages.member;
   el.innerHTML = `
     <div style="position:relative;z-index:1">
       <div class="text-secondary text-sm mb-1">${greeting} 👋</div>
@@ -70,7 +83,7 @@ function renderQuickActions(role) {
   if (!el) return;
 
   const actions = {
-    student: [
+    member: [
       { icon:'🎯', label:'Explore Events',    href:'pages/events.html' },
       { icon:'🌟', label:'Communities',       href:'pages/communities.html' },
       { icon:'🎫', label:'My Registrations',  href:'pages/registrations.html' },
@@ -96,7 +109,7 @@ function renderQuickActions(role) {
     ],
   };
 
-  const items = actions[role] || actions.student;
+  const items = actions[role] || actions.member;
   el.innerHTML = items.map(a => `
     <a href="${a.href}" class="quick-action-card">
       <span class="quick-action-icon">${a.icon}</span>
@@ -158,12 +171,12 @@ function renderRoleContent(role) {
   const el = document.getElementById('role-content');
   if (!el) return;
 
-  if (role === 'student')   el.innerHTML = renderStudentContent();
+  if (role === 'member')   el.innerHTML = renderMemberContent();
   else if (role === 'organizer') el.innerHTML = renderOrganizerContent();
   else if (role === 'admin')     el.innerHTML = renderAdminContent();
 }
 
-function renderStudentContent() {
+function renderMemberContent() {
   const user = getCurrentUser();
   const regs = DataStore.getUserRegistrations(user.uid);
 

@@ -11,7 +11,7 @@
 <body>
 
 <div class="aurora-bg"><div class="aurora-blob"></div><div class="aurora-blob"></div><div class="aurora-blob"></div></div>
-<div id="page-loader"><div class="loader-logo"><img class="loader-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" /><div class="loader-logo-copy"><div class="loader-logo-name">NEXOVERSE</div><div class="loader-logo-subtitle">The Student Ecosystem Platform</div></div></div><div class="loader-spinner"></div><div class="loader-bar"><div class="loader-bar-fill"></div></div></div>
+<div id="page-loader"><div class="loader-logo"><img class="loader-logo-image" src="../assets/logos/logo-placeholder.svg" alt="NEXOVERSE logo placeholder" /><div class="loader-logo-copy"><div class="loader-logo-name">NEXOVERSE</div><div class="loader-logo-subtitle">The Member Ecosystem Platform</div></div></div><div class="loader-spinner"></div><div class="loader-bar"><div class="loader-bar-fill"></div></div></div>
 
 <div class="app-layout">
   <div id="sidebar-container"></div>
@@ -20,20 +20,42 @@
     <div class="page-content">
 
       <!-- Header -->
-      <div class="section-header mb-4">
+      <div class="section-header mb-6">
         <div>
           <h1 style="font-size:24px;font-weight:800">Communities</h1>
-          <div class="text-secondary text-sm mt-1">Discover and join student tech communities</div>
+          <div class="text-secondary text-sm mt-1">Discover and join thriving tech communities</div>
         </div>
         <div style="display:flex;gap:10px">
+          <!-- Future Role Rules:
+               member
+               - Browse communities
+               - Join communities
+               - Cannot create communities
+
+               organizer
+               - Browse communities
+               - Join communities
+               - Create communities
+
+               admin
+               - Full access -->
           <a href="create-community.html" class="btn btn-primary">+ Create Community</a>
         </div>
       </div>
 
       <!-- Tabs -->
       <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0">
+        <button class="tab-btn" data-tab-target="trending" style="padding:10px 20px;border-radius:0;border-bottom:2px solid transparent;background:none;color:var(--text-secondary);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s" id="trending-tab">🔥 Trending</button>
         <button class="tab-btn active" data-tab-target="explore" style="padding:10px 20px;border-radius:0;border-bottom:2px solid transparent;background:none;color:var(--text-secondary);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s" id="explore-tab">🌐 Explore All</button>
         <button class="tab-btn" data-tab-target="mine"    style="padding:10px 20px;border-radius:0;border-bottom:2px solid transparent;background:none;color:var(--text-secondary);font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s" id="mine-tab">⭐ My Communities</button>
+      </div>
+
+      <div data-tab-panel="trending" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-title mb-2">🔥 Trending Communities</div>
+          <div class="text-muted text-sm">Top communities ranked by live member count.</div>
+        </div>
+        <div id="trending-communities-grid" class="grid-auto mt-4"></div>
       </div>
 
       <div data-tab-panel="explore">
@@ -62,6 +84,18 @@
         <div id="my-communities-grid" class="grid-auto"></div>
       </div>
 
+      <!-- Future Firestore schema note for communities collection:
+           {
+             id: "",
+             name: "",
+             description: "",
+             category: "",
+             members: [],
+             organizerId: "",
+             createdAt: "",
+             isApproved: true
+           } -->
+
     </div>
   </div>
 </div>
@@ -73,7 +107,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="../js/firebase.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/data.js"></script>
 <script src="../components/sidebar.js"></script>
 <script src="../js/communities.js"></script>
 <script>
@@ -81,51 +114,55 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!requireAuth()) return;
   initDashboardLayout({ activePage:'communities', pageTitle:'Communities', basePath:'../' });
 
-  // My communities
-  const myGrid = document.getElementById('my-communities-grid');
-  if (myGrid) {
-    createSkeletonCards(myGrid, 3, 240);
-    setTimeout(() => {
-      const joined = DataStore.getCommunities().slice(0,4);
-      if (joined.length === 0) {
-        myGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🌐</div><div class="empty-title">No communities yet</div><div class="empty-desc">Explore and join your first community!</div><button class="btn btn-primary mt-3" onclick="document.getElementById('explore-tab').click()">Explore Communities</button></div>`;
-      } else {
-        myGrid.innerHTML = joined.map(c => `
-          <div class="community-card" onclick="window.location='community-details.html?id=${c.id}'">
-            <div class="community-card-banner" style="background:${c.banner};height:90px">
-              <div class="community-card-logo">${c.emoji}</div>
-            </div>
-            <div class="community-card-body">
-              <div class="community-card-name">${c.name}</div>
-              <div class="community-card-desc">${c.desc}</div>
-              <div class="community-card-meta">
-                <span class="badge badge-green">✅ Joined</span>
-                <span class="community-card-members">👥 ${c.members.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>`).join('');
-      }
-    }, 700);
+  // Future role check placeholder for Firestore-backed visibility.
+  // if (user.role === "organizer" || user.role === "admin") {
+  //   showCreateCommunityButton();
+  // }
+  const user = getCurrentUser();
+  const canCreateCommunity = user?.role === 'organizer' || user?.role === 'admin';
+  const createCommunityAction = document.querySelector('a[href="create-community.html"]')?.closest('div[style*="gap:10px"]');
+  if (createCommunityAction) {
+    createCommunityAction.style.display = canCreateCommunity ? 'flex' : 'none';
+  }
+
+  const activeTabKey = 'nexoverse-communities-active-tab';
+  const tabButtons = Array.from(document.querySelectorAll('[data-tab-target]'));
+  const tabPanels = Array.from(document.querySelectorAll('[data-tab-panel]'));
+
+  function setActiveTab(tabName, persist = true) {
+    const selectedTab = tabButtons.find(tab => tab.dataset.tabTarget === tabName) || document.getElementById('explore-tab');
+    if (!selectedTab) return;
+
+    tabButtons.forEach(tab => {
+      tab.classList.toggle('active', tab === selectedTab);
+      tab.style.borderBottom = tab === selectedTab ? '2px solid var(--purple-500)' : '2px solid transparent';
+      tab.style.color = tab === selectedTab ? 'var(--purple-400)' : 'var(--text-secondary)';
+    });
+
+    tabPanels.forEach(panel => {
+      panel.style.display = panel.dataset.tabPanel === selectedTab.dataset.tabTarget ? '' : 'none';
+    });
+
+    if (selectedTab.dataset.tabTarget === 'trending' && typeof renderTrendingCommunities === 'function') {
+      renderTrendingCommunities();
+    }
+
+    if (persist) {
+      localStorage.setItem(activeTabKey, selectedTab.dataset.tabTarget);
+    }
   }
 
   // Tab switching
-  document.querySelectorAll('[data-tab-target]').forEach(tab => {
+  tabButtons.forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('[data-tab-target]').forEach(t => {
-        t.style.borderBottom = '2px solid transparent';
-        t.style.color = 'var(--text-secondary)';
-      });
-      document.querySelectorAll('[data-tab-panel]').forEach(p => p.style.display = 'none');
-      tab.style.borderBottom = '2px solid var(--purple-500)';
-      tab.style.color = 'var(--purple-400)';
-      const panel = document.querySelector(`[data-tab-panel="${tab.dataset.tabTarget}"]`);
-      if (panel) panel.style.display = '';
+      setActiveTab(tab.dataset.tabTarget);
     });
   });
 
-  // Init first tab styling
-  document.getElementById('explore-tab').style.borderBottom = '2px solid var(--purple-500)';
-  document.getElementById('explore-tab').style.color = 'var(--purple-400)';
+  setActiveTab(localStorage.getItem(activeTabKey) || 'explore', false);
+  if (typeof renderTrendingCommunities === 'function') {
+    renderTrendingCommunities();
+  }
 });
 </script>
 </body>

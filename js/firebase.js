@@ -56,7 +56,7 @@ try {
 
 // ── Firestore Collections ──
 // users/         { uid, name, email, role, avatar, bio, joinedAt, communities[], events[] }
-// communities/   { id, name, desc, category, banner, logo, organizer, members[], createdAt, isApproved }
+// communities/   { id, name, description, category, emoji, website, linkedin, instagram, github, tags[], college, city, organizerId, organizerName, organizerEmail, memberCount, createdAt, status, isApproved }
 // events/        { id, title, desc, category, date, time, venue, isOnline, organizer, communityId, attendees[], banner, isApproved, tags[], maxAttendees, isFree, price }
 // registrations/ { id, userId, eventId, status, registeredAt, ticketId }
 // notifications/ { id, userId, type, title, message, read, createdAt }
