@@ -19,6 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Dashboard community sync failed', error);
       }
     }
+    if (DataStore?.loadRegistrationsFromFirestore) {
+      try {
+        await DataStore.loadRegistrationsFromFirestore();
+      } catch (error) {
+        console.warn('Dashboard registration sync failed', error);
+      }
+    }
+    if (getCurrentUser()?.role === 'admin' && DataStore?.loadUsersFromFirestore) {
+      try {
+        await DataStore.loadUsersFromFirestore();
+      } catch (error) {
+        console.warn('Dashboard user sync failed', error);
+      }
+    }
     renderDashboard();
     startDashboardOrganizerSync();
   })();
@@ -67,7 +81,7 @@ function startDashboardOrganizerSync() {
     const profileData = snapshot.exists ? (snapshot.data() || {}) : {};
     const currentUser = getCurrentUser();
 
-    if (profileData.organizerRequestStatus === 'approved' && currentUser && (currentUser.role !== 'organizer' || currentUser.organizerAccess !== true)) {
+    if (profileData.organizerRequestStatus === 'approved' && currentUser && currentUser.role !== 'admin' && (currentUser.role !== 'organizer' || currentUser.organizerAccess !== true)) {
       const upgradedUser = {
         ...currentUser,
         ...profileData,
@@ -583,17 +597,43 @@ async function renderCollabRequestsPanel() {
   if (!el) return;
   el.innerHTML = '<div class="text-secondary">Loading requests…</div>';
   const user = getCurrentUser();
+  const normalizeStatus = (value) => String(value || 'pending').toLowerCase();
+  const formatStatusLabel = (value, item = null) => {
+    if (item?.removedAt || item?.removedBy || item?.isRemoved) return 'Removed';
+    const normalized = normalizeStatus(value);
+    if (normalized === 'accepted') return 'Accepted';
+    if (normalized === 'rejected') return 'Rejected';
+    return 'Pending';
+  };
+  const statusBadge = (value, item = null) => {
+    if (item?.removedAt || item?.removedBy || item?.isRemoved) {
+      return '<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(148,163,184,0.2);color:#cbd5e1;border:1px solid rgba(148,163,184,0.45);">Removed</span>';
+    }
+    const normalized = normalizeStatus(value);
+    const style = normalized === 'accepted'
+      ? 'background:rgba(74,222,128,0.15);color:var(--green-400);border:1px solid rgba(74,222,128,0.35);'
+      : normalized === 'rejected'
+        ? 'background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.35);'
+        : 'background:rgba(250,204,21,0.12);color:var(--yellow-400);border:1px solid rgba(250,204,21,0.2);';
+    return `<span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;${style}">${formatStatusLabel(value, item)}</span>`;
+  };
   if (!user) { el.innerHTML = '<div class="empty-state"><div class="empty-title">Sign in to view requests</div></div>'; return; }
   try {
     // Incoming: for communities user organizes/owns
     const allCommunities = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : [];
     const ownerComms = allCommunities.filter(c => (c.organizerId === user.uid) || (c.organizer_uid === user.uid) || (c.ownerId === user.uid) || (c.createdBy === user.uid));
     let incoming = [];
+    let handled = [];
     for (const c of ownerComms) {
       if (typeof DataStore?.getCommunityCollabRequests === 'function') {
         const reqs = await DataStore.getCommunityCollabRequests(c.id);
         const pendingReqs = (reqs || []).filter(r => (r.status || 'pending') === 'pending');
+        const handledReqs = (reqs || []).filter(r => {
+          const status = normalizeStatus(r.status);
+          return status === 'accepted' || status === 'rejected';
+        });
         incoming = incoming.concat(pendingReqs.map(r => ({ community: c, req: r })));
+        handled = handled.concat(handledReqs.map(r => ({ community: c, req: r })));
       }
     }
 
@@ -602,8 +642,8 @@ async function renderCollabRequestsPanel() {
     if (typeof db !== 'undefined' && db && typeof db.collection === 'function') {
       const snapshot = await db.collection('collabRequests').where('payload.fromUserId', '==', user.uid).get();
       sent = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
-    } else if (Array.isArray(DUMMY_DATA.collabRequests)) {
-      sent = DUMMY_DATA.collabRequests.filter(r => r.payload && r.payload.fromUserId === user.uid);
+    } else if (typeof DataStore?.getSentCollabRequests === 'function') {
+      sent = await DataStore.getSentCollabRequests(user.uid);
     }
 
     // Render
@@ -625,11 +665,43 @@ async function renderCollabRequestsPanel() {
     }
 
     html += '<div style="height:12px"></div>';
+    html += '<div class="section-subtitle">Recently handled</div>';
+    if (!handled.length) {
+      html += '<div class="text-muted text-xs">No accepted or rejected requests yet.</div>';
+    } else {
+      handled
+        .sort((a, b) => {
+          const aTimeRaw = a.req?.handledAt?.seconds ? a.req.handledAt.seconds * 1000 : (a.req?.handledAt || a.req?.createdAt || 0);
+          const bTimeRaw = b.req?.handledAt?.seconds ? b.req.handledAt.seconds * 1000 : (b.req?.handledAt || b.req?.createdAt || 0);
+          const aTime = typeof aTimeRaw === 'string' ? Date.parse(aTimeRaw) : Number(aTimeRaw || 0);
+          const bTime = typeof bTimeRaw === 'string' ? Date.parse(bTimeRaw) : Number(bTimeRaw || 0);
+          return bTime - aTime;
+        })
+        .slice(0, 6)
+        .forEach(item => {
+          const r = item.req;
+          const title = (r.payload && r.payload.eventDraft && r.payload.eventDraft.title) ? r.payload.eventDraft.title : (r.payload && r.payload.eventId) ? `Event: ${r.payload.eventId}` : 'Event draft';
+          const whenRaw = r.handledAt || r.createdAt || '';
+          const when = whenRaw && whenRaw.seconds ? new Date(whenRaw.seconds * 1000).toLocaleString() : String(whenRaw || '');
+          html += `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:8px;background:var(--bg-card)">`;
+          const removed = r?.removedAt || r?.removedBy || r?.isRemoved;
+          const removedTimeRaw = r.removedAt || '';
+          const removedTime = removedTimeRaw && removedTimeRaw.seconds ? new Date(removedTimeRaw.seconds * 1000).toLocaleString() : String(removedTimeRaw || '');
+          html += `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div style="font-weight:600;min-width:0">${escapeHtml(title)}</div>${statusBadge(r.status, r)}</div>`;
+          html += `<div class="text-muted text-xs">Community: ${escapeHtml(item.community?.name || item.community?.id || '')} • ${escapeHtml(when)}</div>`;
+          if (removed) {
+            html += `<div class="text-muted text-xs">Removed${r.removedBy ? ` by ${escapeHtml(r.removedBy)}` : ''}${removedTime ? ` • ${escapeHtml(removedTime)}` : ''}</div>`;
+          }
+          html += '</div>';
+        });
+    }
+
+    html += '<div style="height:12px"></div>';
     html += '<div class="section-subtitle">My sent requests</div>';
     if (!sent.length) {
       html += '<div class="text-muted text-xs">You have not sent any collaboration requests.</div>';
     } else {
-      html += sent.slice(0,6).map(s => `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:8px;background:var(--bg-card)"><div style="font-weight:600">${escapeHtml((s.payload?.eventDraft?.title) || s.payload?.eventId || 'Event draft')}</div><div class="text-muted text-xs">To: ${escapeHtml(s.toCommunityId || '')} • Status: ${escapeHtml(s.status || 'pending')}</div></div>`).join('');
+      html += sent.slice(0,6).map(s => `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:8px;background:var(--bg-card)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div style="font-weight:600;min-width:0">${escapeHtml((s.payload?.eventDraft?.title) || s.payload?.eventId || 'Event draft')}</div>${statusBadge(s.status, s)}</div><div class="text-muted text-xs">To: ${escapeHtml(s.toCommunityId || '')}</div></div>`).join('');
     }
 
     el.innerHTML = html;

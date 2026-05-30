@@ -9,6 +9,18 @@
   <link rel="stylesheet" href="../css/community.css" />
   <style>
     .admin-panel-page .navbar-left { gap: 10px; }
+    .admin-panel-page .admin-tabs {
+      width: 100% !important;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .admin-panel-page .admin-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .admin-panel-page .tab-btn {
+      flex: 0 0 auto;
+    }
     #organizer-reject-modal {
       position: fixed;
       inset: 0;
@@ -84,6 +96,97 @@
       border-radius: 18px;
       padding: 20px;
       box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
+    @media (max-width: 1024px) {
+      .admin-panel-page .section-header {
+        align-items: flex-start;
+      }
+      .admin-panel-page .section-header > div:last-child,
+      .admin-panel-page .section-header > span:last-child {
+        width: 100%;
+      }
+      .admin-panel-page .section-header [style*="display:flex;gap:8px"],
+      .admin-panel-page .section-header [style*="display:flex;gap:10px"] {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+    }
+    @media (max-width: 640px) {
+      .admin-panel-page .page-content {
+        padding: 14px;
+      }
+      .admin-panel-page .section-header {
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .admin-panel-page .section-title {
+        font-size: 16px;
+      }
+      .admin-panel-page .admin-tabs {
+        padding: 4px;
+        margin-bottom: 18px;
+      }
+      .admin-panel-page .tab-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      .admin-panel-page .card,
+      .admin-panel-page .stat-card,
+      .admin-panel-page .approval-card,
+      .admin-panel-page .settings-section {
+        padding: 16px;
+      }
+      .admin-panel-page .approval-card,
+      .admin-panel-page .admin-user-row,
+      .admin-panel-page .settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .admin-panel-page .approval-actions,
+      .admin-panel-page .admin-user-actions,
+      .admin-panel-page .settings-row > .toggle {
+        width: 100%;
+      }
+      .admin-panel-page .approval-actions .btn,
+      .admin-panel-page .admin-user-actions .btn,
+      .admin-panel-page .settings-row .btn {
+        width: 100%;
+      }
+      .admin-panel-page .search-bar {
+        max-width: none !important;
+        width: 100%;
+      }
+      .admin-panel-page .search-bar input {
+        min-width: 0;
+      }
+      .admin-panel-page .input-field {
+        width: 100%;
+      }
+      .admin-panel-page .grid-3 {
+        gap: 12px;
+      }
+      .admin-panel-page .grid-3 .stat-card {
+        min-width: 0;
+      }
+      .admin-panel-page #admin-recent-approved-list,
+      .admin-panel-page #admin-organizer-requests-list,
+      .admin-panel-page #admin-reports-list {
+        gap: 10px !important;
+      }
+      .admin-panel-page #organizer-reject-modal,
+      .admin-panel-page #admin-user-edit-modal,
+      .admin-panel-page #admin-user-suspend-modal,
+      .admin-panel-page #report-resolve-modal {
+        padding: 12px;
+      }
+      .admin-panel-page #organizer-reject-modal .modal-card,
+      .admin-panel-page #admin-user-edit-modal .modal-card,
+      .admin-panel-page #admin-user-suspend-modal .modal-card,
+      .admin-panel-page #report-resolve-modal .modal-card {
+        padding: 16px;
+        border-radius: 16px;
+      }
     }
   </style>
 </head>

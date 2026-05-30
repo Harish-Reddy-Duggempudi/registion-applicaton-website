@@ -37,6 +37,13 @@ async function initEventsPage() {
       console.warn('Community sync failed', error);
     }
   }
+  if (DataStore?.loadRegistrationsFromFirestore) {
+    try {
+      await DataStore.loadRegistrationsFromFirestore();
+    } catch (error) {
+      console.warn('Registration sync failed', error);
+    }
+  }
   renderFeaturedEvent();
   renderEventCards('all');
   initEventFilters();
@@ -194,6 +201,7 @@ async function initEventDetailsPage() {
   const params = new URLSearchParams(window.location.search);
   const id     = params.get('id') || '';
   let acceptedCollaborationNames = [];
+  let acceptedCollaborationEntries = [];
   if (DataStore?.loadEventsFromFirestore) {
     try {
       await DataStore.loadEventsFromFirestore();
@@ -206,6 +214,13 @@ async function initEventDetailsPage() {
       await DataStore.loadCommunitiesFromFirestore();
     } catch (error) {
       console.warn('Community detail sync failed', error);
+    }
+  }
+  if (DataStore?.loadRegistrationsFromFirestore) {
+    try {
+      await DataStore.loadRegistrationsFromFirestore();
+    } catch (error) {
+      console.warn('Registration detail sync failed', error);
     }
   }
   const event = (typeof DataStore.getLiveEvents === 'function' ? DataStore.getLiveEvents() : []).find(e => e.id === id);
@@ -223,7 +238,22 @@ async function initEventDetailsPage() {
 
   renderEventDetail(event, { profiles: [], count: event.attendees || 0 });
 
-  if (DataStore?.getAcceptedCollaborationNamesForEvent) {
+  if (DataStore?.getAcceptedCollaborationEntriesForEvent) {
+    DataStore.getAcceptedCollaborationEntriesForEvent(event)
+      .then(entries => {
+        acceptedCollaborationEntries = Array.isArray(entries) ? entries : [];
+        acceptedCollaborationNames = acceptedCollaborationEntries.map(item => item.label).filter(Boolean);
+        const latestEvent = (typeof DataStore.getLiveEvents === 'function' ? DataStore.getLiveEvents() : []).find(item => item.id === id);
+        if (!latestEvent) return;
+        const mergedCollaborators = acceptedCollaborationNames.length
+          ? acceptedCollaborationNames
+          : (Array.isArray(latestEvent.collaborators) ? latestEvent.collaborators : []);
+        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators, collaborationEntries: acceptedCollaborationEntries }, { profiles: [], count: latestEvent.attendees || 0 });
+      })
+      .catch(error => {
+        console.warn('Accepted collab entry load failed', error);
+      });
+  } else if (DataStore?.getAcceptedCollaborationNamesForEvent) {
     DataStore.getAcceptedCollaborationNamesForEvent(event)
       .then(collaborationNames => {
         acceptedCollaborationNames = Array.isArray(collaborationNames) ? collaborationNames : [];
@@ -232,7 +262,7 @@ async function initEventDetailsPage() {
         const mergedCollaborators = acceptedCollaborationNames.length
           ? acceptedCollaborationNames
           : (Array.isArray(latestEvent.collaborators) ? latestEvent.collaborators : []);
-        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators }, { profiles: [], count: latestEvent.attendees || 0 });
+        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators, collaborationEntries: acceptedCollaborationEntries }, { profiles: [], count: latestEvent.attendees || 0 });
       })
       .catch(error => {
         console.warn('Accepted collab load failed', error);
@@ -247,7 +277,7 @@ async function initEventDetailsPage() {
         const mergedCollaborators = acceptedCollaborationNames.length
           ? acceptedCollaborationNames
           : (Array.isArray(latestEvent.collaborators) ? latestEvent.collaborators : []);
-        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators }, attendeeData);
+        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators, collaborationEntries: acceptedCollaborationEntries }, attendeeData);
       })
       .catch(error => {
         console.warn('Attendee profile load failed', error);
@@ -282,6 +312,27 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
   const collaborationItems = Array.isArray(e.collaborators)
     ? e.collaborators.map(resolveCommunityDisplayName).filter(Boolean)
     : [];
+  const collaborationAudit = Array.isArray(e.collaborationEntries) ? e.collaborationEntries : [];
+  const lookupAudit = (label) => collaborationAudit.find(entry => resolveCommunityDisplayName(entry?.label || '').toLowerCase() === String(label || '').toLowerCase());
+  const formatAuditDate = (value) => {
+    if (!value) return '';
+    if (value?.seconds) return new Date(value.seconds * 1000).toLocaleString();
+    const dt = typeof value === 'string' ? new Date(value) : null;
+    return dt && !Number.isNaN(dt.getTime()) ? dt.toLocaleString() : String(value);
+  };
+  const collaborationListMarkup = collaborationItems.length
+    ? `<div style="display:flex;flex-direction:column;gap:8px">${collaborationItems.map(item => {
+      const safeEventId = JSON.stringify(String(e.id || ''));
+      const safeLabel = JSON.stringify(String(item || ''));
+      const audit = lookupAudit(item);
+      const approvedAt = formatAuditDate(audit?.handledAt);
+      const approvedBy = audit?.handledBy ? String(audit.handledBy) : '';
+      const auditMeta = approvedAt || approvedBy
+        ? `<div class="text-muted text-xs" style="margin-top:4px">Approved${approvedBy ? ` by ${escapeHtml(approvedBy)}` : ''}${approvedAt ? ` • ${escapeHtml(approvedAt)}` : ''}</div>`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card)"><div style="min-width:0"><span style="color:var(--text-secondary);font-size:14px;line-height:1.5">${escapeHtml(item)}</span>${auditMeta}</div>${canManage ? `<button class=\"btn btn-ghost btn-sm\" onclick='openCollabRemoveModal(${safeEventId}, ${safeLabel})'>Remove</button>` : ''}</div>`;
+    }).join('')}</div>`
+    : '';
   const renderSpeakerValue = (item) => {
     if (item && typeof item === 'object') {
       const name = item.name || item.title || '';
@@ -373,7 +424,7 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
 
         <div class="card mb-4">
           <div class="section-title mb-4">🔗 Collaboration</div>
-          <ul style="padding-left:18px;color:var(--text-secondary);line-height:1.8;margin:0">${renderList(collaborationItems)}</ul>
+          ${collaborationItems.length ? collaborationListMarkup : '<ul style="padding-left:18px;color:var(--text-secondary);line-height:1.8;margin:0">' + renderList(collaborationItems) + '</ul>'}
           ${!collaborationItems.length ? '<div class="text-muted text-xs mt-2">No collaboration communities added yet.</div>' : ''}
         </div>
 
@@ -508,6 +559,61 @@ function shareEvent(id) {
   copyToClipboard(url);
 }
 
+let pendingCollabRemoveContext = null;
+
+window.openCollabRemoveModal = function(eventId, collaboratorLabel) {
+  if (!eventId || !collaboratorLabel) return;
+  pendingCollabRemoveContext = { eventId, collaboratorLabel };
+  const modal = document.getElementById('collab-remove-modal');
+  const titleEl = document.getElementById('collab-remove-modal-title');
+  const messageEl = document.getElementById('collab-remove-modal-message');
+  if (titleEl) titleEl.textContent = 'Remove Collaboration';
+  if (messageEl) messageEl.textContent = `Remove ${collaboratorLabel} from this event collaborations?`;
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+};
+
+window.closeCollabRemoveModal = function() {
+  pendingCollabRemoveContext = null;
+  const modal = document.getElementById('collab-remove-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+};
+
+window.confirmCollabRemoveModal = function() {
+  if (!pendingCollabRemoveContext) return;
+  const { eventId, collaboratorLabel } = pendingCollabRemoveContext;
+  window.closeCollabRemoveModal();
+  window.removeEventCollaboratorForEvent(eventId, collaboratorLabel);
+};
+
+window.removeEventCollaboratorForEvent = async function(eventId, collaboratorLabel) {
+  if (!eventId || !collaboratorLabel) return;
+  const user = getCurrentUser();
+  const canManage = typeof canUseOrganizerFeatures === 'function'
+    ? canUseOrganizerFeatures(user)
+    : (user?.role === 'organizer' || user?.role === 'admin');
+  if (!canManage) {
+    toast.error('Access denied', 'Only organizers or admins can remove collaborators.');
+    return;
+  }
+
+  try {
+    const removed = await DataStore.removeEventCollaborator(eventId, collaboratorLabel, user?.uid || '');
+    if (!removed) {
+      toast.info('No changes made', 'This collaborator is already removed.');
+      return;
+    }
+    toast.success('Collaborator removed', `${collaboratorLabel} was removed successfully.`);
+    await initEventDetailsPage();
+  } catch (error) {
+    toast.error('Remove failed', error?.message || 'Unable to remove collaborator.');
+  }
+};
+
 function getEventDraftDefaults(category) {
   const normalized = String(category || '').trim();
   const defaults = {
@@ -609,12 +715,12 @@ async function renderCollaborationSuggestions(query = '') {
     try {
       source = DataStore.searchCommunities(''); // get full list; we'll filter below
     } catch (err) {
-      source = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : (Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : []);
+      source = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : [];
     }
   } else if (typeof DataStore?.getCommunities === 'function') {
     source = DataStore.getCommunities();
   } else {
-    source = Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : [];
+    source = [];
   }
 
   // If source seems unexpectedly small (e.g. only 0-1 items), try a direct Firestore fetch as a fallback
@@ -1090,7 +1196,7 @@ async function initCreateEventPage() {
     const q = (collabInput?.value || '').trim();
     if (!q) return;
     // find community by exact name or best match
-    const source = typeof DataStore?.searchCommunities === 'function' ? DataStore.searchCommunities(q) : (Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : []);
+    const source = typeof DataStore?.searchCommunities === 'function' ? DataStore.searchCommunities(q) : [];
     const match = source.find(c => c.name.toLowerCase() === q.toLowerCase()) || source.find(c => c.name.toLowerCase().includes(q.toLowerCase()));
     if (!match) { if (typeof toast === 'object' && typeof toast.warning === 'function') toast.warning('Not found', 'No matching community found'); collabInput.focus(); return; }
     const res = await attemptAddOrRequestCollab(match, { eventId: editId || '', draftId: collaborationDraftId });
@@ -1105,8 +1211,7 @@ async function initCreateEventPage() {
     if (!item) return;
     const id = item.dataset.id || '';
     // find community by id
-    const all = Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : [];
-    const match = all.find(c => (c.id || '') === id) || (typeof DataStore?.getCommunity === 'function' ? DataStore.getCommunity(id) : null);
+    const match = typeof DataStore?.getCommunity === 'function' ? DataStore.getCommunity(id) : null;
     if (!match) return;
     const res = await attemptAddOrRequestCollab(match, { eventId: editId || '', draftId: collaborationDraftId });
     if (res.action === 'added' || res.action === 'requested') {
@@ -1317,11 +1422,13 @@ async function initCreateEventPage() {
         toast.success('Event Created! 🎉', 'Your event was saved to Firestore and is now available in Events.');
       } else {
         const localId = `local-${Date.now()}`;
-        DUMMY_DATA.events.unshift({
-          id: localId,
-          ...payload,
-          createdAt: new Date().toISOString(),
-        });
+        if (DataStore?.saveCreatedEventLocal) {
+          DataStore.saveCreatedEventLocal({
+            id: localId,
+            ...payload,
+            createdAt: new Date().toISOString(),
+          });
+        }
         toast.success('Event Created locally', 'Firestore is unavailable, so the event was saved in local data.');
       }
       setTimeout(() => window.location.href = 'events.html', 900);

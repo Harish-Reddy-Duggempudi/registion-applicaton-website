@@ -49,6 +49,16 @@
     </div>
   </div>
 </div>
+<div id="collab-remove-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="collab-remove-modal-title" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,11,20,.72);backdrop-filter:blur(10px);z-index:2000;padding:20px">
+  <div class="modal-card" style="max-width:460px">
+    <div class="section-title" id="collab-remove-modal-title">Remove Collaboration</div>
+    <div class="text-secondary text-sm mt-1" id="collab-remove-modal-message">Do you want to remove this collaborator from the event?</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px">
+      <button class="btn btn-ghost btn-sm" onclick="closeCollabRemoveModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmCollabRemoveModal()">Remove</button>
+    </div>
+  </div>
+</div>
 <script src="../js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>

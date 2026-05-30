@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // query Firestore directly for requests where payload.fromUserId == user.uid
       const snapshot = await db.collection('collabRequests').where('payload.fromUserId', '==', user.uid).get();
       sent = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
-    } else if (Array.isArray(DUMMY_DATA.collabRequests)) {
-      sent = DUMMY_DATA.collabRequests.filter(r => r.payload && r.payload.fromUserId === user.uid);
+      } else if (typeof DataStore?.getSentCollabRequests === 'function') {
+        sent = await DataStore.getSentCollabRequests(user.uid);
     }
 
     if (!sent || !sent.length) {

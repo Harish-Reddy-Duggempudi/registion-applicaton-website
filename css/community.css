@@ -287,6 +287,47 @@
   height: 100%;
 }
 
+/* ── Analytics Page Overrides ── */
+.analytics-page .grid-2,
+.analytics-page .grid-4 {
+  gap: 16px;
+}
+
+.analytics-page .chart-card {
+  padding: 20px;
+  min-height: 190px;
+}
+
+.analytics-page .chart-header {
+  margin-bottom: 14px;
+}
+
+.analytics-page .chart-title {
+  font-size: 14px;
+}
+
+.analytics-page .chart-value {
+  font-size: 20px;
+}
+
+.analytics-page .fake-chart {
+  height: 150px;
+  min-height: 140px;
+}
+
+.analytics-page .stat-card {
+  padding: 20px;
+}
+
+.analytics-page .stat-value {
+  font-size: 28px;
+}
+
+.analytics-page .grid-4 .stat-card {
+  min-height: 140px;
+  min-width: 0;
+}
+
 /* ── Donut ── */
 .donut-wrap {
   display: flex;

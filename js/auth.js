@@ -3,17 +3,10 @@
 // =============================================
 
 // ── Demo Mode (no Firebase Auth) ─────────────
-// Keep demo data only when Firebase Auth is unavailable.
+// Keep a local fallback only when Firebase Auth is unavailable.
 const HAS_FIREBASE_AUTH = typeof auth !== 'undefined' && !!auth;
 const HAS_FIRESTORE = typeof db !== 'undefined' && !!db && typeof db.collection === 'function';
 const DEMO_MODE = !HAS_FIREBASE_AUTH;
-
-// ── Dummy users for demo ──────────────────────
-const DEMO_USERS = {
-  'student@nexora.dev':   { uid:'u1', name:'Aarav Mehta',   email:'student@nexora.dev',   role:'member',   avatar:'AM', bio:'CS student at IIIT Hyderabad 🚀' },
-  'organizer@nexora.dev': { uid:'u2', name:'Priya Sharma',  email:'organizer@nexora.dev', role:'organizer', avatar:'PS', bio:'Tech community builder' },
-  'admin@nexora.dev':     { uid:'u3', name:'Rohan Verma',   email:'admin@nexora.dev',     role:'admin',     avatar:'RV', bio:'Nexora Platform Admin' },
-};
 
 function createDefaultUserProfile(overrides = {}) {
   return {
@@ -109,10 +102,23 @@ function getRelativePath(page) {
 async function loginUser(email, password, options = {}) {
   const shouldPersist = options.rememberMe !== false;
   if (DEMO_MODE) {
-    const user = DEMO_USERS[email.toLowerCase()];
-    if (!user) throw new Error('No account found with this email.');
     if (password.length < 6) throw new Error('Invalid password.');
-    const profile = normalizeUserProfile(user, { uid: user.uid, email: user.email, name: user.name });
+    const localPart = String(email || '').split('@')[0].trim();
+    const fallbackName = localPart
+      ? localPart.replace(/[._-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase())
+      : 'Demo User';
+    const profile = normalizeUserProfile(createDefaultUserProfile({
+      uid: `demo_${Date.now()}`,
+      name: fallbackName || 'Demo User',
+      email,
+      role: 'member',
+      organizerAccess: false,
+      avatar: (fallbackName || 'DU').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'DU',
+      bio: '',
+      joinedAt: new Date().toISOString(),
+      communities: [],
+      events: [],
+    }));
     setCurrentUser(profile, shouldPersist);
     return profile;
   }
@@ -155,7 +161,6 @@ async function registerUser(name, email, password) {
       events: [],
     });
     setCurrentUser(user);
-    DEMO_USERS[email.toLowerCase()] = user;
     return user;
   }
 

@@ -49,7 +49,7 @@ nexoverse/
 ├── js/
 │   ├── firebase.js          ← Firebase config (replace with your keys)
 │   ├── auth.js              ← Auth logic, role storage, route protection
-│   ├── data.js              ← Dummy data store + DataStore API
+│   ├── data.js              ← Live DataStore API + local fallback caches
 │   ├── ui.js                ← Toast, loader, modal, tabs, search
 │   ├── dashboard.js         ← Role-based dashboard rendering
 │   ├── communities.js       ← Communities module
@@ -59,20 +59,6 @@ nexoverse/
 └── components/
     └── sidebar.js           ← Sidebar + navbar builder component
 ```
-
----
-
-## 🎭 Demo Accounts
-
-Open the project and use these pre-built accounts on the login page:
-
-| Role       | Email                    | Password         |
-|------------|--------------------------|------------------|
-| 🎓 Student  | student@nexoverse.dev       | any 6+ chars     |
-| ⚡ Organizer| organizer@nexoverse.dev     | any 6+ chars     |
-| 🛡️ Admin   | admin@nexoverse.dev         | any 6+ chars     |
-
-> **No Firebase setup needed for the demo** — the app runs in demo mode using localStorage.
 
 ---
 
@@ -251,7 +237,7 @@ The AI Tools page uses the **Anthropic Claude API**.
 1. Get your API key at [https://console.anthropic.com](https://console.anthropic.com)
 2. **Note:** API keys should never be exposed in frontend code in production
 3. For production, create a backend proxy (Node.js / Firebase Cloud Functions) that holds the key server-side
-4. For demo/dev: the app falls back to realistic placeholder outputs automatically
+4. For demo/dev: the app falls back to empty-state or local cached outputs automatically
 
 ---
 

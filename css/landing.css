@@ -668,6 +668,83 @@ html, body {
   text-wrap: pretty;
 }
 
+/* Compact landing card grid */
+.landing-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 250px));
+  justify-content: start;
+  gap: 16px;
+  width: 100%;
+}
+
+.landing-community-card,
+.landing-event-card {
+  border-radius: var(--radius-xl);
+  width: 250px;
+  justify-self: start;
+}
+
+.landing-community-card .community-card-banner,
+.landing-event-card .event-card-banner {
+  min-height: 62px;
+}
+
+.landing-community-card .community-card-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 22px;
+}
+
+.landing-community-card .community-card-body,
+.landing-event-card .event-card-body {
+  padding: 12px 12px 10px;
+  gap: 8px;
+}
+
+.landing-community-card .community-card-name,
+.landing-event-card .event-card-title {
+  font-size: 15px;
+}
+
+.landing-community-card .community-card-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  min-height: calc(1.45em * 2);
+}
+
+.landing-community-card .community-card-meta,
+.landing-event-card .event-card-meta {
+  gap: 6px;
+  font-size: 11px;
+}
+
+.landing-event-card .event-card-footer {
+  gap: 8px;
+}
+
+.landing-event-card .event-attendees-count,
+.landing-community-card .community-card-members {
+  font-size: 11px;
+}
+
+.landing-card-grid .btn.btn-sm {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+@media (max-width: 767px) {
+  .landing-card-grid {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .landing-community-card,
+  .landing-event-card {
+    width: 100%;
+  }
+}
+
 /* Shared hover treatment for primary surfaces */
 .trusted-card,
 .how-card,

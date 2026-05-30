@@ -61,7 +61,7 @@
           </div>
           <div class="fake-chart" id="registrations-chart"></div>
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
-            <span>Jan 2025</span><span>Dec 2025</span>
+            <span id="registrations-chart-start">—</span><span id="registrations-chart-end">—</span>
           </div>
         </div>
 
@@ -75,7 +75,7 @@
           </div>
           <div class="fake-chart" id="community-chart"></div>
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
-            <span>Jan 2025</span><span>Dec 2025</span>
+            <span id="community-chart-start">—</span><span id="community-chart-end">—</span>
           </div>
         </div>
       </div>
@@ -88,11 +88,11 @@
               <div class="chart-title">🎯 Event Attendance Rate</div>
               <div class="text-muted text-xs mt-1">Percentage of registrants who attended</div>
             </div>
-            <div class="chart-value">88%</div>
+            <div class="chart-value" id="attendance-rate-value">—</div>
           </div>
           <div class="fake-chart" id="attendance-chart"></div>
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:8px">
-            <span>Jan 2025</span><span>Dec 2025</span>
+            <span id="attendance-chart-start">—</span><span id="attendance-chart-end">—</span>
           </div>
         </div>
 
@@ -114,53 +114,7 @@
           <div class="section-header mb-4">
             <div class="section-title">🔥 Top Events by Registrations</div>
           </div>
-          <div id="top-events-list">
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#1</div>
-              <div style="font-size:20px">🌐</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Google I/O Extended Hyderabad</div>
-                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:84%"></div></div>
-              </div>
-              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">843</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#2</div>
-              <div style="font-size:20px">🏆</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">HackHyderabad 3.0</div>
-                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:81%"></div></div>
-              </div>
-              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">487</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#3</div>
-              <div style="font-size:20px">🎨</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">UI/UX Design Bootcamp</div>
-                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:78%"></div></div>
-              </div>
-              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">234</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#4</div>
-              <div style="font-size:20px">☁️</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Cloud Computing with Azure</div>
-                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:62%"></div></div>
-              </div>
-              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">156</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#5</div>
-              <div style="font-size:20px">💡</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Startup Pitch Night</div>
-                <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:78%"></div></div>
-              </div>
-              <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">312</div>
-            </div>
-          </div>
+          <div id="top-events-list"></div>
         </div>
 
         <!-- Top Communities -->
@@ -168,38 +122,7 @@
           <div class="section-header mb-4">
             <div class="section-title">🌐 Top Communities by Members</div>
           </div>
-          <div id="top-communities-list">
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#1</div>
-                <div style="font-size:20px">🌐</div>
-                <div style="flex:1"><div style="font-size:13px;font-weight:600">GDG Hyderabad</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 1,240 members</div></div>
-                <div class="stat-change up">+12%</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#2</div>
-                <div style="font-size:20px">🚀</div>
-                <div style="flex:1"><div style="font-size:13px;font-weight:600">StartupHub Campus</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 780 members</div></div>
-                <div class="stat-change up">+22%</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#3</div>
-                <div style="font-size:20px">🔷</div>
-                <div style="flex:1"><div style="font-size:13px;font-weight:600">MLSA IIIT-H</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 890 members</div></div>
-                <div class="stat-change up">+8%</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#4</div>
-                <div style="font-size:20px">⚙️</div>
-                <div style="flex:1"><div style="font-size:13px;font-weight:600">ACM CBIT</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 650 members</div></div>
-                <div class="stat-change up">+5%</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#5</div>
-                <div style="font-size:20px">🔬</div>
-                <div style="flex:1"><div style="font-size:13px;font-weight:600">IEEE CS Society</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 420 members</div></div>
-                <div class="stat-change up">+3%</div>
-              </div>
-          </div>
+          <div id="top-communities-list"></div>
         </div>
       </div>
 
@@ -208,28 +131,28 @@
         <div class="section-title mb-4">⚡ Engagement Metrics</div>
         <div class="grid-4">
               <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
-                <div style="font-size:28px;margin-bottom:8px">🎯</div>
-                <div class="stat-value">3.2</div>
-                <div class="stat-label">Avg Events per Member</div>
-                <div class="stat-change up mt-2">+0.4 from last month</div>
+                <div id="analytics-highlight-1-icon" style="font-size:28px;margin-bottom:8px">🎯</div>
+                <div class="stat-value" id="analytics-highlight-1-value">—</div>
+                <div class="stat-label" id="analytics-highlight-1-label">—</div>
+                  <div class="stat-change up mt-2" id="analytics-highlight-1-change">—</div>
               </div>
               <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
-                <div style="font-size:28px;margin-bottom:8px">👥</div>
-                <div class="stat-value">682</div>
-                <div class="stat-label">Avg Community Members</div>
-                <div class="stat-change up mt-2">+8% growth rate</div>
+                <div id="analytics-highlight-2-icon" style="font-size:28px;margin-bottom:8px">👥</div>
+                <div class="stat-value" id="analytics-highlight-2-value">—</div>
+                <div class="stat-label" id="analytics-highlight-2-label">—</div>
+                <div class="stat-change up mt-2" id="analytics-highlight-2-change">—</div>
               </div>
               <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
-                <div style="font-size:28px;margin-bottom:8px">📈</div>
-                <div class="stat-value">73%</div>
-                <div class="stat-label">Registration Conv. Rate</div>
-                <div class="stat-change up mt-2">Above industry avg</div>
+                <div id="analytics-highlight-3-icon" style="font-size:28px;margin-bottom:8px">📈</div>
+                <div class="stat-value" id="analytics-highlight-3-value">—</div>
+                <div class="stat-label" id="analytics-highlight-3-label">—</div>
+                <div class="stat-change up mt-2" id="analytics-highlight-3-change">—</div>
               </div>
               <div class="stat-card" style="text-align:center;padding:20px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg)">
-                <div style="font-size:28px;margin-bottom:8px">⭐</div>
-                <div class="stat-value">84</div>
-                <div class="stat-label">Platform NPS Score</div>
-                <div class="stat-change up mt-2">Excellent rating</div>
+                <div id="analytics-highlight-4-icon" style="font-size:28px;margin-bottom:8px">⭐</div>
+                <div class="stat-value" id="analytics-highlight-4-value">—</div>
+                <div class="stat-label" id="analytics-highlight-4-label">—</div>
+                <div class="stat-change up mt-2" id="analytics-highlight-4-change">—</div>
               </div>
           </div>
       </div>
@@ -267,6 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const comEl = document.getElementById('community-total');
     if (regEl) { regEl.textContent = '0'; animateCounter(regEl, regTotal); }
     if (comEl) { comEl.textContent = '0'; animateCounter(comEl, comTotal); }
+    const monthStart = data.months?.[0] || '—';
+    const monthEnd = data.months?.[data.months.length - 1] || '—';
+    ['registrations-chart', 'community-chart', 'attendance-chart'].forEach(chartId => {
+      const startEl = document.getElementById(`${chartId}-start`);
+      const endEl = document.getElementById(`${chartId}-end`);
+      if (startEl) startEl.textContent = monthStart;
+      if (endEl) endEl.textContent = monthEnd;
+    });
   }, 500);
 });
 </script>

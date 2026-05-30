@@ -1,171 +1,6 @@
 // =============================================
-// NEXOVERSE — Dummy Data & Data Module
+// NEXOVERSE — Data Module
 // =============================================
-
-const DUMMY_DATA = {
-
-  communities: [
-    {
-      id:'c1', name:'GDG Hyderabad', category:'Google', members:1240,
-      desc:'Official Google Developer Group for Hyderabad region. Building the next generation of developers.',
-      emoji:'🌐', banner:'linear-gradient(135deg,#4285F4,#34A853)',
-      organizer:'Priya Sharma', organizer_uid:'u2', isApproved:true,
-      events:12, founded:'2019-03-15',
-      tags:['Android','Flutter','Cloud','AI/ML'],
-    },
-    {
-      id:'c2', name:'MLSA IIIT-H', category:'Microsoft', members:890,
-      desc:'Microsoft Learn Student Ambassadors chapter at IIIT Hyderabad. Empowering students with Microsoft tech.',
-      emoji:'🔷', banner:'linear-gradient(135deg,#00A4EF,#7FBA00)',
-      organizer:'Rahul Singh', organizer_uid:'u2', isApproved:true,
-      events:8, founded:'2020-08-01',
-      tags:['Azure','AI','Web','Power Platform'],
-    },
-    {
-      id:'c3', name:'ACM CBIT', category:'ACM', members:650,
-      desc:'Association for Computing Machinery student chapter at CBIT. Where code meets community.',
-      emoji:'⚙️', banner:'linear-gradient(135deg,#7c3aed,#2563eb)',
-      organizer:'Sneha Reddy', organizer_uid:'u2', isApproved:true,
-      events:15, founded:'2018-01-10',
-      tags:['Algorithms','CP','Open Source','Hackathons'],
-    },
-    {
-      id:'c4', name:'IEEE CS Society', category:'IEEE', members:420,
-      desc:'IEEE Computer Society student branch. Advancing technology for humanity through innovation.',
-      emoji:'🔬', banner:'linear-gradient(135deg,#0891b2,#0e7490)',
-      organizer:'Karthik Nair', organizer_uid:'u2', isApproved:true,
-      events:6, founded:'2017-09-01',
-      tags:['Robotics','IoT','Research','Publications'],
-    },
-    {
-      id:'c5', name:'Design Collective', category:'Design', members:310,
-      desc:'A community of designers, creators, and visual thinkers. Building beautiful digital experiences.',
-      emoji:'🎨', banner:'linear-gradient(135deg,#ec4899,#f97316)',
-      organizer:'Ananya Patel', organizer_uid:'u2', isApproved:true,
-      events:5, founded:'2021-04-20',
-      tags:['UI/UX','Figma','Branding','Motion'],
-    },
-    {
-      id:'c6', name:'StartupHub Campus', category:'Entrepreneurship', members:780,
-      desc:'Connecting student entrepreneurs, mentors, and investors. Building the next big startup.',
-      emoji:'🚀', banner:'linear-gradient(135deg,#f59e0b,#ef4444)',
-      organizer:'Vikram Joshi', organizer_uid:'u2', isApproved:false,
-      events:9, founded:'2020-11-05',
-      tags:['Startups','Fundraising','Product','Pitch'],
-    },
-  ],
-
-  events: [
-    {
-      id:'e1', title:'Google I/O Extended Hyderabad 2025', category:'Tech Talk',
-      date:'2025-08-15', time:'10:00 AM', venue:'HICC Convention Centre, Hyderabad',
-      isOnline:false, isFree:true, price:0,
-      desc:'Join us for the biggest Google developer event in Hyderabad! Keynotes, workshops, codelabs, and networking.',
-      emoji:'🌐', banner:'linear-gradient(135deg,#4285F4,#34A853)',
-      organizer:'GDG Hyderabad', organizer_uid:'u2', communityId:'c1',
-      attendees:843, maxAttendees:1000, tags:['Android','Flutter','AI','Web'],
-      isApproved:true, status:'upcoming',
-      schedule:[
-        { time:'10:00', title:'Registration & Networking', speaker:'' },
-        { time:'11:00', title:'Keynote: AI at Google', speaker:'Sundar Pichai (Live Stream)' },
-        { time:'12:30', title:'Lunch Break', speaker:'' },
-        { time:'14:00', title:'Flutter Workshop', speaker:'Tim Sneath' },
-        { time:'16:00', title:'Google Cloud Session', speaker:'Priya Sharma' },
-        { time:'17:30', title:'Q&A & Networking', speaker:'' },
-      ]
-    },
-    {
-      id:'e2', title:'HackHyderabad 3.0 — 36hr Hackathon', category:'Hackathon',
-      date:'2025-09-05', time:'9:00 AM', venue:'T-Hub, Hyderabad',
-      isOnline:false, isFree:false, price:299,
-      desc:'The biggest student hackathon in Telangana. 36 hours. 500+ hackers. ₹5 Lakh prize pool.',
-      emoji:'🏆', banner:'linear-gradient(135deg,#7c3aed,#ec4899)',
-      organizer:'ACM CBIT', organizer_uid:'u2', communityId:'c3',
-      attendees:487, maxAttendees:600, tags:['AI/ML','Web3','FinTech','HealthTech'],
-      isApproved:true, status:'upcoming',
-      schedule:[
-        { time:'09:00', title:'Opening Ceremony & Team Formation', speaker:'' },
-        { time:'10:00', title:'Hacking Begins 🚀', speaker:'' },
-        { time:'20:00', title:'Mentoring Sessions', speaker:'Industry Experts' },
-        { time:'21:00', title:'Midnight Snacks & Games', speaker:'' },
-        { time:'20:00+1', title:'Submissions Close', speaker:'' },
-        { time:'21:00+1', title:'Judging & Award Ceremony', speaker:'' },
-      ]
-    },
-    {
-      id:'e3', title:'UI/UX Design Bootcamp', category:'Workshop',
-      date:'2025-08-25', time:'11:00 AM', venue:'Online (Zoom)',
-      isOnline:true, isFree:true, price:0,
-      desc:'A 3-day intensive bootcamp covering Figma, design systems, prototyping, and portfolio building.',
-      emoji:'🎨', banner:'linear-gradient(135deg,#ec4899,#f97316)',
-      organizer:'Design Collective', organizer_uid:'u2', communityId:'c5',
-      attendees:234, maxAttendees:300, tags:['Figma','Design Systems','UX Research'],
-      isApproved:true, status:'upcoming',
-      schedule:[]
-    },
-    {
-      id:'e4', title:'Cloud Computing with Azure', category:'Workshop',
-      date:'2025-08-20', time:'2:00 PM', venue:'Online (Teams)',
-      isOnline:true, isFree:true, price:0,
-      desc:'Hands-on Azure workshop covering cloud fundamentals, serverless, and deploying your first app.',
-      emoji:'☁️', banner:'linear-gradient(135deg,#00A4EF,#7FBA00)',
-      organizer:'MLSA IIIT-H', organizer_uid:'u2', communityId:'c2',
-      attendees:156, maxAttendees:250, tags:['Azure','Serverless','Cloud'],
-      isApproved:true, status:'upcoming',
-      schedule:[]
-    },
-    {
-      id:'e5', title:'Startup Pitch Night — Demo Day', category:'Networking',
-      date:'2025-09-12', time:'6:00 PM', venue:'NASSCOM HQ, Hyderabad',
-      isOnline:false, isFree:false, price:99,
-      desc:'Watch 10 student startups pitch to real investors. Network with founders, VCs, and ecosystem leaders.',
-      emoji:'💡', banner:'linear-gradient(135deg,#f59e0b,#ef4444)',
-      organizer:'StartupHub Campus', organizer_uid:'u2', communityId:'c6',
-      attendees:312, maxAttendees:400, tags:['Startups','VC','Pitch','Networking'],
-      isApproved:true, status:'upcoming',
-      schedule:[]
-    },
-    {
-      id:'e6', title:'Competitive Programming Contest', category:'Competition',
-      date:'2025-08-30', time:'10:00 AM', venue:'CBIT Auditorium, Hyderabad',
-      isOnline:false, isFree:true, price:0,
-      desc:'Annual CP contest with LeetCode-style problems. Cash prizes for top 10. Open to all students.',
-      emoji:'⚡', banner:'linear-gradient(135deg,#0891b2,#7c3aed)',
-      organizer:'ACM CBIT', organizer_uid:'u2', communityId:'c3',
-      attendees:198, maxAttendees:300, tags:['Algorithms','Data Structures','CP'],
-      isApproved:true, status:'upcoming',
-      schedule:[]
-    },
-  ],
-
-  registrations: [
-    { id:'r1', userId:'u1', eventId:'e1', status:'confirmed', registeredAt:'2025-07-28', ticketId:'NXR-E1-001', attended:false },
-    { id:'r2', userId:'u1', eventId:'e3', status:'confirmed', registeredAt:'2025-07-30', ticketId:'NXR-E3-042', attended:false },
-    { id:'r3', userId:'u1', eventId:'e6', status:'pending',   registeredAt:'2025-08-01', ticketId:'NXR-E6-019', attended:false },
-  ],
-  
-
-  notifications: [
-    { id:'n1', type:'event', title:'Event starts in 3 days!', message:'Google I/O Extended Hyderabad is on Aug 15', read:false, time:'1h ago' },
-    { id:'n2', type:'community', title:'New event in GDG Hyderabad', message:'Flutter Workshop announced for Aug 25', read:false, time:'3h ago' },
-    { id:'n3', type:'registration', title:'Registration confirmed', message:'Your spot for HackHyderabad is secured ✅', read:true, time:'1d ago' },
-    { id:'n4', type:'system', title:'Welcome to NEXOVERSE!', message:'Complete your profile to get personalized recommendations', read:true, time:'3d ago' },
-  ],
-
-  analytics: {
-    registrationsOverTime: [12,24,18,36,28,45,52,61,48,73,84,92],
-    communityGrowth:       [80,120,145,180,220,280,340,390,450,520,610,680],
-    eventAttendance:       [65,72,58,80,76,88,92,85,90,95,88,93],
-    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-    categories: [
-      { label:'Hackathons', value:38, color:'#a855f7' },
-      { label:'Workshops',  value:29, color:'#3b82f6' },
-      { label:'Tech Talks', value:18, color:'#22d3ee' },
-      { label:'Networking', value:10, color:'#f472b6' },
-      { label:'Other',      value:5,  color:'#94a3b8' },
-    ],
-  },
-};
 
 const EVENT_BANNER_BY_CATEGORY = {
   'Hackathon': 'linear-gradient(135deg,#7c3aed,#ec4899)',
@@ -191,7 +26,19 @@ let firestoreEventLoadPromise = null;
 let firestoreCommunityCache = null;
 let firestoreCommunityCacheLoaded = false;
 let firestoreCommunityLoadPromise = null;
+let firestoreRegistrationCache = null;
+let firestoreRegistrationCacheLoaded = false;
+let firestoreRegistrationLoadPromise = null;
+let firestoreUserCache = null;
+let firestoreUserCacheLoaded = false;
+let firestoreUserLoadPromise = null;
 const LOCAL_CREATED_EVENTS_KEY = 'nexora_created_events';
+const LOCAL_REGISTRATIONS_KEY = 'nexora_local_registrations';
+const LOCAL_COLLAB_REQUESTS_KEY = 'nexora_collab_requests';
+const LOCAL_USERS_KEY = 'nexora_local_users';
+const LOCAL_COMMUNITIES_KEY = 'nexora_local_communities';
+
+const ANALYTICS_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function getFallbackEventBanner(category) {
   return EVENT_BANNER_BY_CATEGORY[category] || 'linear-gradient(135deg,#4f46e5,#06b6d4)';
@@ -219,10 +66,268 @@ function writeLocalCreatedEvents(events) {
   }
 }
 
+function readLocalRegistrations() {
+  try {
+    const raw = localStorage.getItem(LOCAL_REGISTRATIONS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeLocalRegistrations(registrations) {
+  try {
+    localStorage.setItem(LOCAL_REGISTRATIONS_KEY, JSON.stringify(Array.isArray(registrations) ? registrations : []));
+  } catch (error) {
+    console.warn('Failed to persist local registrations', error);
+  }
+}
+
+function readLocalCollabRequests() {
+  try {
+    const raw = localStorage.getItem(LOCAL_COLLAB_REQUESTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeLocalCollabRequests(requests) {
+  try {
+    localStorage.setItem(LOCAL_COLLAB_REQUESTS_KEY, JSON.stringify(Array.isArray(requests) ? requests : []));
+  } catch (error) {
+    console.warn('Failed to persist local collaboration requests', error);
+  }
+}
+
+function readLocalUsers() {
+  try {
+    const raw = localStorage.getItem(LOCAL_USERS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeLocalUsers(users) {
+  try {
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(Array.isArray(users) ? users : []));
+  } catch (error) {
+    console.warn('Failed to persist local users', error);
+  }
+}
+
+function readLocalCommunities() {
+  try {
+    const raw = localStorage.getItem(LOCAL_COMMUNITIES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeLocalCommunities(communities) {
+  try {
+    localStorage.setItem(LOCAL_COMMUNITIES_KEY, JSON.stringify(Array.isArray(communities) ? communities : []));
+  } catch (error) {
+    console.warn('Failed to persist local communities', error);
+  }
+}
+
+function getCachedCommunities() {
+  return Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : readLocalCommunities();
+}
+
+function getCachedEvents() {
+  return Array.isArray(firestoreEventCache) ? firestoreEventCache : [];
+}
+
+function getCachedRegistrations() {
+  return Array.isArray(firestoreRegistrationCache) ? firestoreRegistrationCache : readLocalRegistrations();
+}
+
+function getCachedUsers() {
+  return Array.isArray(firestoreUserCache) ? firestoreUserCache : readLocalUsers();
+}
+
+function normalizeRegistrationRecord(data = {}, fallbackId = '') {
+  return {
+    id: data.id || fallbackId,
+    userId: data.userId || '',
+    eventId: data.eventId || '',
+    status: data.status || 'confirmed',
+    registeredAt: data.registeredAt || data.createdAt || null,
+    ticketId: data.ticketId || '',
+    attended: !!data.attended,
+    createdAt: data.createdAt || null,
+  };
+}
+
+function mergeRegistrationSources(...lists) {
+  const map = new Map();
+  lists.flat().filter(Boolean).forEach(item => {
+    const normalized = normalizeRegistrationRecord(item, item?.id || '');
+    if (!normalized.id) normalized.id = `${normalized.userId || 'reg'}-${normalized.eventId || Date.now()}`;
+    map.set(normalized.id, normalized);
+  });
+  return Array.from(map.values());
+}
+
+function mergeUserSources(...lists) {
+  const map = new Map();
+  lists.flat().filter(Boolean).forEach(item => {
+    const id = String(item?.id || item?.uid || '').trim();
+    if (!id) return;
+    map.set(id, {
+      id,
+      uid: item.uid || id,
+      name: item.name || 'User',
+      email: item.email || '',
+      role: item.role || 'member',
+      organizerAccess: item.organizerAccess === true,
+      status: item.status || (item.suspended ? 'suspended' : 'active'),
+      suspended: !!item.suspended,
+      organizerRequestStatus: item.organizerRequestStatus || 'none',
+      organizerRequestReason: item.organizerRequestReason || '',
+      organizerRequestRejectionReason: item.organizerRequestRejectionReason || '',
+      joined: item.joined || item.joinedAt || null,
+      joinedAt: item.joinedAt || item.joined || null,
+      avatar: item.avatar || '',
+      bio: item.bio || '',
+      communities: Array.isArray(item.communities) ? item.communities : [],
+      events: Array.isArray(item.events) ? item.events : [],
+      ...item,
+    });
+  });
+  return Array.from(map.values());
+}
+
+function getMonthIndex(value) {
+  if (!value) return -1;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return -1;
+  return date.getMonth();
+}
+
+function buildMonthlySeries(items = [], dateGetter = item => item?.createdAt || item?.date || '', valueGetter = item => 1, aggregate = 'sum') {
+  const totals = ANALYTICS_MONTHS.map(() => 0);
+  const counts = ANALYTICS_MONTHS.map(() => 0);
+
+  items.forEach(item => {
+    const monthIndex = getMonthIndex(dateGetter(item));
+    if (monthIndex < 0) return;
+    const value = Number(valueGetter(item) || 0);
+    totals[monthIndex] += Number.isFinite(value) ? value : 0;
+    counts[monthIndex] += 1;
+  });
+
+  if (aggregate === 'average') {
+    return totals.map((value, index) => counts[index] ? Math.round(value / counts[index]) : 0);
+  }
+
+  if (aggregate === 'cumulative') {
+    let running = 0;
+    return totals.map(value => {
+      running += value;
+      return running;
+    });
+  }
+
+  return totals;
+}
+
+function formatSeriesGrowthLabel(series = []) {
+  if (!Array.isArray(series) || series.length < 2) return 'Live';
+
+  const current = Number(series[series.length - 1] || 0);
+  const previous = Number(series[series.length - 2] || 0);
+
+  if (current === previous) return '0%';
+  if (previous <= 0) return current > 0 ? 'New' : '0%';
+
+  const change = Math.round(((current - previous) / previous) * 100);
+  return `${change > 0 ? '+' : ''}${change}%`;
+}
+
+async function loadRegistrationsFromFirestore(force = false) {
+  const localRegistrations = readLocalRegistrations();
+  if (!db) {
+    firestoreRegistrationCache = localRegistrations;
+    firestoreRegistrationCacheLoaded = true;
+    return localRegistrations;
+  }
+  if (firestoreRegistrationLoadPromise && !force) return firestoreRegistrationLoadPromise;
+
+  firestoreRegistrationLoadPromise = (async () => {
+    try {
+      const snapshot = await db.collection('registrations').get();
+      const remoteRegistrations = snapshot.docs.map(doc => normalizeRegistrationRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id));
+      firestoreRegistrationCache = mergeRegistrationSources(remoteRegistrations, localRegistrations);
+      firestoreRegistrationCacheLoaded = true;
+      return firestoreRegistrationCache;
+    } catch (error) {
+      console.warn('Failed to load registrations from Firestore', error);
+      firestoreRegistrationCacheLoaded = true;
+      if (!Array.isArray(firestoreRegistrationCache)) {
+        firestoreRegistrationCache = mergeRegistrationSources(localRegistrations);
+      }
+      return firestoreRegistrationCache;
+    } finally {
+      firestoreRegistrationLoadPromise = null;
+    }
+  })();
+
+  return firestoreRegistrationLoadPromise;
+}
+
+async function loadUsersFromFirestore(force = false) {
+  const localUsers = readLocalUsers();
+  if (!db) {
+    firestoreUserCache = mergeUserSources(localUsers, firestoreUserCache);
+    firestoreUserCacheLoaded = true;
+    return firestoreUserCache;
+  }
+  if (firestoreUserLoadPromise && !force) return firestoreUserLoadPromise;
+
+  firestoreUserLoadPromise = (async () => {
+    try {
+      const snapshot = await db.collection('users').get();
+      const remoteUsers = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+      firestoreUserCache = mergeUserSources(localUsers, remoteUsers);
+      firestoreUserCacheLoaded = true;
+      return firestoreUserCache;
+    } catch (error) {
+      console.warn('Failed to load users from Firestore', error);
+      firestoreUserCacheLoaded = true;
+      if (!Array.isArray(firestoreUserCache) || firestoreUserCache.length === 0) {
+        firestoreUserCache = mergeUserSources(localUsers, firestoreUserCache);
+      }
+      return firestoreUserCache;
+    } finally {
+      firestoreUserLoadPromise = null;
+    }
+  })();
+
+  return firestoreUserLoadPromise;
+}
+
 function mergeEventSources(...lists) {
   const map = new Map();
   lists.flat().filter(Boolean).forEach(item => {
     const normalized = normalizeEventRecord(item, item?.id || '');
+    if (normalized.id) map.set(normalized.id, normalized);
+  });
+  return Array.from(map.values());
+}
+
+function mergeCommunitySources(...lists) {
+  const map = new Map();
+  lists.flat().filter(Boolean).forEach(item => {
+    const normalized = normalizeCommunityRecord(item, item?.id || '');
     if (normalized.id) map.set(normalized.id, normalized);
   });
   return Array.from(map.values());
@@ -317,7 +422,7 @@ function normalizeCommunityRecord(data = {}, fallbackId = '') {
 async function loadEventsFromFirestore(force = false) {
   const localEvents = readLocalCreatedEvents();
   if (!db) {
-    const fallback = mergeEventSources(DUMMY_DATA.events, localEvents);
+    const fallback = mergeEventSources(localEvents);
     firestoreEventCache = fallback;
     firestoreEventCacheLoaded = true;
     return fallback;
@@ -347,20 +452,30 @@ async function loadEventsFromFirestore(force = false) {
 }
 
 async function loadCommunitiesFromFirestore(force = false) {
-  if (!db) return Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+  const localCommunities = readLocalCommunities();
+  if (!db) {
+    const fallback = mergeCommunitySources(localCommunities, firestoreCommunityCache);
+    firestoreCommunityCache = fallback;
+    firestoreCommunityCacheLoaded = true;
+    return fallback;
+  }
   if (firestoreCommunityLoadPromise && !force) return firestoreCommunityLoadPromise;
 
   firestoreCommunityLoadPromise = (async () => {
     try {
       const snapshot = await db.collection('communities').get();
-      firestoreCommunityCache = snapshot.docs.map(doc => normalizeCommunityRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id));
+      const remoteCommunities = snapshot.docs.map(doc => normalizeCommunityRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id));
+      firestoreCommunityCache = mergeCommunitySources(localCommunities, remoteCommunities);
+      writeLocalCommunities(firestoreCommunityCache);
       firestoreCommunityCacheLoaded = true;
       return firestoreCommunityCache;
     } catch (error) {
       console.warn('Failed to load communities from Firestore', error);
       firestoreCommunityCacheLoaded = true;
-      if (!Array.isArray(firestoreCommunityCache)) firestoreCommunityCache = null;
-      return Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+      if (!Array.isArray(firestoreCommunityCache) || firestoreCommunityCache.length === 0) {
+        firestoreCommunityCache = mergeCommunitySources(localCommunities, firestoreCommunityCache);
+      }
+      return firestoreCommunityCache;
     } finally {
       firestoreCommunityLoadPromise = null;
     }
@@ -375,7 +490,7 @@ const DataStore = {
     return loadEventsFromFirestore(force);
   },
   getLiveEvents() {
-    return Array.isArray(firestoreEventCache) ? firestoreEventCache : [];
+    return getCachedEvents();
   },
   hasLoadedEventsFromFirestore() {
     return firestoreEventCacheLoaded;
@@ -383,8 +498,30 @@ const DataStore = {
   async loadCommunitiesFromFirestore(force = false) {
     return loadCommunitiesFromFirestore(force);
   },
+  async loadRegistrationsFromFirestore(force = false) {
+    return loadRegistrationsFromFirestore(force);
+  },
+  async loadUsersFromFirestore(force = false) {
+    return loadUsersFromFirestore(force);
+  },
+  getLiveRegistrations() {
+    return getCachedRegistrations();
+  },
+  getLiveUsers() {
+    return getCachedUsers();
+  },
+  saveLocalUserProfile(user) {
+    if (!user) return null;
+    const id = String(user.id || user.uid || '').trim();
+    if (!id) return null;
+    const nextUsers = mergeUserSources(readLocalUsers(), [{ ...user, id, uid: user.uid || id }]);
+    writeLocalUsers(nextUsers);
+    firestoreUserCache = mergeUserSources(firestoreUserCache || [], nextUsers);
+    firestoreUserCacheLoaded = true;
+    return nextUsers.find(item => item.id === id) || null;
+  },
   getCommunitiesForUser(userId) {
-    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    const source = getCachedCommunities();
     return source.filter(c => !c.removedByAdmin && (
       c.organizerId === userId ||
       c.organizer_uid === userId ||
@@ -393,28 +530,28 @@ const DataStore = {
     ));
   },
   getCommunities(filter = null) {
-    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    const source = getCachedCommunities();
     let list = source.filter(c => c.isApproved && !c.removedByAdmin);
     if (filter && filter !== 'all') list = list.filter(c => c.category === filter);
     return list;
   },
   getCommunity(id) {
-    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
-    return source.find(c => c.id === id) || DUMMY_DATA.communities.find(c => c.id === id);
+    const source = getCachedCommunities();
+    return source.find(c => c.id === id) || null;
   },
   getEvents(filter = null) {
-    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    const source = getCachedEvents();
     let list = source.filter(e => e.isApproved && !e.removedByAdmin);
     if (filter && filter !== 'all') list = list.filter(e => e.category === filter);
     return list;
   },
   getEvent(id) {
-    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
-    return source.find(e => e.id === id) || DUMMY_DATA.events.find(e => e.id === id);
+    const source = getCachedEvents();
+    return source.find(e => e.id === id) || null;
   },
   getUserRegistrations(uid) {
-    const regs = DUMMY_DATA.registrations.filter(r => r.userId === uid);
-    return regs.map(r => ({ ...r, event: DataStore.getEvent(r.eventId) }));
+    const regs = getCachedRegistrations().filter(r => r.userId === uid);
+    return regs.map(r => ({ ...r, event: DataStore.getEvent(r.eventId) })).filter(item => !!item.event || !!item.eventId);
   },
   async getEventAttendeeProfiles(eventId, limit = 12) {
     if (!eventId) return { profiles: [], count: 0 };
@@ -454,19 +591,18 @@ const DataStore = {
       }
     }
 
-    const fallbackRegs = DUMMY_DATA.registrations.filter(item => item.eventId === eventId).slice(0, limit);
-    const demoUsers = typeof DEMO_USERS !== 'undefined' ? DEMO_USERS : {};
+    const fallbackRegs = getCachedRegistrations().filter(item => item.eventId === eventId).slice(0, limit);
     return {
       count: fallbackRegs.length,
       profiles: fallbackRegs.map(item => {
-      const user = Object.values(demoUsers).find(profile => profile.uid === item.userId) || null;
-      const name = user?.name || item.userId || 'Attendee';
+      const fallbackLabel = item.userId || 'Attendee';
+      const name = fallbackLabel.replace(/[._-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase()) || 'Attendee';
       return {
         id: item.userId,
         name,
-        email: user?.email || '',
-        avatar: user?.avatar || name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'U',
-        role: user?.role || 'member',
+        email: '',
+        avatar: name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'U',
+        role: 'member',
         registeredAt: item.registeredAt || null,
         ticketId: item.ticketId || '',
       };
@@ -474,23 +610,46 @@ const DataStore = {
     };
   },
   getNotifications(uid) {
-    // If demo notifications include userId, filter by uid; otherwise return demo list
-    if (!Array.isArray(DUMMY_DATA.notifications)) return [];
-    try {
-      const hasUserId = DUMMY_DATA.notifications.some(n => Object.prototype.hasOwnProperty.call(n, 'userId'));
-      if (hasUserId && uid) {
-        return DUMMY_DATA.notifications.filter(n => n.userId === uid);
-      }
-      return DUMMY_DATA.notifications;
-    } catch (e) {
-      return DUMMY_DATA.notifications;
-    }
+    return [];
   },
   getAnalytics() {
-    return DUMMY_DATA.analytics;
+    const communities = getCachedCommunities().filter(c => c.isApproved && !c.removedByAdmin);
+    const events = getCachedEvents().filter(e => e.isApproved && !e.removedByAdmin);
+    const registrations = getCachedRegistrations();
+
+    const registrationsOverTime = buildMonthlySeries(registrations, item => item.registeredAt || item.createdAt || '', item => 1, 'sum');
+    const communityGrowth = buildMonthlySeries(communities, item => item.createdAt || item.founded || '', item => 1, 'cumulative');
+    const eventAttendance = buildMonthlySeries(events, item => item.date || item.createdAt || '', item => {
+      const attendees = Number(item.attendees || 0);
+      const maxAttendees = Number(item.maxAttendees || 0);
+      if (!maxAttendees) return 0;
+      return Math.round((attendees / maxAttendees) * 100);
+    }, 'average');
+
+    const categoryTotals = new Map();
+    events.forEach(event => {
+      const category = event.category || 'Other';
+      categoryTotals.set(category, (categoryTotals.get(category) || 0) + 1);
+    });
+    const totalEvents = events.length || 1;
+    const palette = ['#a855f7', '#3b82f6', '#22d3ee', '#f472b6', '#94a3b8', '#f59e0b'];
+    const categories = Array.from(categoryTotals.entries()).map(([label, count], index) => ({
+      label,
+      value: Math.round((count / totalEvents) * 100),
+      color: palette[index % palette.length],
+    }));
+
+    return {
+      registrationsOverTime,
+      communityGrowth,
+      eventAttendance,
+      months: ANALYTICS_MONTHS,
+      categories,
+    };
   },
   addRegistration(userId, eventId) {
-    const existing = DUMMY_DATA.registrations.find(r => r.userId === userId && r.eventId === eventId);
+    const registrations = getCachedRegistrations();
+    const existing = registrations.find(r => r.userId === userId && r.eventId === eventId);
     if (existing) return existing;
     const reg = {
       id: 'r'+Date.now(), userId, eventId,
@@ -499,7 +658,10 @@ const DataStore = {
       ticketId: 'NXR-'+eventId.toUpperCase()+'-'+Math.floor(Math.random()*900+100),
       attended: false
     };
-    DUMMY_DATA.registrations.push(reg);
+    const nextRegistrations = mergeRegistrationSources(registrations, [reg]);
+    firestoreRegistrationCache = nextRegistrations;
+    firestoreRegistrationCacheLoaded = true;
+    writeLocalRegistrations(nextRegistrations);
     // bump attendee count
     const evt = DataStore.getEvent(eventId);
     if (evt) evt.attendees++;
@@ -507,7 +669,7 @@ const DataStore = {
   },
   searchEvents(query) {
     const q = query.toLowerCase();
-    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    const source = getCachedEvents();
     return source.filter(e =>
       e.isApproved && !e.removedByAdmin && (
         e.title.toLowerCase().includes(q) ||
@@ -526,7 +688,7 @@ const DataStore = {
   },
   searchCommunities(query) {
     const q = query.toLowerCase();
-    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    const source = getCachedCommunities();
     return source.filter(c =>
       c.isApproved && !c.removedByAdmin && (
       c.name.toLowerCase().includes(q) ||
@@ -536,25 +698,76 @@ const DataStore = {
     );
   },
   getPendingApprovals() {
-    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    const source = getCachedEvents();
     return {
-      communities: DUMMY_DATA.communities.filter(c => !c.isApproved),
+      communities: getCachedCommunities().filter(c => !c.isApproved),
       events: source.filter(e => !e.isApproved),
     };
   },
-  getDashboardStats(role) {
+  getDashboardStats(role, userId = '') {
+    const communities = getCachedCommunities();
+    const events = getCachedEvents();
+    const registrations = getCachedRegistrations();
+    const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const activeUserId = userId || currentUser?.uid || '';
+    const userCommunityIds = Array.isArray(currentUser?.communities) ? currentUser.communities : [];
+    const userRegistrations = registrations.filter(reg => reg.userId === activeUserId);
+    const userGrowthSeries = buildMonthlySeries(Array.isArray(firestoreUserCache) ? firestoreUserCache : [], item => item.joinedAt || item.createdAt || item.registeredAt || '', item => 1, 'sum');
+    const eventGrowthSeries = buildMonthlySeries(events, item => item.createdAt || item.date || '', item => 1, 'sum');
+    const communityGrowthSeries = buildMonthlySeries(communities, item => item.createdAt || item.founded || '', item => 1, 'cumulative');
+    const registrationGrowthSeries = buildMonthlySeries(registrations, item => item.registeredAt || item.createdAt || '', item => 1, 'sum');
+
     if (role === 'admin') return {
-      totalUsers: 3847, totalCommunities: 48, totalEvents: 124,
-      totalRegistrations: 15230, pendingApprovals: 6, reportsOpen: 3,
-      growthUsers: '+12%', growthEvents: '+8%',
+      totalUsers: Array.isArray(firestoreUserCache) ? firestoreUserCache.length : 0,
+      totalCommunities: communities.length,
+      totalEvents: events.length,
+      totalRegistrations: registrations.length,
+      pendingApprovals: communities.filter(c => !c.isApproved).length + events.filter(e => !e.isApproved).length,
+      reportsOpen: 0,
+      growthUsers: formatSeriesGrowthLabel(userGrowthSeries),
+      growthEvents: formatSeriesGrowthLabel(eventGrowthSeries),
+      growthCommunities: formatSeriesGrowthLabel(communityGrowthSeries),
+      growthRegistrations: formatSeriesGrowthLabel(registrationGrowthSeries),
     };
-    if (role === 'organizer') return {
-      totalEvents: 8, totalAttendees: 1543, totalCommunities: 3,
-      totalRegistrations: 643, viewsThisMonth: 2840, engagementRate: '68%',
-    };
+
+    if (role === 'organizer') {
+      const organizerCommunities = activeUserId ? communities.filter(item => item.organizerId === activeUserId || item.organizer_uid === activeUserId || item.createdBy === activeUserId) : [];
+      const organizerEvents = activeUserId ? events.filter(item => item.organizerId === activeUserId || item.organizer_uid === activeUserId || item.createdBy === activeUserId) : [];
+      const organizerEventIds = new Set(organizerEvents.map(item => item.id));
+      const organizerRegistrations = registrations.filter(item => organizerEventIds.has(item.eventId));
+      const totalAttendees = organizerEvents.reduce((sum, item) => sum + Number(item.attendees || 0), 0);
+      const organizerEventGrowthSeries = buildMonthlySeries(organizerEvents, item => item.createdAt || item.date || '', item => 1, 'sum');
+      const organizerRegistrationGrowthSeries = buildMonthlySeries(organizerRegistrations, item => item.registeredAt || item.createdAt || '', item => 1, 'sum');
+      const organizerAttendeeGrowthSeries = buildMonthlySeries(organizerEvents, item => item.createdAt || item.date || '', item => Number(item.attendees || 0), 'sum');
+      const organizerCommunityGrowthSeries = buildMonthlySeries(organizerCommunities, item => item.createdAt || item.founded || '', item => 1, 'cumulative');
+
+      return {
+        totalEvents: organizerEvents.length,
+        totalAttendees,
+        totalCommunities: organizerCommunities.length,
+        totalRegistrations: organizerRegistrations.length,
+        viewsThisMonth: 0,
+        engagementRate: organizerEvents.length ? `${Math.round((organizerRegistrations.length / organizerEvents.length) * 100)}%` : '0%',
+        growthEvents: formatSeriesGrowthLabel(organizerEventGrowthSeries),
+        growthRegistrations: formatSeriesGrowthLabel(organizerRegistrationGrowthSeries),
+        growthAttendees: formatSeriesGrowthLabel(organizerAttendeeGrowthSeries),
+        growthCommunities: formatSeriesGrowthLabel(organizerCommunityGrowthSeries),
+      };
+    }
+
     return {
-      joinedCommunities: 4, registeredEvents: 3, upcomingEvents: 2,
-      certificates: 1, attendanceRate: '85%', points: 340,
+      joinedCommunities: userCommunityIds.length,
+      registeredEvents: userRegistrations.length,
+      upcomingEvents: userRegistrations.filter(reg => {
+        const event = DataStore.getEvent(reg.eventId);
+        return event && event.status !== 'completed';
+      }).length,
+      certificates: 0,
+      attendanceRate: '0%',
+      points: userRegistrations.length * 100,
+      growthCommunities: formatSeriesGrowthLabel(communityGrowthSeries),
+      growthEvents: formatSeriesGrowthLabel(eventGrowthSeries),
+      growthRegistrations: formatSeriesGrowthLabel(registrationGrowthSeries),
     };
   },
   async sendCollabRequest(toCommunityId, requestPayload = {}) {
@@ -575,8 +788,8 @@ const DataStore = {
     }
     // fallback to local storage
     const req = { id: 'cr' + Date.now(), toCommunityId, payload: requestPayload, status: 'pending', createdAt: new Date().toISOString() };
-    if (!Array.isArray(DUMMY_DATA.collabRequests)) DUMMY_DATA.collabRequests = [];
-    DUMMY_DATA.collabRequests.push(req);
+    const nextRequests = [...readLocalCollabRequests(), req];
+    writeLocalCollabRequests(nextRequests);
     return req;
   },
   async getCommunityCollabRequests(communityId) {
@@ -589,7 +802,19 @@ const DataStore = {
         console.warn('Failed to load collab requests from Firestore', err);
       }
     }
-    return Array.isArray(DUMMY_DATA.collabRequests) ? DUMMY_DATA.collabRequests.filter(r => r.toCommunityId === communityId) : [];
+    return readLocalCollabRequests().filter(r => r.toCommunityId === communityId);
+  },
+  async getSentCollabRequests(userId) {
+    if (!userId) return [];
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('collabRequests').where('payload.fromUserId', '==', userId).get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+      } catch (err) {
+        console.warn('Failed to load sent collaboration requests', err);
+      }
+    }
+    return readLocalCollabRequests().filter(r => r.payload && r.payload.fromUserId === userId);
   },
   async getAcceptedCollaborationNamesForEvent(event = {}) {
     const normalizeText = value => String(value || '').trim().toLowerCase();
@@ -611,13 +836,14 @@ const DataStore = {
       const communityName = request?.payload?.toCommunity?.name || request?.payload?.toCommunityName || request?.toCommunityName || '';
       return String(communityName || request?.toCommunityId || '').trim();
     };
+    const isRemovedRequest = (request) => !!(request?.removedAt || request?.removedBy || request?.isRemoved === true);
 
     if (db && typeof db.collection === 'function') {
       try {
         const snapshot = await db.collection('collabRequests').where('status', '==', 'accepted').get();
         return snapshot.docs
           .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
-          .filter(matchEventRequest)
+          .filter(request => matchEventRequest(request) && !isRemovedRequest(request))
           .map(requestToLabel)
           .filter(Boolean);
       } catch (err) {
@@ -625,12 +851,58 @@ const DataStore = {
       }
     }
 
-    return Array.isArray(DUMMY_DATA.collabRequests)
-      ? DUMMY_DATA.collabRequests
-          .filter(req => req.status === 'accepted' && matchEventRequest(req))
-          .map(requestToLabel)
-          .filter(Boolean)
-      : [];
+    return readLocalCollabRequests()
+      .filter(req => req.status === 'accepted' && matchEventRequest(req) && !isRemovedRequest(req))
+      .map(requestToLabel)
+      .filter(Boolean);
+  },
+  async getAcceptedCollaborationEntriesForEvent(event = {}) {
+    const normalizeText = value => String(value || '').trim().toLowerCase();
+    const matchEventRequest = (request) => {
+      const eventId = request?.payload?.eventId || request?.payload?.eventDraft?.eventId || '';
+      const draftId = request?.payload?.eventDraft?.draftId || request?.payload?.draftId || '';
+      const title = String(request?.payload?.eventDraft?.title || request?.payload?.title || '').trim();
+      const date = String(request?.payload?.eventDraft?.date || request?.payload?.date || '').trim();
+
+      if (event.id && eventId && normalizeText(event.id) === normalizeText(eventId)) return true;
+      if (event.collaborationDraftId && draftId && normalizeText(event.collaborationDraftId) === normalizeText(draftId)) return true;
+      if (title && date) {
+        return normalizeText(event.title) === normalizeText(title) && normalizeText(event.date) === normalizeText(date);
+      }
+      if (title) return normalizeText(event.title) === normalizeText(title);
+      return false;
+    };
+    const requestToEntry = (request) => {
+      const communityName = request?.payload?.toCommunity?.name || request?.payload?.toCommunityName || request?.toCommunityName || request?.toCommunityId || '';
+      return {
+        requestId: request?.id || '',
+        label: String(communityName || '').trim(),
+        status: request?.status || 'pending',
+        handledBy: request?.handledBy || '',
+        handledAt: request?.handledAt || null,
+        removedBy: request?.removedBy || '',
+        removedAt: request?.removedAt || null,
+      };
+    };
+    const isRemovedRequest = (request) => !!(request?.removedAt || request?.removedBy || request?.isRemoved === true);
+
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('collabRequests').where('status', '==', 'accepted').get();
+        return snapshot.docs
+          .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
+          .filter(request => matchEventRequest(request) && !isRemovedRequest(request))
+          .map(requestToEntry)
+          .filter(entry => !!entry.label);
+      } catch (err) {
+        console.warn('Failed to load accepted collaboration entries', err);
+      }
+    }
+
+    return readLocalCollabRequests()
+      .filter(req => req.status === 'accepted' && matchEventRequest(req) && !isRemovedRequest(req))
+      .map(requestToEntry)
+      .filter(entry => !!entry.label);
   },
   async handleCollabRequest(requestId, action = 'accept', handlerUid = '', opts = {}) {
     if (!requestId) throw new Error('Missing requestId');
@@ -654,7 +926,7 @@ const DataStore = {
 
       const community = Array.isArray(firestoreCommunityCache)
         ? firestoreCommunityCache.find(item => item.id === communityId)
-        : DUMMY_DATA.communities.find(item => item.id === communityId);
+        : null;
       return String(community?.name || communityId).trim();
     };
     const findEventByRequest = async (data) => {
@@ -735,13 +1007,15 @@ const DataStore = {
       }
     }
     // local fallback
-    if (Array.isArray(DUMMY_DATA.collabRequests)) {
-      const idx = DUMMY_DATA.collabRequests.findIndex(r => r.id === requestId);
+    const localRequests = readLocalCollabRequests();
+    if (Array.isArray(localRequests)) {
+      const idx = localRequests.findIndex(r => r.id === requestId);
       if (idx === -1) return false;
-      DUMMY_DATA.collabRequests[idx].status = action === 'accept' ? 'accepted' : 'rejected';
-      DUMMY_DATA.collabRequests[idx].handledBy = handlerUid || null;
-      DUMMY_DATA.collabRequests[idx].handledAt = new Date().toISOString();
-      const data = DUMMY_DATA.collabRequests[idx];
+      localRequests[idx].status = action === 'accept' ? 'accepted' : 'rejected';
+      localRequests[idx].handledBy = handlerUid || null;
+      localRequests[idx].handledAt = new Date().toISOString();
+      writeLocalCollabRequests(localRequests);
+      const data = localRequests[idx];
       if (action === 'accept' && data) {
         const collaboratorLabel = await resolveCollaboratorLabel(data);
         const eventId = data?.payload?.eventId || data?.payload?.eventDraft?.eventId || '';
@@ -750,12 +1024,12 @@ const DataStore = {
         const draftDate = String(data?.payload?.eventDraft?.date || data?.payload?.date || '').trim();
         const fromUserId = String(data?.payload?.fromUserId || data?.fromUserId || '').trim();
         const ev = eventId
-          ? DUMMY_DATA.events.find(e => e.id === eventId)
+          ? getCachedEvents().find(e => e.id === eventId)
           : (draftId
-            ? DUMMY_DATA.events.find(e => e.collaborationDraftId === draftId)
+            ? getCachedEvents().find(e => e.collaborationDraftId === draftId)
             : (draftTitle && draftDate
-              ? DUMMY_DATA.events.find(e => normalizeText(e.title) === normalizeText(draftTitle) && normalizeText(e.date) === normalizeText(draftDate) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId)))
-              : (draftTitle ? DUMMY_DATA.events.find(e => normalizeText(e.title) === normalizeText(draftTitle) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId))) : null)));
+              ? getCachedEvents().find(e => normalizeText(e.title) === normalizeText(draftTitle) && normalizeText(e.date) === normalizeText(draftDate) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId)))
+              : (draftTitle ? getCachedEvents().find(e => normalizeText(e.title) === normalizeText(draftTitle) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId))) : null)));
         if (ev && collaboratorLabel) {
           ev.collaborators = Array.isArray(ev.collaborators) ? ev.collaborators.concat([collaboratorLabel]) : [collaboratorLabel];
         }
@@ -763,5 +1037,140 @@ const DataStore = {
       return true;
     }
     return false;
+  },
+  async removeEventCollaborator(eventId, collaboratorLabel, actorUid = '') {
+    if (!eventId) throw new Error('Missing eventId');
+    const label = String(collaboratorLabel || '').trim();
+    if (!label) throw new Error('Missing collaborator');
+
+    const normalizeText = value => String(value || '').trim().toLowerCase();
+    const aliases = new Set([normalizeText(label)]);
+    const communityPool = getCachedCommunities();
+    const matchedCommunity = communityPool.find(item => normalizeText(item?.name) === normalizeText(label) || normalizeText(item?.id) === normalizeText(label));
+    if (matchedCommunity) {
+      aliases.add(normalizeText(matchedCommunity.name));
+      aliases.add(normalizeText(matchedCommunity.id));
+    }
+
+    const removeFromList = (source = []) => {
+      const list = Array.isArray(source) ? source : [];
+      return list.filter(item => !aliases.has(normalizeText(item)));
+    };
+
+    const applyCacheUpdate = (nextCollaborators) => {
+      if (Array.isArray(firestoreEventCache)) {
+        firestoreEventCache = firestoreEventCache.map(item => item.id === eventId
+          ? { ...item, collaborators: nextCollaborators }
+          : item);
+      }
+
+      const localEvents = readLocalCreatedEvents();
+      if (Array.isArray(localEvents) && localEvents.length) {
+        const updatedLocal = localEvents.map(item => item.id === eventId
+          ? { ...item, collaborators: nextCollaborators }
+          : item);
+        writeLocalCreatedEvents(updatedLocal);
+      }
+    };
+
+    const markMatchedRequestsAsRemoved = async (eventData = {}) => {
+      const eventTitle = String(eventData?.title || '').trim();
+      const eventDate = String(eventData?.date || '').trim();
+      const eventDraftId = String(eventData?.collaborationDraftId || '').trim();
+      const eventRefId = String(eventData?.id || eventId || '').trim();
+
+      const requestMatchesEvent = (request = {}) => {
+        const requestEventId = String(request?.payload?.eventId || request?.payload?.eventDraft?.eventId || '').trim();
+        const requestDraftId = String(request?.payload?.eventDraft?.draftId || request?.payload?.draftId || '').trim();
+        const requestTitle = String(request?.payload?.eventDraft?.title || request?.payload?.title || '').trim();
+        const requestDate = String(request?.payload?.eventDraft?.date || request?.payload?.date || '').trim();
+
+        if (eventRefId && requestEventId && normalizeText(eventRefId) === normalizeText(requestEventId)) return true;
+        if (eventDraftId && requestDraftId && normalizeText(eventDraftId) === normalizeText(requestDraftId)) return true;
+        if (eventTitle && requestTitle && normalizeText(eventTitle) === normalizeText(requestTitle)) {
+          if (!eventDate || !requestDate) return true;
+          return normalizeText(eventDate) === normalizeText(requestDate);
+        }
+        return false;
+      };
+
+      const requestMatchesCollaborator = (request = {}) => {
+        const candidates = [
+          request?.toCommunityId,
+          request?.payload?.toCommunityId,
+          request?.payload?.toCommunity?.id,
+          request?.payload?.toCommunity?.name,
+          request?.payload?.toCommunityName,
+          request?.toCommunityName,
+        ];
+        return candidates.some(item => aliases.has(normalizeText(item)));
+      };
+
+      if (db && typeof db.collection === 'function') {
+        const snapshot = await db.collection('collabRequests').where('status', '==', 'accepted').get();
+        const matches = snapshot.docs.filter(doc => {
+          const data = doc.data() || {};
+          return !data.removedAt && requestMatchesEvent(data) && requestMatchesCollaborator(data);
+        });
+        await Promise.all(matches.map(doc => doc.ref.update({
+          removedBy: actorUid || null,
+          removedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          removedReason: 'organizer_removed',
+        })));
+        return;
+      }
+
+      const localRequests = readLocalCollabRequests();
+      if (Array.isArray(localRequests)) {
+        localRequests.forEach(request => {
+          if (request.status !== 'accepted') return;
+          if (request.removedAt) return;
+          if (!requestMatchesEvent(request)) return;
+          if (!requestMatchesCollaborator(request)) return;
+          request.removedBy = actorUid || null;
+          request.removedAt = new Date().toISOString();
+          request.removedReason = 'organizer_removed';
+        });
+        writeLocalCollabRequests(localRequests);
+      }
+    };
+
+    if (db && typeof db.collection === 'function') {
+      try {
+        const ref = db.collection('events').doc(eventId);
+        const doc = await ref.get();
+        if (!doc.exists) return false;
+        const data = doc.data() || {};
+        const currentCollaborators = Array.isArray(data.collaborators)
+          ? data.collaborators
+          : (Array.isArray(data.collaboration) ? data.collaboration : []);
+        const nextCollaborators = removeFromList(currentCollaborators);
+        if (nextCollaborators.length === currentCollaborators.length) return false;
+
+        await ref.update({
+          collaborators: nextCollaborators,
+          updatedBy: actorUid || null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await markMatchedRequestsAsRemoved({ id: eventId, ...data });
+
+        applyCacheUpdate(nextCollaborators);
+        return true;
+      } catch (error) {
+        console.warn('Failed to remove event collaborator in Firestore', error);
+        throw error;
+      }
+    }
+
+    const event = this.getEvent(eventId);
+    if (!event) return false;
+    const currentCollaborators = Array.isArray(event.collaborators) ? event.collaborators : [];
+    const nextCollaborators = removeFromList(currentCollaborators);
+    if (nextCollaborators.length === currentCollaborators.length) return false;
+
+    await markMatchedRequestsAsRemoved(event);
+    applyCacheUpdate(nextCollaborators);
+    return true;
   },
 };

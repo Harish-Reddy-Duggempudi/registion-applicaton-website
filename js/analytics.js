@@ -159,8 +159,7 @@ async function submitAdminUserSuspendModal() {
     }
 
     closeAdminUserSuspendModal();
-    loadAdminUsers();
-    renderAdminStats();
+    await Promise.all([loadAdminUsers(), loadAdminStats()]);
     toast.success(nextStatus === 'suspended' ? 'Account suspended' : 'Account restored', `${user.name} is now ${nextStatus}.`);
   } catch (error) {
     toast.error('Action failed', error?.message || 'Unable to update account status.');
@@ -199,8 +198,7 @@ async function submitAdminUserEditModal() {
     });
 
     closeAdminUserEditModal();
-    loadAdminUsers();
-    renderAdminStats();
+    await Promise.all([loadAdminUsers(), loadAdminStats()]);
     toast.success('User updated', `${normalizedName} has been saved.`);
   } catch (error) {
     toast.error('Edit failed', error?.message || 'Unable to update user.');
@@ -208,14 +206,59 @@ async function submitAdminUserEditModal() {
 }
 
 async function saveAdminUserChanges(id, changes) {
-  if (!db) throw new Error('Firestore unavailable.');
-  await db.collection('users').doc(id).set(changes, { merge: true });
+  const normalizedChanges = {
+    ...changes,
+    ...(changes.role === 'admin' ? {
+      organizerAccess: false,
+      organizerRequestStatus: 'none',
+      organizerRequestReason: '',
+      organizerRequestRejectionReason: '',
+    } : {}),
+    ...(changes.role === 'member' ? {
+      organizerAccess: false,
+      organizerRequestStatus: 'none',
+      organizerRequestReason: '',
+      organizerRequestRejectionReason: '',
+    } : {}),
+    ...(changes.role === 'organizer' ? {
+      organizerAccess: true,
+      organizerRequestStatus: 'approved',
+      organizerRequestReason: '',
+      organizerRequestRejectionReason: '',
+    } : {}),
+  };
+
+  const localOnlyUser = {
+    id,
+    uid: id,
+    ...normalizedChanges,
+  };
+
+  if (db) {
+    try {
+      await db.collection('users').doc(id).set(normalizedChanges, { merge: true });
+    } catch (error) {
+      console.warn('Failed to save admin user changes to Firestore, using local cache', error);
+    }
+  }
+
+  if (typeof DataStore?.saveLocalUserProfile === 'function') {
+    DataStore.saveLocalUserProfile(localOnlyUser);
+  }
+
+  adminPanelState.users = adminPanelState.users.map(user => user.id === id ? {
+    ...user,
+    ...normalizedChanges,
+  } : user);
+
+  renderAdminUsersList();
+  renderAdminRoleBreakdown();
 
   const current = getCurrentUser();
   if (current?.uid === id) {
     setCurrentUser({
       ...current,
-      ...changes,
+      ...normalizedChanges,
     });
     populateUserInfo();
   }
@@ -319,16 +362,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function initAnalyticsPage() {
+async function initAnalyticsPage() {
   const user  = getCurrentUser();
-  const stats = DataStore.getDashboardStats(user.role);
+  await Promise.all([
+    DataStore?.loadEventsFromFirestore ? DataStore.loadEventsFromFirestore() : Promise.resolve(),
+    DataStore?.loadCommunitiesFromFirestore ? DataStore.loadCommunitiesFromFirestore() : Promise.resolve(),
+    DataStore?.loadRegistrationsFromFirestore ? DataStore.loadRegistrationsFromFirestore() : Promise.resolve(),
+    user?.role === 'admin' && DataStore?.loadUsersFromFirestore ? DataStore.loadUsersFromFirestore() : Promise.resolve(),
+  ]);
+  const stats = DataStore.getDashboardStats(user.role, user.uid);
   const data  = DataStore.getAnalytics();
 
-  renderAnalyticsStats(user.role, stats);
+  renderAnalyticsStats(user.role, stats, data, user);
   renderLineChart('registrations-chart', data.registrationsOverTime, data.months);
   renderLineChart('community-chart',     data.communityGrowth,       data.months, '#22d3ee');
   renderBarChart ('attendance-chart',    data.eventAttendance,       data.months, '#f472b6');
   renderDonutChart('category-chart',     data.categories);
+  renderTopEventsList();
+  renderTopCommunitiesList();
+  renderAnalyticsHighlights(user.role, stats, data);
 
   // Animate counters
   setTimeout(() => {
@@ -338,7 +390,7 @@ function initAnalyticsPage() {
   }, 300);
 }
 
-function renderAnalyticsStats(role, stats) {
+function renderAnalyticsStats(role, stats, data = {}, user = null) {
   const el = document.getElementById('analytics-stats');
   if (!el) return;
   let cards = [];
@@ -346,22 +398,24 @@ function renderAnalyticsStats(role, stats) {
     cards = [
       { label:'Total Users',         value: stats.totalUsers,         icon:'👥', change:stats.growthUsers },
       { label:'Total Events',        value: stats.totalEvents,        icon:'🎯', change:stats.growthEvents },
-      { label:'Total Communities',   value: stats.totalCommunities,   icon:'🌐', change:'+5%' },
-      { label:'Registrations',       value: stats.totalRegistrations, icon:'🎫', change:'+22%' },
+      { label:'Total Communities',   value: stats.totalCommunities,   icon:'🌐', change:stats.growthCommunities || 'Live' },
+      { label:'Registrations',       value: stats.totalRegistrations, icon:'🎫', change:stats.growthRegistrations || 'Live' },
     ];
   } else if (role === 'organizer') {
+    const organizerEventIds = new Set((data?.events || []).filter(item => item.organizerId === user?.uid || item.organizer_uid === user?.uid || item.createdBy === user?.uid).map(item => item.id));
+    const organizerRegistrations = (data?.registrations || []).filter(item => organizerEventIds.has(item.eventId));
     cards = [
-      { label:'My Events',           value: stats.totalEvents,        icon:'🎯', change:'This month' },
-      { label:'Total Attendees',     value: stats.totalAttendees,     icon:'👥', change:'+18%' },
-      { label:'Registrations',       value: stats.totalRegistrations, icon:'🎫', change:'+23%' },
-      { label:'Engagement Rate',     value: stats.engagementRate,     icon:'📈', change:'High' },
+      { label:'My Events',           value: stats.totalEvents,        icon:'🎯', change:stats.growthEvents || 'Live' },
+      { label:'Total Attendees',     value: stats.totalAttendees,     icon:'👥', change:stats.growthAttendees || 'Live' },
+      { label:'Registrations',       value: stats.totalRegistrations, icon:'🎫', change:stats.growthRegistrations || 'Live' },
+      { label:'Engagement Rate',     value: stats.engagementRate,     icon:'📈', change:stats.engagementRate || 'Live' },
     ];
   } else {
     cards = [
-      { label:'Communities Joined',  value: stats.joinedCommunities,  icon:'🌐', change:'Active' },
-      { label:'Events Attended',     value: stats.registeredEvents,   icon:'🎯', change:'Good' },
-      { label:'Activity Points',     value: stats.points,             icon:'⭐', change:'+40' },
-      { label:'Attendance Rate',     value: stats.attendanceRate,     icon:'📊', change:'Great!' },
+      { label:'Communities Joined',  value: stats.joinedCommunities,  icon:'🌐', change:stats.growthCommunities || 'Live' },
+      { label:'Events Attended',     value: stats.registeredEvents,   icon:'🎯', change:stats.growthEvents || 'Live' },
+      { label:'Activity Points',     value: stats.points,             icon:'⭐', change:stats.growthRegistrations || 'Live' },
+      { label:'Attendance Rate',     value: stats.attendanceRate,     icon:'📊', change:stats.attendanceRate || '0%' },
     ];
   }
 
@@ -377,9 +431,54 @@ function renderAnalyticsStats(role, stats) {
   `).join('');
 }
 
+function renderAnalyticsHighlights(role, stats, data) {
+  const averageAttendance = Array.isArray(data?.eventAttendance) && data.eventAttendance.length
+    ? Math.round(data.eventAttendance.reduce((sum, value) => sum + Number(value || 0), 0) / data.eventAttendance.length)
+    : 0;
+
+  const templates = role === 'admin' ? [
+    { icon: '👥', label: 'Total Users', value: stats.totalUsers, change: stats.growthUsers || 'Live' },
+    { icon: '🌐', label: 'Total Communities', value: stats.totalCommunities, change: stats.growthCommunities || 'Live' },
+    { icon: '🎯', label: 'Total Events', value: stats.totalEvents, change: stats.growthEvents || 'Live' },
+    { icon: '🎫', label: 'Total Registrations', value: stats.totalRegistrations, change: stats.growthRegistrations || 'Live' },
+  ] : role === 'organizer' ? [
+    { icon: '🎯', label: 'My Events', value: stats.totalEvents, change: stats.growthEvents || 'Live' },
+    { icon: '👥', label: 'Total Attendees', value: stats.totalAttendees, change: stats.growthAttendees || 'Live' },
+    { icon: '🎫', label: 'Registrations', value: stats.totalRegistrations, change: stats.growthRegistrations || 'Live' },
+    { icon: '📈', label: 'Engagement Rate', value: stats.engagementRate, change: stats.engagementRate || 'Live' },
+  ] : [
+    { icon: '🌐', label: 'Communities Joined', value: stats.joinedCommunities, change: stats.growthCommunities || 'Live' },
+    { icon: '🎯', label: 'Events Attended', value: stats.registeredEvents, change: stats.growthEvents || 'Live' },
+    { icon: '⭐', label: 'Activity Points', value: stats.points, change: stats.growthRegistrations || 'Live' },
+    { icon: '📊', label: 'Attendance Rate', value: stats.attendanceRate, change: stats.attendanceRate || '0%' },
+  ];
+
+  templates.forEach((entry, index) => {
+    const slot = index + 1;
+    const iconEl = document.getElementById(`analytics-highlight-${slot}-icon`);
+    const valueEl = document.getElementById(`analytics-highlight-${slot}-value`);
+    const labelEl = document.getElementById(`analytics-highlight-${slot}-label`);
+    const changeEl = document.getElementById(`analytics-highlight-${slot}-change`);
+
+    if (iconEl) iconEl.textContent = entry.icon;
+    if (valueEl) {
+      valueEl.textContent = typeof entry.value === 'number' ? entry.value.toLocaleString() : String(entry.value || '0');
+    }
+    if (labelEl) labelEl.textContent = entry.label;
+    if (changeEl) changeEl.textContent = entry.change;
+  });
+
+  const attendanceValueEl = document.getElementById('attendance-rate-value');
+  if (attendanceValueEl) attendanceValueEl.textContent = `${averageAttendance}%`;
+}
+
 function renderLineChart(canvasId, data, labels, color = '#a855f7') {
   const container = document.getElementById(canvasId);
   if (!container) return;
+  if (!Array.isArray(data) || data.length === 0 || data.every(value => Number(value) === 0)) {
+    container.innerHTML = '<div class="empty-state" style="min-height:160px"><div class="empty-icon">📈</div><div class="empty-title">No live data yet</div><div class="empty-desc">Connect Firestore data to populate this chart.</div></div>';
+    return;
+  }
   const max = Math.max(...data);
   const w = 600; const h = 160; const pad = 16;
 
@@ -428,6 +527,10 @@ function renderLineChart(canvasId, data, labels, color = '#a855f7') {
 function renderBarChart(canvasId, data, labels, color = '#a855f7') {
   const container = document.getElementById(canvasId);
   if (!container) return;
+  if (!Array.isArray(data) || data.length === 0 || data.every(value => Number(value) === 0)) {
+    container.innerHTML = '<div class="empty-state" style="min-height:160px"><div class="empty-icon">📊</div><div class="empty-title">No live data yet</div><div class="empty-desc">Connect Firestore data to populate this chart.</div></div>';
+    return;
+  }
   const max = Math.max(...data);
   const w = 600; const h = 160; const pad = 16;
   const barW = (w - pad * 2) / data.length * 0.6;
@@ -457,6 +560,10 @@ function renderBarChart(canvasId, data, labels, color = '#a855f7') {
 function renderDonutChart(containerId, categories) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  if (!Array.isArray(categories) || categories.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="min-height:160px"><div class="empty-icon">🏷️</div><div class="empty-title">No categories yet</div><div class="empty-desc">Approved events will appear here once Firestore is connected.</div></div>';
+    return;
+  }
   const size = 130;
   const r = 45;
   const cx = size / 2;
@@ -499,11 +606,72 @@ function renderDonutChart(containerId, categories) {
     </div>`;
 }
 
+function renderTopEventsList() {
+  const container = document.getElementById('top-events-list');
+  if (!container) return;
+
+  const events = (typeof DataStore?.getEvents === 'function' ? DataStore.getEvents() : [])
+    .slice()
+    .sort((a, b) => Number(b.attendees || 0) - Number(a.attendees || 0))
+    .slice(0, 5);
+
+  if (!events.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">No live events yet</div><div class="empty-desc">Approved events will appear here after Firestore is connected.</div></div>';
+    return;
+  }
+
+  const maxAttendees = Math.max(...events.map(event => Number(event.attendees || 0)), 1);
+  container.innerHTML = events.map((event, index) => {
+    const width = Math.max(10, Math.round((Number(event.attendees || 0) / maxAttendees) * 100));
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${index + 1}</div>
+        <div style="font-size:20px">${escapeHtml(event.emoji || '🎯')}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(event.title || 'Untitled Event')}</div>
+          <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${width}%"></div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--purple-400);white-space:nowrap">${Number(event.attendees || 0).toLocaleString()}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderTopCommunitiesList() {
+  const container = document.getElementById('top-communities-list');
+  if (!container) return;
+
+  const communities = (typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : [])
+    .slice()
+    .sort((a, b) => Number(b.members || b.memberCount || 0) - Number(a.members || a.memberCount || 0))
+    .slice(0, 5);
+
+  if (!communities.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌐</div><div class="empty-title">No live communities yet</div><div class="empty-desc">Approved communities will appear here after Firestore is connected.</div></div>';
+    return;
+  }
+
+  const maxMembers = Math.max(...communities.map(community => Number(community.members || community.memberCount || 0)), 1);
+  container.innerHTML = communities.map((community, index) => {
+    const width = Math.max(10, Math.round((Number(community.members || community.memberCount || 0) / maxMembers) * 100));
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:right">#${index + 1}</div>
+        <div style="font-size:20px">${escapeHtml(community.emoji || '🌐')}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${escapeHtml(community.name || 'Untitled Community')}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">👥 ${Number(community.members || community.memberCount || 0).toLocaleString()} members</div><div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:${width}%"></div></div></div>
+      </div>`;
+  }).join('');
+}
+
 // ============================================================
 // REGISTRATIONS
 // ============================================================
-function initRegistrationsPage() {
+async function initRegistrationsPage() {
   const user = getCurrentUser();
+  await Promise.all([
+    DataStore?.loadEventsFromFirestore ? DataStore.loadEventsFromFirestore() : Promise.resolve(),
+    DataStore?.loadCommunitiesFromFirestore ? DataStore.loadCommunitiesFromFirestore() : Promise.resolve(),
+    DataStore?.loadRegistrationsFromFirestore ? DataStore.loadRegistrationsFromFirestore() : Promise.resolve(),
+  ]);
   const regs = DataStore.getUserRegistrations(user.uid);
   renderRegistrationsList(regs);
   initRegTabs();
@@ -1480,31 +1648,45 @@ async function loadAdminUsers() {
   el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading users...</div><div class="empty-desc">Fetching user profiles from Firestore.</div></div>`;
 
   try {
-    if (!db) throw new Error('Firestore unavailable.');
-    const snapshot = await db.collection('users').get();
-    adminPanelState.users = snapshot.docs.map(doc => {
-      const data = doc.data() || {};
-      return {
-        id: doc.id,
-        name: data.name || 'User',
-        email: data.email || 'No email',
-        role: data.role || 'member',
-        joined: formatAdminJoinedDate(data.joinedAt || data.createdAt),
-        status: data.status || (data.suspended ? 'suspended' : 'active'),
-      };
-    });
+    if (typeof DataStore?.loadUsersFromFirestore === 'function') {
+      await DataStore.loadUsersFromFirestore();
+    }
+    const liveUsers = typeof DataStore?.getLiveUsers === 'function' ? DataStore.getLiveUsers() : [];
+    adminPanelState.users = liveUsers.map(user => ({
+      id: user.id || user.uid,
+      name: user.name || 'User',
+      email: user.email || 'No email',
+      role: user.role || 'member',
+      joined: formatAdminJoinedDate(user.joinedAt || user.joined || user.createdAt),
+      status: user.status || (user.suspended ? 'suspended' : 'active'),
+    }));
   } catch (error) {
-    adminPanelState.users = [
-      { id:'demo-aarav', name:'Aarav Mehta',  email:'aarav@iiith.ac.in',  role:'member',   joined:'Jul 28, 2025', status:'active' },
-      { id:'demo-priya', name:'Priya Sharma', email:'priya@gdg.dev',       role:'organizer', joined:'Jun 12, 2025', status:'active' },
-      { id:'demo-karthik', name:'Karthik Nair', email:'karthik@ieee.org',    role:'organizer', joined:'May 5, 2025',  status:'active' },
-      { id:'demo-sneha', name:'Sneha Reddy',  email:'sneha@cbit.ac.in',    role:'member',   joined:'Jul 10, 2025', status:'active' },
-      { id:'demo-rohan', name:'Rohan Verma',  email:'rohan@nexoverse.dev',    role:'admin',     joined:'Jan 1, 2025',  status:'active' },
-      { id:'demo-ananya', name:'Ananya Patel', email:'ananya@design.io',    role:'organizer', joined:'Mar 22, 2025', status:'suspended' },
-    ];
+    console.warn('Failed to load admin users', error);
+    adminPanelState.users = typeof DataStore?.getLiveUsers === 'function' ? DataStore.getLiveUsers().map(user => ({
+      id: user.id || user.uid,
+      name: user.name || 'User',
+      email: user.email || 'No email',
+      role: user.role || 'member',
+      joined: formatAdminJoinedDate(user.joinedAt || user.joined || user.createdAt),
+      status: user.status || (user.suspended ? 'suspended' : 'active'),
+    })) : [];
   } finally {
     adminPanelState.usersLoading = false;
-    el.innerHTML = adminPanelState.users.map(u => `
+    renderAdminUsersList();
+  }
+}
+
+function renderAdminUsersList(users = adminPanelState.users) {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+
+  if (!Array.isArray(users) || users.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No users loaded</div><div class="empty-desc">Connect Firestore to view the live user list.</div></div>';
+    renderAdminRoleBreakdown();
+    return;
+  }
+
+  el.innerHTML = users.map(u => `
     <div class="admin-user-row">
       <div class="avatar avatar-md" style="background:var(--gradient-primary)">${u.name.split(' ').map(w=>w[0]).join('')}</div>
       <div class="admin-user-info flex-1">
@@ -1519,7 +1701,6 @@ async function loadAdminUsers() {
       </div>
     </div>`).join('');
     renderAdminRoleBreakdown();
-  }
 }
 
 function renderAdminApprovals() {

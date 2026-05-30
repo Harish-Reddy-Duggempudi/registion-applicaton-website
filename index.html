@@ -90,7 +90,7 @@
         <div class="avatar avatar-sm avatar-grad-5">R</div>
       </div>
       <span class="text-sm text-secondary">
-        Trusted by <strong class="text-primary">3,847+</strong> students & 48 communities
+        Trusted by <strong class="text-primary" id="landing-trusted-students">0</strong> students & <span id="landing-trusted-communities">0</span> communities
       </span>
     </div>
     <p>⭐⭐⭐⭐⭐ Loved by students across 20+ colleges</p>
@@ -121,9 +121,9 @@
         <div class="preview-content">
           <div class="preview-greeting">Good morning, Harish 👋</div>
           <div class="preview-grid">
-            <div class="preview-stat"><div class="preview-stat-value">4</div><div class="preview-stat-label">Communities</div></div>
-            <div class="preview-stat"><div class="preview-stat-value">12</div><div class="preview-stat-label">Events</div></div>
-            <div class="preview-stat"><div class="preview-stat-value">340</div><div class="preview-stat-label">Points</div></div>
+            <div class="preview-stat"><div class="preview-stat-value" id="landing-preview-communities">0</div><div class="preview-stat-label">Communities</div></div>
+            <div class="preview-stat"><div class="preview-stat-value" id="landing-preview-events-count">0</div><div class="preview-stat-label">Events</div></div>
+            <div class="preview-stat"><div class="preview-stat-value" id="landing-preview-registrations">0</div><div class="preview-stat-label">Registrations</div></div>
           </div>
           <div class="preview-cards">
               <div class="preview-card">
@@ -135,11 +135,7 @@
             </div>
             <div class="preview-card">
               <div class="preview-card-title">UPCOMING</div>
-              <div class="preview-events">
-                <div class="preview-event-item"><div class="preview-event-dot"></div><div class="preview-event-text">Google I/O Extended</div></div>
-                <div class="preview-event-item"><div class="preview-event-dot" style="background:var(--cyan-500)"></div><div class="preview-event-text">HackHyderabad 3.0</div></div>
-                <div class="preview-event-item"><div class="preview-event-dot" style="background:var(--pink-500)"></div><div class="preview-event-text">UI/UX Bootcamp</div></div>
-              </div>
+              <div class="preview-events" id="landing-preview-events"></div>
             </div>
           </div>
         </div>
@@ -256,22 +252,22 @@
 </section>
 
 <section class="container">
-  <div class="stats-row">
-    <div class="stats-row-item"><div class="stats-row-value">3,847+</div><div class="stats-row-label">Active Students</div></div>
-    <div class="stats-row-item"><div class="stats-row-value">48</div><div class="stats-row-label">Communities</div></div>
-    <div class="stats-row-item"><div class="stats-row-value">124</div><div class="stats-row-label">Events Hosted</div></div>
-    <div class="stats-row-item"><div class="stats-row-value">15K+</div><div class="stats-row-label">Registrations</div></div>
-  </div>
-</section>
-
-<!-- Features Section -->
-<!-- How It Works (new) -->
-<section class="section how-works" id="how-it-works">
-  <div>
-    <div class="section-eyebrow">How it Works</div>
-    <h2 class="section-title">3 simple steps to get started</h2>
-    <p class="section-subtitle">From joining communities to growing your network — NEXOVERSE makes it effortless.</p>
-  </div>
+    <div class="stat-item">
+      <div class="stat-number" id="landing-stat-students">0</div>
+      <div class="stat-label">Active Students</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="landing-stat-communities">0</div>
+      <div class="stat-label">Communities</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="landing-stat-events">0</div>
+      <div class="stat-label">Events Hosted</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="landing-stat-registrations">0</div>
+      <div class="stat-label">Registrations</div>
+    </div>
 
   <div class="how-grid mt-12">
     <div class="how-card">
@@ -341,128 +337,7 @@
     <p class="section-subtitle">Join GDGs, MLSAs, ACM Chapters, IEEE societies, design collectives, and startup communities all in one place.</p>
   </div>
 
-  <div class="grid-auto mt-12">
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open GDG Hyderabad community" data-href="pages/community-details.html?id=c1">
-      <div class="community-card-banner card-banner banner-sm grad-1">
-        <div class="community-card-logo">🌐</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">GDG Hyderabad</div>
-          <span class="badge badge-purple shrink-0">Google</span>
-        </div>
-        <div class="community-card-desc muted-desc">Official Google Developer Group for Hyderabad region. Building the next generation of developers.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 1,240 members</span>
-          <span class="text-muted text-xs">🗓️ 12 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c1'">View →</button>
-        </div>
-      </div>
-    </div>
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open MLSA IIIT-H community" data-href="pages/community-details.html?id=c2">
-      <div class="community-card-banner card-banner banner-sm grad-2">
-        <div class="community-card-logo">🔷</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">MLSA IIIT-H</div>
-          <span class="badge badge-purple shrink-0">Microsoft</span>
-        </div>
-        <div class="community-card-desc muted-desc">Microsoft Learn Student Ambassadors chapter at IIIT Hyderabad. Empowering students with Microsoft tech.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 890 members</span>
-          <span class="text-muted text-xs">🗓️ 8 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c2'">View →</button>
-        </div>
-      </div>
-    </div>
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open ACM CBIT community" data-href="pages/community-details.html?id=c3">
-      <div class="community-card-banner card-banner banner-sm grad-3">
-        <div class="community-card-logo">⚙️</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">ACM CBIT</div>
-          <span class="badge badge-purple shrink-0">ACM</span>
-        </div>
-        <div class="community-card-desc muted-desc">Association for Computing Machinery student chapter at CBIT. Where code meets community.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 650 members</span>
-          <span class="text-muted text-xs">🗓️ 15 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c3'">View →</button>
-        </div>
-      </div>
-    </div>
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open IEEE CS Society community" data-href="pages/community-details.html?id=c4">
-      <div class="community-card-banner card-banner banner-sm grad-4">
-        <div class="community-card-logo">🔬</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">IEEE CS Society</div>
-          <span class="badge badge-purple shrink-0">IEEE</span>
-        </div>
-        <div class="community-card-desc muted-desc">IEEE Computer Society student branch. Advancing technology for humanity through innovation.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 420 members</span>
-          <span class="text-muted text-xs">🗓️ 6 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c4'">View →</button>
-        </div>
-      </div>
-    </div>
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open Design Collective community" data-href="pages/community-details.html?id=c5">
-      <div class="community-card-banner card-banner banner-sm grad-5">
-        <div class="community-card-logo">🎨</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">Design Collective</div>
-          <span class="badge badge-purple shrink-0">Design</span>
-        </div>
-        <div class="community-card-desc muted-desc">A community of designers, creators, and visual thinkers. Building beautiful digital experiences.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 310 members</span>
-          <span class="text-muted text-xs">🗓️ 5 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c5'">View →</button>
-        </div>
-      </div>
-    </div>
-    <div class="community-card cursor-pointer" role="link" tabindex="0" aria-label="Open StartupHub Campus community" data-href="pages/community-details.html?id=c6">
-      <div class="community-card-banner card-banner banner-sm grad-6">
-        <div class="community-card-logo">🚀</div>
-      </div>
-      <div class="community-card-body">
-        <div class="flex items-start justify-between gap-2 mb-1">
-          <div class="community-card-name">StartupHub Campus</div>
-          <span class="badge badge-purple shrink-0">Startup</span>
-        </div>
-        <div class="community-card-desc muted-desc">Connecting student entrepreneurs, mentors, and investors. Building the next big startup.</div>
-        <div class="community-card-meta">
-          <span class="community-card-members">👥 780 members</span>
-          <span class="text-muted text-xs">🗓️ 9 events</span>
-        </div>
-        <div class="divider my-3"></div>
-        <div class="flex gap-2">
-          <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=c6'">View →</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="landing-communities-grid" class="landing-card-grid mt-12"></div>
 
   <div class="text-center mt-10">
     <a href="signup.html" class="btn btn-primary btn-lg">Join a Community →</a>
@@ -477,53 +352,7 @@
     <p class="section-subtitle">Hackathons, workshops, tech talks, networking nights — discover and register for the best campus events.</p>
   </div>
 
-  <div class="grid-auto mt-12">
-    <div class="event-card">
-      <div class="event-card-banner card-banner banner-lg grad-1">
-        <div class="banner-icon">🌐</div>
-        <span class="badge badge-green badge-top-right">Free</span>
-      </div>
-      <div class="event-card-body">
-        <div class="event-card-category">Tech Talk</div>
-        <div class="event-card-title">Google I/O Extended Hyderabad 2025</div>
-        <div class="event-card-meta"><span>📅 Aug 15, 2025</span></div>
-        <div class="event-card-footer">
-          <span class="event-attendees-count">👥 843 attending</span>
-          <a href="signup.html" class="btn btn-primary btn-sm">Register</a>
-        </div>
-      </div>
-    </div>
-    <div class="event-card">
-      <div class="event-card-banner card-banner banner-lg grad-3">
-        <div class="banner-icon">🏆</div>
-        <span class="badge badge-purple badge-top-right">Paid</span>
-      </div>
-      <div class="event-card-body">
-        <div class="event-card-category">Hackathon</div>
-        <div class="event-card-title">HackHyderabad 3.0 — 36hr Hackathon</div>
-        <div class="event-card-meta"><span>📅 Sep 5, 2025</span></div>
-        <div class="event-card-footer">
-          <span class="event-attendees-count">👥 487 attending</span>
-          <a href="signup.html" class="btn btn-primary btn-sm">Register</a>
-        </div>
-      </div>
-    </div>
-    <div class="event-card">
-      <div class="event-card-banner card-banner banner-lg grad-5">
-        <div class="banner-icon">🎨</div>
-        <span class="badge badge-green badge-top-right">Free</span>
-      </div>
-      <div class="event-card-body">
-        <div class="event-card-category">Workshop</div>
-        <div class="event-card-title">UI/UX Design Bootcamp</div>
-        <div class="event-card-meta"><span>📅 Aug 25, 2025</span></div>
-        <div class="event-card-footer">
-          <span class="event-attendees-count">👥 234 attending</span>
-          <a href="signup.html" class="btn btn-primary btn-sm">Register</a>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="landing-events-grid" class="landing-card-grid mt-12"></div>
 
   <div class="text-center mt-10">
     <a href="signup.html" class="btn btn-outline btn-lg">Explore All Events →</a>
@@ -539,27 +368,27 @@
 
   <div class="testimonials-grid">
     <div class="testimonial-card">
-      <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      <p class="testimonial-text">"NEXOVERSE completely changed how we run GDG Hyderabad. Registration, announcements, analytics — everything is in one place. Our event attendance jumped 60%!"</p>
+      <div class="testimonial-stars">✅</div>
+      <p class="testimonial-text">Live communities, event registrations, and analytics all read from the same Firestore-backed data layer.</p>
       <div class="testimonial-author">
-        <div class="avatar avatar-md avatar-grad-6">PS</div>
-        <div><div class="testimonial-name">Priya Sharma</div><div class="testimonial-role">GDG Organizer, Hyderabad</div></div>
+        <div class="avatar avatar-md avatar-grad-6">FD</div>
+        <div><div class="testimonial-name">Firestore Data</div><div class="testimonial-role">Single source of truth</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      <p class="testimonial-text">"The AI tools are insane. I used to spend 2 hours writing event descriptions. Now NEXOVERSE generates them in 10 seconds and they're actually good!"</p>
+      <div class="testimonial-stars">⚡</div>
+      <p class="testimonial-text">Organizer and member screens now render real records or clean empty states instead of seeded demo rows.</p>
       <div class="testimonial-author">
-        <div class="avatar avatar-md avatar-grad-1">AM</div>
-        <div><div class="testimonial-name">Aarav Mehta</div><div class="testimonial-role">CS Student, IIIT Hyderabad</div></div>
+        <div class="avatar avatar-md avatar-grad-1">LS</div>
+        <div><div class="testimonial-name">Live Sync</div><div class="testimonial-role">No sample data</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      <p class="testimonial-text">"Running HackHyderabad with 500+ participants used to be chaos. NEXOVERSE's dashboard made managing registrations and announcements effortless."</p>
+      <div class="testimonial-stars">📊</div>
+      <p class="testimonial-text">Analytics and preview cards update from approved events and communities after the data cache loads.</p>
       <div class="testimonial-author">
-        <div class="avatar avatar-md avatar-grad-7">KN</div>
-        <div><div class="testimonial-name">Karthik Nair</div><div class="testimonial-role">Hackathon Organizer, ACM CBIT</div></div>
+        <div class="avatar avatar-md avatar-grad-7">RD</div>
+        <div><div class="testimonial-name">Real Data</div><div class="testimonial-role">Dynamic homepage</div></div>
       </div>
     </div>
   </div>
@@ -665,7 +494,128 @@
 
 
 <script src="js/ui.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/data.js"></script>
 <script>
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[character]));
+  }
+
+  function renderEmptyState(message, description) {
+    return `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">◌</div>
+        <div class="empty-title">${escapeHtml(message)}</div>
+        <div class="empty-desc">${escapeHtml(description)}</div>
+      </div>`;
+  }
+
+  async function renderLandingContent() {
+    try {
+      if (typeof DataStore?.loadEventsFromFirestore === 'function') {
+        await DataStore.loadEventsFromFirestore();
+      }
+      if (typeof DataStore?.loadCommunitiesFromFirestore === 'function') {
+        await DataStore.loadCommunitiesFromFirestore();
+      }
+      if (typeof DataStore?.loadRegistrationsFromFirestore === 'function') {
+        await DataStore.loadRegistrationsFromFirestore();
+      }
+    } catch (error) {
+      console.warn('Landing data sync failed', error);
+    }
+
+    const communities = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities().slice(0, 6) : [];
+    const events = typeof DataStore?.getEvents === 'function' ? DataStore.getEvents().slice(0, 3) : [];
+    const registrations = typeof DataStore?.getLiveRegistrations === 'function' ? DataStore.getLiveRegistrations() : [];
+    const studentCount = registrations.length;
+
+    const trustedStudents = document.getElementById('landing-trusted-students');
+    const trustedCommunities = document.getElementById('landing-trusted-communities');
+    const statStudents = document.getElementById('landing-stat-students');
+    const statCommunities = document.getElementById('landing-stat-communities');
+    const statEvents = document.getElementById('landing-stat-events');
+    const statRegistrations = document.getElementById('landing-stat-registrations');
+    if (trustedStudents) trustedStudents.textContent = studentCount.toLocaleString();
+    if (trustedCommunities) trustedCommunities.textContent = String(communities.length);
+    if (statStudents) statStudents.textContent = studentCount.toLocaleString();
+    if (statCommunities) statCommunities.textContent = String(communities.length);
+    if (statEvents) statEvents.textContent = String(events.length);
+    if (statRegistrations) statRegistrations.textContent = registrations.length.toLocaleString();
+
+    const communitiesGrid = document.getElementById('landing-communities-grid');
+    if (communitiesGrid) {
+      communitiesGrid.innerHTML = communities.length ? communities.map(community => `
+        <div class="community-card landing-community-card cursor-pointer" role="link" tabindex="0" aria-label="Open ${escapeHtml(community.name)} community" data-href="pages/community-details.html?id=${escapeHtml(community.id)}">
+          <div class="community-card-banner card-banner banner-sm" style="background:${escapeHtml(community.banner || 'linear-gradient(135deg,#4f46e5,#06b6d4)')}">
+            <div class="community-card-logo">${escapeHtml(community.emoji || '🌐')}</div>
+          </div>
+          <div class="community-card-body">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="community-card-name">${escapeHtml(community.name || 'Untitled Community')}</div>
+              <span class="badge badge-purple shrink-0">${escapeHtml(community.category || 'Other')}</span>
+            </div>
+            <div class="community-card-desc muted-desc">${escapeHtml(community.desc || community.description || '')}</div>
+            <div class="community-card-meta">
+              <span class="community-card-members">👥 ${Number(community.members || community.memberCount || 0).toLocaleString()} members</span>
+              <span class="text-muted text-xs">🗓️ ${Number(community.events || 0)} events</span>
+            </div>
+            <div class="divider my-3"></div>
+            <div class="flex gap-2">
+              <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();window.location='pages/community-details.html?id=${escapeHtml(community.id)}'">View →</button>
+            </div>
+          </div>
+        </div>
+      `).join('') : renderEmptyState('No live communities yet', 'Connect Firestore to populate this section with approved communities.');
+    }
+
+    const eventsGrid = document.getElementById('landing-events-grid');
+    if (eventsGrid) {
+      eventsGrid.innerHTML = events.length ? events.map(eventItem => `
+        <div class="event-card landing-event-card">
+          <div class="event-card-banner card-banner banner-lg" style="background:${escapeHtml(eventItem.banner || 'linear-gradient(135deg,#4f46e5,#06b6d4)')}">
+            <div class="banner-icon">${escapeHtml(eventItem.emoji || '🎯')}</div>
+            <span class="badge ${eventItem.isFree ? 'badge-green' : 'badge-purple'} badge-top-right">${eventItem.isFree ? 'Free' : 'Paid'}</span>
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-category">${escapeHtml(eventItem.category || 'Event')}</div>
+            <div class="event-card-title">${escapeHtml(eventItem.title || 'Untitled Event')}</div>
+            <div class="event-card-meta"><span>📅 ${escapeHtml(eventItem.date || 'TBA')}</span></div>
+            <div class="event-card-footer">
+              <span class="event-attendees-count">👥 ${Number(eventItem.attendees || 0).toLocaleString()} attending</span>
+              <a href="pages/event-details.html?id=${escapeHtml(eventItem.id)}" class="btn btn-primary btn-sm">Register</a>
+            </div>
+          </div>
+        </div>
+      `).join('') : renderEmptyState('No live events yet', 'Connect Firestore to populate this section with approved events.');
+    }
+
+    const previewStatsCommunities = document.getElementById('landing-preview-communities');
+    const previewStatsEvents = document.getElementById('landing-preview-events-count');
+    const previewStatsRegistrations = document.getElementById('landing-preview-registrations');
+    if (previewStatsCommunities) previewStatsCommunities.textContent = String(communities.length);
+    if (previewStatsEvents) previewStatsEvents.textContent = String(events.length);
+    if (previewStatsRegistrations) previewStatsRegistrations.textContent = String(registrations.length);
+
+    const previewEvents = document.getElementById('landing-preview-events');
+    if (previewEvents) {
+      previewEvents.innerHTML = events.length ? events.slice(0, 3).map((eventItem, index) => `
+        <div class="preview-event-item"><div class="preview-event-dot"${index === 0 ? '' : ' style="background:var(--cyan-500)"'}></div><div class="preview-event-text">${escapeHtml(eventItem.title || 'Untitled Event')}</div></div>
+      `).join('') : '<div class="preview-event-item"><div class="preview-event-dot"></div><div class="preview-event-text">Connect Firestore to load live events</div></div>';
+    }
+  }
+
+  renderLandingContent();
+
   // Set footer year range from 2026 to current year
   (function(){
     const el = document.getElementById('year-range');

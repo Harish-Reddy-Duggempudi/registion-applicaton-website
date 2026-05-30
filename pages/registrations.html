@@ -156,18 +156,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function renderOrganizerTable() {
+async function renderOrganizerTable() {
   const tbody = document.getElementById('org-reg-tbody');
   if (!tbody) return;
 
-  const rows = [
-    { name:'Aarav Mehta',   email:'aarav@iiith.ac.in',   event:'Google I/O Extended',    ticket:'NXR-E1-001', status:'confirmed', date:'Jul 28, 2025' },
-    { name:'Sneha Reddy',   email:'sneha@cbit.ac.in',    event:'Google I/O Extended',    ticket:'NXR-E1-002', status:'confirmed', date:'Jul 29, 2025' },
-    { name:'Rahul Singh',   email:'rahul@mlsa.dev',      event:'HackHyderabad 3.0',      ticket:'NXR-E2-001', status:'confirmed', date:'Jul 30, 2025' },
-    { name:'Karthik Nair',  email:'karthik@ieee.org',    event:'HackHyderabad 3.0',      ticket:'NXR-E2-002', status:'pending',   date:'Aug 1, 2025'  },
-    { name:'Priya Sharma',  email:'priya@gdg.dev',       event:'UI/UX Design Bootcamp',  ticket:'NXR-E3-001', status:'confirmed', date:'Aug 1, 2025'  },
-    { name:'Ananya Patel',  email:'ananya@design.io',    event:'UI/UX Design Bootcamp',  ticket:'NXR-E3-002', status:'cancelled', date:'Aug 2, 2025'  },
-  ];
+  const registrations = typeof DataStore?.getLiveRegistrations === 'function' ? DataStore.getLiveRegistrations() : [];
+  if (!registrations.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🎫</div><div class="empty-title">No registrations found</div><div class="empty-desc">Connect Firestore to load the live attendee list.</div></div></td></tr>';
+    return;
+  }
+
+  const uniqueUserIds = [...new Set(registrations.map(item => item.userId).filter(Boolean))];
+  const userDocs = db && typeof db.collection === 'function'
+    ? await Promise.all(uniqueUserIds.map(userId => db.collection('users').doc(userId).get()))
+    : [];
+  const usersById = new Map(userDocs.map((doc, index) => {
+    const data = doc.exists ? (doc.data() || {}) : {};
+    const userId = uniqueUserIds[index];
+    return [userId, {
+      name: data.name || userId,
+      email: data.email || '',
+    }];
+  }));
+
+  const rows = registrations.map(reg => {
+    const user = usersById.get(reg.userId) || { name: reg.userId || 'Attendee', email: '' };
+    const event = typeof DataStore?.getEvent === 'function' ? DataStore.getEvent(reg.eventId) : null;
+    return {
+      name: user.name,
+      email: user.email,
+      event: event?.title || reg.eventId || 'Event',
+      ticket: reg.ticketId || '',
+      status: reg.status || 'pending',
+      date: reg.registeredAt || reg.createdAt || '',
+    };
+  });
 
   tbody.innerHTML = rows.map(r => `
     <tr>
