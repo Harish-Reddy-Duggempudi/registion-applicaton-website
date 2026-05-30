@@ -66,6 +66,25 @@
       padding: 20px;
       box-shadow: 0 24px 70px rgba(0,0,0,0.35);
     }
+    #report-resolve-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 20, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      padding: 20px;
+    }
+    #report-resolve-modal .modal-card {
+      width: min(620px, 100%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
   </style>
 </head>
 <body class="admin-panel-page">
@@ -105,7 +124,7 @@
       <div id="admin-stats" class="grid-3 mb-6"></div>
 
       <!-- Tabs -->
-      <div style="display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content;flex-wrap:wrap">
+      <div class="admin-tabs" style="display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content;flex-wrap:wrap">
         <button class="tab-btn active" id="tab-approvals" onclick="switchAdminTab('approvals',this)">⏳ Approvals</button>
         <button class="tab-btn" id="tab-users"     onclick="switchAdminTab('users',this)">👥 Users</button>
         <button class="tab-btn" id="tab-organizer-requests" onclick="switchAdminTab('organizer-requests',this)">⚡ Organizer Requests</button>
@@ -193,49 +212,9 @@
       <div id="panel-reports" style="display:none">
         <div class="section-header mb-4">
           <div class="section-title">🚨 Reported Content</div>
-          <span class="badge badge-pink">3 Open</span>
+          <span id="reports-open-badge" class="badge badge-pink">0 Open</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="approval-card">
-            <div style="font-size:28px">🚨</div>
-            <div class="approval-info">
-              <div class="approval-name">Suspicious Event: "Win ₹1 Lakh Daily"</div>
-              <div class="approval-meta">Event · Reported by Aarav M. · Aug 2 · Reason: Spam / Scam content</div>
-            </div>
-            <div class="approval-actions">
-              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
-              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
-            </div>
-          </div>
-          <div class="approval-card">
-            <div style="font-size:28px">🚨</div>
-            <div class="approval-info">
-              <div class="approval-name">Community: "Get Rich Quick Hacks"</div>
-              <div class="approval-meta">Community · Reported by Sneha R. · Aug 1 · Reason: Misleading description</div>
-            </div>
-            <div class="approval-actions">
-              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
-              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
-            </div>
-          </div>
-          <div class="approval-card">
-            <div style="font-size:28px">🚨</div>
-            <div class="approval-info">
-              <div class="approval-name">User: fake_organizer_2025</div>
-              <div class="approval-meta">User · Reported by Karthik N. · Jul 30 · Reason: Impersonation</div>
-            </div>
-            <div class="approval-actions">
-              <button class="btn btn-danger btn-sm" onclick="resolveReport(this,'remove')">🗑️ Remove</button>
-              <button class="btn btn-ghost btn-sm" onclick="resolveReport(this,'dismiss')">✕ Dismiss</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="empty-state mt-6" style="opacity:0.5">
-          <div class="empty-icon">🏆</div>
-          <div class="empty-title">Great moderation!</div>
-          <div class="empty-desc">Only 3 open reports. Platform is healthy.</div>
-        </div>
+        <div id="admin-reports-list" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
 
       <!-- Platform Tab -->
@@ -384,6 +363,21 @@
   </div>
 </div>
 
+<div id="report-resolve-modal" role="dialog" aria-modal="true" aria-labelledby="report-resolve-title">
+  <div class="modal-card">
+    <div class="section-title" id="report-resolve-title">Resolve report</div>
+    <div class="text-secondary text-sm mt-1">Write a resolution message. It will be sent to the reporting user and saved in Recent Activity.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Resolution message</label>
+      <textarea id="report-resolve-message" class="input-field" rows="5" placeholder="We reviewed your report and removed the inappropriate content."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeReportResolveModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitReportResolveModal()">Send & Resolve</button>
+    </div>
+  </div>
+</div>
+
 <script src="../js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -431,18 +425,14 @@ function filterByRole(role) {
   });
 }
 
-function resolveReport(btn, action) {
+function resolveReport(btn) {
   const card = btn.closest('.approval-card');
-  if (card) {
-    card.style.opacity = '0';
-    card.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => card.remove(), 300);
+  const reportId = card?.dataset?.reportId || card?.id?.replace(/^report-/, '');
+  if (!reportId) {
+    toast.error('Resolve failed', 'Report not found.');
+    return;
   }
-  if (action === 'remove') {
-    toast.success('Content Removed', 'The reported content has been removed from the platform.');
-  } else {
-    toast.info('Report Dismissed', 'The report has been marked as reviewed and dismissed.');
-  }
+  if (typeof openReportResolveModal === 'function') openReportResolveModal(reportId);
 }
 
 </script>

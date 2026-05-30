@@ -121,6 +121,148 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ── Report Modal helpers (global so pages can open a report dialog) ──
+let _pendingReportContext = null;
+function openReportModal(type, itemId, title) {
+  console.log('openReportModal called', { type, itemId, title });
+  _pendingReportContext = { type, itemId, title };
+  const modal = document.getElementById('report-modal');
+  const titleEl = document.getElementById('report-modal-title');
+  const reasonEl = document.getElementById('report-modal-reason');
+  if (titleEl) titleEl.textContent = `Report ${title || type}`;
+  if (reasonEl) reasonEl.value = '';
+  if (modal) {
+    modal.style.display = 'flex';
+    if (reasonEl) setTimeout(() => reasonEl.focus(), 50);
+  } else {
+    toast.info('Opening report', 'Report modal not found on this page.');
+    console.warn('report-modal element missing');
+  }
+}
+
+function closeReportModal() {
+  _pendingReportContext = null;
+  const modal = document.getElementById('report-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitReportModal() {
+  if (!_pendingReportContext) return;
+  const reasonEl = document.getElementById('report-modal-reason');
+  const reason = reasonEl?.value.trim() || '';
+  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if (!user) { toast.error('Login required', 'Please sign in to report content.'); return; }
+  // If Firestore is unavailable, persist locally to localStorage so testing can continue.
+  const _db = (typeof window !== 'undefined' && window.db) ? window.db : (typeof db !== 'undefined' ? db : null);
+  if (!_db) {
+    try {
+      const pending = JSON.parse(localStorage.getItem('nexora_pending_reports') || '[]');
+      const localReportId = 'local-' + Date.now();
+      const item = {
+        id: localReportId,
+        reportId: localReportId,
+        type: _pendingReportContext.type,
+        itemId: _pendingReportContext.itemId,
+        title: _pendingReportContext.title || null,
+        reporterId: user.uid,
+        reporterName: user.name || user.email || 'User',
+        reason,
+        status: 'local_pending',
+        createdAt: new Date().toISOString(),
+      };
+      pending.unshift(item);
+      localStorage.setItem('nexora_pending_reports', JSON.stringify(pending));
+      console.log('Saved report to localStorage (pending sync)', item);
+      toast.success('Saved locally', 'Report saved locally and will be synced when Firestore is available.');
+      closeReportModal();
+      return;
+    } catch (err) {
+      toast.error('Save failed', 'Unable to save report locally.');
+      return;
+    }
+  }
+
+  try {
+    const reportRef = _db.collection('reports').doc();
+    await reportRef.set({
+      reportId: reportRef.id,
+      type: _pendingReportContext.type,
+      itemId: _pendingReportContext.itemId,
+      title: _pendingReportContext.title || null,
+      reporterId: user.uid,
+      reporterName: user.name || user.email || 'User',
+      reason,
+      status: 'open',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    toast.success('Report submitted', 'Thanks — the moderation team will review this.');
+    closeReportModal();
+    if (typeof window.startReportsListener === 'function') window.startReportsListener();
+  } catch (error) {
+    toast.error('Submission failed', error?.message || 'Unable to submit report.');
+  }
+}
+
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.submitReportModal = submitReportModal;
+
+// Sync any locally-saved reports once Firestore becomes available
+async function syncPendingReports() {
+  try {
+    const pendingRaw = localStorage.getItem('nexora_pending_reports');
+    if (!pendingRaw) return;
+    const pending = JSON.parse(pendingRaw || '[]');
+    if (!pending.length) return;
+    const _db = (typeof window !== 'undefined' && window.db) ? window.db : (typeof db !== 'undefined' ? db : null);
+    if (!_db) return;
+    for (const r of pending.slice().reverse()) {
+      try {
+        const reportRef = _db.collection('reports').doc();
+        await reportRef.set({
+          reportId: r.reportId || reportRef.id,
+          type: r.type,
+          itemId: r.itemId,
+          title: r.title || null,
+          reporterId: r.reporterId,
+          reporterName: r.reporterName,
+          reason: r.reason,
+          status: 'open',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log('Synced pending report to Firestore', r.id);
+      } catch (err) {
+        console.warn('Failed to sync pending report', r.id, err);
+      }
+    }
+    localStorage.removeItem('nexora_pending_reports');
+    toast.success('Local reports synced', 'Pending reports were uploaded to Firestore.');
+    if (typeof window.startReportsListener === 'function') window.startReportsListener();
+  } catch (error) {
+    console.error('syncPendingReports failed', error);
+  }
+}
+
+// Periodically check for Firestore and sync pending reports (tries for 30s)
+{ (function trySync() {
+    let attempts = 0;
+    const iv = setInterval(() => {
+      attempts++;
+      if (window.db) {
+        clearInterval(iv);
+        syncPendingReports();
+      } else if (attempts > 10) {
+        clearInterval(iv);
+      }
+    }, 3000);
+  })(); }
+
+// Expose sync helper for manual triggering from console
+window.syncPendingReports = syncPendingReports;
+
+// If Firestore is already available now, attempt an immediate sync
+if (window.db) setTimeout(() => syncPendingReports(), 800);
+
 // ── Skeleton Cards ────────────────────────────
 function createSkeletonCards(container, count = 6, height = 280) {
   container.innerHTML = '';

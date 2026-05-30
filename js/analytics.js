@@ -240,6 +240,12 @@ const organizerRequestState = {
   initialized: false,
 };
 
+const reportsState = {
+  reports: [],
+  loading: false,
+  unsubscribe: null,
+};
+
 let organizerRequestsUnsubscribe = null;
 let pendingOrganizerReject = null;
 
@@ -912,6 +918,7 @@ function initAdminPage() {
   loadAdminStats();
   loadAdminCommunityApprovals();
   startOrganizerRequestsListener();
+  startReportsListener();
   renderAdminStats();
 
   setTimeout(() => {
@@ -938,6 +945,8 @@ function switchAdminTab(tabName, buttonEl) {
     renderOrganizerRequests();
   } else if (tabName === 'approvals') {
     renderAdminApprovals();
+  } else if (tabName === 'reports') {
+    renderReports();
   }
 }
 
@@ -1140,6 +1149,167 @@ function renderOrganizerRequests() {
   `).join('');
 }
 
+function normalizeReportDoc(doc) {
+  const data = doc.data() || {};
+  return {
+    id: doc.id,
+    reportId: data.reportId || doc.id,
+    type: data.type || 'content',
+    title: data.title || data.name || 'Reported item',
+    itemId: data.itemId || null,
+    reporterId: data.reporterId || null,
+    reporterName: data.reporterName || data.reportedByName || data.reporter || 'User',
+    reason: data.reason || data.reasonText || 'Not specified',
+    createdAt: data.createdAt || null,
+    status: data.status || 'open',
+  };
+}
+
+function startReportsListener() {
+  if (reportsState.unsubscribe) {
+    reportsState.unsubscribe();
+    reportsState.unsubscribe = null;
+  }
+
+  reportsState.loading = true;
+  renderReports();
+
+  if (!db) {
+    // If Firestore is unavailable, show locally-saved pending reports (for local testing)
+    try {
+      const pendingRaw = localStorage.getItem('nexora_pending_reports');
+      const pending = pendingRaw ? JSON.parse(pendingRaw) : [];
+      reportsState.reports = (pending || []).map(p => ({
+        id: p.id,
+        reportId: p.reportId || p.id,
+        type: p.type || 'content',
+        title: p.title || 'Reported item',
+        itemId: p.itemId || null,
+        reporterId: p.reporterId || null,
+        reporterName: p.reporterName || 'User',
+        reason: p.reason || 'Not specified',
+        createdAt: p.createdAt ? new Date(p.createdAt) : null,
+        status: p.status || 'local_pending',
+        __local: true,
+      }));
+    } catch (e) {
+      reportsState.reports = [];
+    }
+    reportsState.loading = false;
+    renderReports();
+    renderAdminStats();
+    return;
+  }
+
+  const query = db.collection('reports').where('status', '==', 'open').orderBy('createdAt', 'desc');
+  try {
+    reportsState.unsubscribe = query.onSnapshot(snapshot => {
+      reportsState.reports = snapshot.docs.map(normalizeReportDoc);
+      reportsState.loading = false;
+      renderReports();
+      renderAdminStats();
+    }, error => {
+      console.warn('reports listener error', error);
+      // If listener errors at runtime, attempt fallback fetch
+      fallbackFetchReports(error);
+    });
+  } catch (err) {
+    console.warn('startReportsListener failed to attach listener', err);
+    fallbackFetchReports(err);
+  }
+
+  // Fallback: fetch all reports and filter client-side (handles missing index or schema differences)
+  async function fallbackFetchReports(error) {
+    try {
+      const msg = String(error?.message || error || '');
+      // If permission denied, don't attempt a blind fetch
+      if (/permission|not authorized|insufficient permissions/i.test(msg)) {
+        reportsState.reports = [];
+        reportsState.loading = false;
+        renderReports();
+        renderAdminStats();
+        toast.error('Reports unavailable', 'Missing permission to read reports.');
+        return;
+      }
+
+      // Try a broad read and filter locally
+      const snapshot = await db.collection('reports').get();
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+      // normalize status case and filter 'open'
+      const open = docs.filter(d => String((d.status || '')).toLowerCase() === 'open');
+      // If createdAt exists, sort by it (newest first)
+      open.sort((a, b) => {
+        const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return bt - at;
+      });
+
+      reportsState.reports = open.map(r => ({
+        id: r.id,
+        reportId: r.reportId || r.id,
+        type: r.type || 'content',
+        title: r.title || r.name || 'Reported item',
+        itemId: r.itemId || null,
+        reporterId: r.reporterId || null,
+        reporterName: r.reporterName || r.reporter || 'User',
+        reason: r.reason || r.reasonText || 'Not specified',
+        createdAt: r.createdAt || null,
+        status: r.status || 'open',
+      }));
+
+      reportsState.loading = false;
+      renderReports();
+      renderAdminStats();
+      toast.info('Reports (fallback)', 'Loaded reports via fallback fetch.');
+    } catch (fetchErr) {
+      console.error('fallbackFetchReports failed', fetchErr);
+      reportsState.reports = [];
+      reportsState.loading = false;
+      renderReports();
+      renderAdminStats();
+      toast.error('Reports unavailable', fetchErr?.message || 'Unable to load reports.');
+    }
+  }
+}
+
+function renderReports() {
+  const el = document.getElementById('admin-reports-list');
+  const badge = document.getElementById('reports-open-badge');
+  if (badge) badge.textContent = `${reportsState.reports.length} Open`;
+  if (!el) return;
+
+  if (reportsState.loading) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading reports...</div><div class="empty-desc">Please wait while Firestore data loads.</div></div>`;
+    return;
+  }
+
+  if (reportsState.reports.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No open reports.</div><div class="empty-desc">Reports will appear here when users flag content.</div></div>`;
+    return;
+  }
+  el.innerHTML = reportsState.reports.map(r => {
+    const safeTitle = escapeHtml(r.title || 'Reported item');
+    const safeReporter = escapeHtml(r.reporterName || 'User');
+    const safeReason = escapeHtml(r.reason || 'Not specified');
+    const timeLabel = formatAdminJoinedDate(r.createdAt);
+
+    return `
+      <div class="approval-card" id="report-${r.id}" data-report-id="${r.id}">
+        <div style="font-size:28px">🚨</div>
+        <div class="approval-info">
+          <div class="approval-name">${safeTitle}</div>
+          <div class="approval-meta"><strong>Reporter Name:</strong> ${safeReporter}</div>
+          <div class="approval-meta"><strong>Reported Item:</strong> ${safeTitle}</div>
+          <div class="approval-meta"><strong>Report Reason:</strong> ${safeReason}</div>
+          <div class="approval-meta"><strong>Created Date:</strong> ${timeLabel}</div>
+        </div>
+        <div class="approval-actions">
+          <button class="btn btn-primary btn-sm" onclick="resolveReport(this)">✅ Resolve</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 function openOrganizerRejectModal(uid, name) {
   pendingOrganizerReject = { uid, name };
   const modal = document.getElementById('organizer-reject-modal');
@@ -1156,6 +1326,142 @@ function closeOrganizerRejectModal() {
   pendingOrganizerReject = null;
   const modal = document.getElementById('organizer-reject-modal');
   if (modal) modal.style.display = 'none';
+}
+
+// ── Report Modal / Submission ─────────────────
+let pendingReportContext = null;
+let pendingReportResolution = null;
+
+function openReportModal(type, itemId, title) {
+  pendingReportContext = { type, itemId, title };
+  const modal = document.getElementById('report-modal');
+  const titleEl = document.getElementById('report-modal-title');
+  const reasonEl = document.getElementById('report-modal-reason');
+  if (titleEl) titleEl.textContent = `Report ${title || type}`;
+  if (reasonEl) reasonEl.value = '';
+  if (modal) modal.style.display = 'flex';
+  if (reasonEl) setTimeout(() => reasonEl.focus(), 50);
+}
+
+function closeReportModal() {
+  pendingReportContext = null;
+  const modal = document.getElementById('report-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitReportModal() {
+  if (!pendingReportContext) return;
+  const reasonEl = document.getElementById('report-modal-reason');
+  const reason = reasonEl?.value.trim() || '';
+  const user = getCurrentUser();
+  if (!user) { toast.error('Login required', 'Please sign in to report content.'); return; }
+  if (!db) { toast.error('Offline', 'Cannot submit report while Firestore is unavailable.'); return; }
+
+  try {
+    await db.collection('reports').add({
+      type: pendingReportContext.type,
+      itemId: pendingReportContext.itemId,
+      title: pendingReportContext.title || null,
+      reporterId: user.uid,
+      reporterName: user.name || user.email || 'User',
+      reason,
+      status: 'open',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    toast.success('Report submitted', 'Thanks — the moderation team will review this.');
+    closeReportModal();
+    startReportsListener();
+  } catch (error) {
+    toast.error('Submission failed', error?.message || 'Unable to submit report.');
+  }
+}
+
+function openReportResolveModal(reportId) {
+  const report = reportsState.reports.find(item => item.id === reportId || item.reportId === reportId);
+  if (!report) {
+    toast.error('Report not found', 'Unable to open resolve modal.');
+    return;
+  }
+  pendingReportResolution = report;
+  const modal = document.getElementById('report-resolve-modal');
+  const titleEl = document.getElementById('report-resolve-title');
+  const messageEl = document.getElementById('report-resolve-message');
+  if (titleEl) titleEl.textContent = `Resolve report`;
+  if (messageEl) messageEl.value = '';
+  if (modal) modal.style.display = 'flex';
+  if (messageEl) setTimeout(() => messageEl.focus(), 50);
+}
+
+function closeReportResolveModal() {
+  pendingReportResolution = null;
+  const modal = document.getElementById('report-resolve-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitReportResolveModal() {
+  if (!pendingReportResolution) return;
+  const messageEl = document.getElementById('report-resolve-message');
+  const adminMessage = messageEl?.value.trim() || '';
+  if (!adminMessage) {
+    toast.warning('Message required', 'Please enter a resolution message before sending.');
+    return;
+  }
+  if (!db) {
+    toast.error('Offline', 'Firestore is unavailable right now.');
+    return;
+  }
+
+  const report = pendingReportResolution;
+  let reporterId = report.reporterId || null;
+  let resolvedReportId = report.reportId || report.id;
+
+  if (!reporterId && db) {
+    try {
+      const freshSnap = await db.collection('reports').doc(report.id).get();
+      if (freshSnap.exists) {
+        const freshData = freshSnap.data() || {};
+        reporterId = freshData.reporterId || null;
+        resolvedReportId = freshData.reportId || resolvedReportId;
+      }
+    } catch (lookupError) {
+      console.warn('Failed to re-load report before resolving', lookupError);
+    }
+  }
+
+  if (!reporterId) {
+    toast.error('Cannot resolve', 'This report is missing reporterId.');
+    return;
+  }
+
+  const reportRef = db.collection('reports').doc(report.id);
+  const notificationRef = db.collection('notifications').doc();
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const notifData = {
+        userId: reporterId,
+        type: 'report_resolved',
+        title: 'Report Resolved',
+        message: adminMessage,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false,
+        reportId: resolvedReportId,
+        itemId: report.itemId || null,
+      };
+      tx.set(notificationRef, notifData);
+      tx.delete(reportRef);
+    });
+
+    reportsState.reports = reportsState.reports.filter(item => item.id !== report.id);
+    renderReports();
+    renderAdminStats();
+    closeReportResolveModal();
+    toast.success('Report resolved and user notified.', '');
+    if (typeof window.startReportsListener === 'function') window.startReportsListener();
+  } catch (error) {
+    console.error('submitReportResolveModal failed', error);
+    toast.error('Resolve failed', error?.message || 'Unable to resolve report.');
+  }
 }
 
 async function submitOrganizerRejectModal() {
@@ -1420,6 +1726,11 @@ window.requestOrganizerAccess = requestOrganizerAccess;
 window.switchAdminTab = switchAdminTab;
 window.startOrganizerRequestsListener = startOrganizerRequestsListener;
 window.renderOrganizerRequests = renderOrganizerRequests;
+window.startReportsListener = startReportsListener;
+window.renderReports = renderReports;
+window.openReportModal = openReportModal;
+window.closeReportModal = closeReportModal;
+window.submitReportModal = submitReportModal;
 window.approveAllCommunityApprovals = approveAllCommunityApprovals;
 window.editAdminUser = editAdminUser;
 window.toggleAdminUserSuspend = toggleAdminUserSuspend;

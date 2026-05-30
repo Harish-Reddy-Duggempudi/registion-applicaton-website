@@ -142,6 +142,51 @@
             </div>
           </div>
 
+          <!-- Program & Team -->
+          <div class="form-section">
+            <div class="form-section-title">🎤 Program & Team</div>
+            <div class="mb-4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+                <label class="input-label" style="margin:0">Speakers</label>
+                <button type="button" class="btn btn-ghost btn-sm" id="add-speaker-btn">+ Add Speaker</button>
+              </div>
+              <div id="speaker-builder" style="display:flex;flex-direction:column;gap:12px"></div>
+              <div class="text-secondary text-xs mt-2">Add speaker name and designation. Sessions can pick from these speakers.</div>
+            </div>
+            <div class="mb-4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+                <label class="input-label" style="margin:0">Sessions</label>
+                <button type="button" class="btn btn-ghost btn-sm" id="add-session-btn">+ Add Session</button>
+              </div>
+              <div id="session-builder" style="display:flex;flex-direction:column;gap:14px"></div>
+              <div class="text-secondary text-xs mt-2">Add sessions one by one. Choose speakers from the list above, then add name, date, time range, and tag.</div>
+            </div>
+            <div class="mb-4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+                <label class="input-label" style="margin:0">Sponsors</label>
+                <button type="button" class="btn btn-ghost btn-sm" id="add-sponsor-btn">+ Add Sponsor</button>
+              </div>
+              <div id="sponsor-builder" style="display:flex;flex-direction:column;gap:12px"></div>
+              <div class="text-secondary text-xs mt-2">Add sponsor name and designation like Platinum Sponsor or Partner.</div>
+            </div>
+            <div class="mb-4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+                <label class="input-label" style="margin:0">Collaboration</label>
+                <button type="button" class="btn btn-ghost btn-sm" id="add-collaboration-btn">+ Add Community</button>
+              </div>
+              <div class="input-group mb-3">
+                <input id="collaboration-search" class="input-field" list="collaboration-community-options" placeholder="Search a community already on the platform" />
+                <datalist id="collaboration-community-options"></datalist>
+              </div>
+              <div id="collaboration-builder" style="display:flex;flex-direction:column;gap:10px"></div>
+              <div class="text-secondary text-xs mt-2">Search an existing community and add it to collaboration. You can also type a custom partner name.</div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Organising Team</label>
+              <textarea id="e-organizing-team" class="input-field" rows="3" placeholder="One team member per line"></textarea>
+            </div>
+          </div>
+
           <!-- Submit -->
           <div style="display:flex;gap:12px;padding-top:8px">
             <button type="submit" class="btn btn-primary btn-lg" id="create-event-submit">

@@ -4,8 +4,17 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!requireAuth()) return;
-  renderDashboard();
-  startDashboardOrganizerSync();
+  (async () => {
+    if (DataStore?.loadEventsFromFirestore) {
+      try {
+        await DataStore.loadEventsFromFirestore();
+      } catch (error) {
+        console.warn('Dashboard event sync failed', error);
+      }
+    }
+    renderDashboard();
+    startDashboardOrganizerSync();
+  })();
 });
 
 let dashboardOrganizerUnsubscribe = null;
@@ -150,7 +159,6 @@ function renderQuickActions(role) {
       { icon:'🎫', label:'My Registrations',  href:'pages/registrations.html' },
       { icon:'🤖', label:'AI Tools',          href:'pages/ai-tools.html' },
       { icon:'📊', label:'My Progress',       href:'pages/analytics.html' },
-      { icon:'🔔', label:'Notifications',     href:'#' },
     ],
     organizer: [
       { icon:'➕', label:'Create Event',      href:'pages/create-event.html' },
@@ -458,24 +466,76 @@ function renderAdminContent() {
 function renderRecentActivity() {
   const el = document.getElementById('recent-activity');
   if (!el) return;
+  // Try to load real notifications / recent activity for the current user from Firestore.
+  // If no user-specific notifications exist, fall back to role-specific activity items.
+  (async () => {
+    try {
+      const user = getCurrentUser();
+      let items = [];
+      const role = user?.role || 'member';
+      if (window.db && user?.uid) {
+        try {
+          const snap = await window.db.collection('notifications').where('userId','==',user.uid).orderBy('createdAt','desc').limit(8).get();
+          items = snap.docs.map(d => ({ id: d.id, ...(d.data()||{}) }));
+        } catch (qerr) {
+          // Fallback: fetch all and filter
+          const snap = await window.db.collection('notifications').get();
+          items = snap.docs.map(d => ({ id: d.id, ...(d.data()||{}) })).filter(n => n.userId === user.uid).slice(0,8);
+        }
+      } 
 
-  const activities = [
-    { icon:'🎯', color:'rgba(168,85,247,0.15)', title:'Registered for Google I/O Extended', time:'2 hours ago' },
-    { icon:'🌟', color:'rgba(59,130,246,0.15)',  title:'Joined GDG Hyderabad community',   time:'1 day ago' },
-    { icon:'📊', color:'rgba(34,211,238,0.15)',  title:'Viewed UI/UX Bootcamp details',    time:'2 days ago' },
-    { icon:'🏆', color:'rgba(244,114,182,0.15)', title:'Applied to HackHyderabad 3.0',     time:'3 days ago' },
-    { icon:'✅', color:'rgba(74,222,128,0.15)',  title:'Profile setup completed',           time:'5 days ago' },
-  ];
+      // If no user-specific notifications found, show role-specific recent activity
+      if (!items || items.length === 0) {
+        // role-specific activity templates
+        const activitiesByRole = {
+          member: [
+            { icon:'🎯', color:'rgba(168,85,247,0.15)', title:'Recommended events for you', time:'Now' },
+            { icon:'🌟', color:'rgba(59,130,246,0.15)', title:'People you follow posted in communities', time:'1 day ago' },
+            { icon:'📊', color:'rgba(34,211,238,0.15)', title:'New event analytics available', time:'2 days ago' },
+          ],
+          organizer: [
+            { icon:'📈', color:'rgba(59,130,246,0.08)', title:'New registration on your event', time:'30 mins ago' },
+            { icon:'⚙️', color:'rgba(99,102,241,0.08)', title:'Platform changes require attention', time:'1 day ago' },
+          ],
+          admin: [
+            { icon:'🛡️', color:'rgba(168,85,247,0.15)', title:'Pending approvals need review', time:'Now' },
+            { icon:'🚨', color:'rgba(244,114,182,0.12)', title:'New reports submitted', time:'2 hours ago' },
+          ],
+        };
 
-  el.innerHTML = activities.map(a => `
-    <div class="activity-item">
-      <div class="activity-icon-wrap" style="background:${a.color}">${a.icon}</div>
-      <div class="activity-body">
-        <div class="activity-title">${a.title}</div>
-        <div class="activity-time">${a.time}</div>
-      </div>
-    </div>
-  `).join('');
+        const fallback = activitiesByRole[role] || activitiesByRole.member;
+        el.innerHTML = fallback.map(a => `
+          <div class="activity-item">
+            <div class="activity-icon-wrap" style="background:${a.color}">${a.icon}</div>
+            <div class="activity-body">
+              <div class="activity-title">${escapeHtml(a.title)}</div>
+              <div class="activity-time">${escapeHtml(a.time)}</div>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      el.innerHTML = items.map(n => {
+        const title = n.title || n.message || 'Notification';
+        const time = n.createdAt ? (n.createdAt.toDate ? n.createdAt.toDate().toLocaleString() : new Date(n.createdAt).toLocaleString()) : '';
+        const icon = n.type === 'report_resolved' ? '🔔' : (n.type === 'report' ? '🚨' : (n.type === 'event' ? '🎯' : '🔔'));
+        const color = n.type === 'report_resolved' ? 'rgba(59,130,246,0.12)' : (n.type === 'report' ? 'rgba(244,114,182,0.12)' : 'rgba(99,102,241,0.08)');
+        return `
+          <div class="activity-item">
+            <div class="activity-icon-wrap" style="background:${color}">${icon}</div>
+            <div class="activity-body">
+              <div class="activity-title">${escapeHtml(title)}</div>
+              <div class="activity-time">${escapeHtml(time)}</div>
+              ${n.message ? `<div style="margin-top:6px;font-size:13px;line-height:1.5;color:var(--text-secondary)">${escapeHtml(n.message)}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    } catch (err) {
+      console.error('renderRecentActivity failed', err);
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">Failed to load activity</div><div class="empty-desc">${escapeHtml(err.message||err)}</div></div>`;
+    }
+  })();
 }
 
 // ── Upcoming Events ───────────────────────────

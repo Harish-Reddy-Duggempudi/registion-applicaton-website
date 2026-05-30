@@ -60,3 +60,15 @@ try {
 // events/        { id, title, desc, category, date, time, venue, isOnline, organizer, communityId, attendees[], banner, isApproved, tags[], maxAttendees, isFree, price }
 // registrations/ { id, userId, eventId, status, registeredAt, ticketId }
 // notifications/ { id, userId, type, title, message, read, createdAt }
+
+// Expose to window for other scripts that expect window.db/window.auth
+try {
+  if (typeof window !== 'undefined') {
+    window.db = db;
+    window.auth = auth;
+    window.googleProvider = googleProvider;
+    console.log('Exposed firebase globals on window');
+  }
+} catch (e) {
+  // ignore
+}

@@ -63,6 +63,20 @@
 </div>
 
 <div id="toast-container"></div>
+<div id="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-modal-title" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,11,20,.72);backdrop-filter:blur(10px);z-index:2000;padding:20px">
+  <div class="modal-card">
+    <div class="section-title" id="report-modal-title">Report content</div>
+    <div class="text-secondary text-sm mt-1">Tell us why you're reporting this item — our moderation team will review.</div>
+    <div class="input-group mt-4">
+      <label class="input-label">Details</label>
+      <textarea id="report-modal-reason" class="input-field" rows="5" placeholder="Describe the issue or reason for reporting..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeReportModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitReportModal()">Submit Report</button>
+    </div>
+  </div>
+</div>
 
 <script src="../js/ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>

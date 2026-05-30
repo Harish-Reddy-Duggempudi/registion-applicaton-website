@@ -225,6 +225,28 @@ async function hydrateCommunityMemberCounts(communities) {
   }));
 }
 
+async function hydrateCommunityEventCounts(communities) {
+  if (!db || !Array.isArray(communities) || communities.length === 0) return communities;
+
+  const counts = await Promise.all(communities.map(async community => {
+    try {
+      const snapshot = await db.collection('events')
+        .where('communityId', '==', community.id)
+        .where('isApproved', '==', true)
+        .get();
+      return { id: community.id, count: snapshot.size };
+    } catch (error) {
+      return { id: community.id, count: typeof community.events === 'number' ? community.events : 0 };
+    }
+  }));
+
+  const countMap = new Map(counts.map(item => [item.id, item.count]));
+  return communities.map(community => ({
+    ...community,
+    events: countMap.get(community.id) ?? community.events,
+  }));
+}
+
 function filterLoadedCommunities(filter, searchQuery) {
   let list = [...communityPageState.approvedCommunities];
   if (filter && filter !== 'all') {
@@ -346,6 +368,7 @@ async function loadApprovedCommunities() {
       return bTime - aTime;
     });
     communityPageState.approvedCommunities = await hydrateCommunityMemberCounts(communityPageState.approvedCommunities);
+    communityPageState.approvedCommunities = await hydrateCommunityEventCounts(communityPageState.approvedCommunities);
     communityPageState.approvedLoaded = true;
     communityPageState.approvedLoading = false;
     renderCommunityCards(communityPageState.filter, communityPageState.search);
@@ -399,6 +422,7 @@ async function loadMyCommunities() {
       .map(normalizeCommunityDoc)
       .filter(c => c.isApproved);
     communityPageState.myCommunities = await hydrateCommunityMemberCounts(communityPageState.myCommunities);
+    communityPageState.myCommunities = await hydrateCommunityEventCounts(communityPageState.myCommunities);
     communityPageState.myLoaded = true;
     communityPageState.myLoading = false;
     if (communityPageState.approvedLoaded) {
@@ -746,6 +770,18 @@ async function renderCommunityDetail(c) {
   const el = document.getElementById('community-detail-content');
   if (!el) return;
 
+  if (c.removedByAdmin) {
+    el.innerHTML = `
+      <div class="card">
+        <div class="empty-state">
+          <div class="empty-icon">🚫</div>
+          <div class="empty-title">Community removed by admin</div>
+          <div class="empty-desc">This community has been hidden by an administrator. If you believe this is an error, contact support.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
   const user = getCurrentUser();
   const canManage = !!user?.uid && (user.uid === c.organizerId || user.uid === c.organizer_uid);
 
@@ -856,6 +892,7 @@ async function renderCommunityDetail(c) {
              📅 View Events -->
         <button class="btn btn-primary" onclick='joinCommunity(${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>🌟 Join Community</button>
         <button class="btn btn-ghost btn-icon" title="Share">🔗</button>
+        <button class="btn btn-ghost btn-sm" onclick="openReportModal('community','${(c.id||'').replace(/'/g, "\\'")}','${(c.name||'').replace(/'/g, "\\'")}')">🚨 Report</button>
            <!-- These owner controls should only be visible to the community owner.
              Members should never see them.
 

@@ -166,30 +166,323 @@ const DUMMY_DATA = {
   },
 };
 
+const EVENT_BANNER_BY_CATEGORY = {
+  'Hackathon': 'linear-gradient(135deg,#7c3aed,#ec4899)',
+  'Workshop': 'linear-gradient(135deg,#00A4EF,#22d3ee)',
+  'Tech Talk': 'linear-gradient(135deg,#4285F4,#34A853)',
+  'Competition': 'linear-gradient(135deg,#0891b2,#7c3aed)',
+  'Networking': 'linear-gradient(135deg,#f59e0b,#ef4444)',
+  'Conference': 'linear-gradient(135deg,#10b981,#3b82f6)',
+};
+
+const EVENT_EMOJI_BY_CATEGORY = {
+  'Hackathon': '🏆',
+  'Workshop': '🔧',
+  'Tech Talk': '🎙️',
+  'Competition': '⚡',
+  'Networking': '🤝',
+  'Conference': '🌐',
+};
+
+let firestoreEventCache = null;
+let firestoreEventCacheLoaded = false;
+let firestoreEventLoadPromise = null;
+let firestoreCommunityCache = null;
+let firestoreCommunityCacheLoaded = false;
+let firestoreCommunityLoadPromise = null;
+const LOCAL_CREATED_EVENTS_KEY = 'nexora_created_events';
+
+function getFallbackEventBanner(category) {
+  return EVENT_BANNER_BY_CATEGORY[category] || 'linear-gradient(135deg,#4f46e5,#06b6d4)';
+}
+
+function getFallbackEventEmoji(category) {
+  return EVENT_EMOJI_BY_CATEGORY[category] || '🎯';
+}
+
+function readLocalCreatedEvents() {
+  try {
+    const raw = localStorage.getItem(LOCAL_CREATED_EVENTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeLocalCreatedEvents(events) {
+  try {
+    localStorage.setItem(LOCAL_CREATED_EVENTS_KEY, JSON.stringify(Array.isArray(events) ? events : []));
+  } catch (error) {
+    console.warn('Failed to persist local created events', error);
+  }
+}
+
+function mergeEventSources(...lists) {
+  const map = new Map();
+  lists.flat().filter(Boolean).forEach(item => {
+    const normalized = normalizeEventRecord(item, item?.id || '');
+    if (normalized.id) map.set(normalized.id, normalized);
+  });
+  return Array.from(map.values());
+}
+
+function normalizeEventRecord(data = {}, fallbackId = '') {
+  const category = data.category || 'Other';
+  const title = data.title || 'Untitled Event';
+  const description = data.desc || data.description || '';
+  const tags = Array.isArray(data.tags) ? data.tags : [];
+  const normalizeList = value => Array.isArray(value)
+    ? value.map(item => {
+      if (item && typeof item === 'object') {
+        return [item.name || item.title || '', item.designation || item.role || ''].filter(Boolean).join(' — ').trim();
+      }
+      return String(item).trim();
+    }).filter(Boolean)
+    : (typeof value === 'string' ? value.split(/\r?\n|,/).map(item => item.trim()).filter(Boolean) : []);
+  const attendees = typeof data.attendees === 'number' ? data.attendees : Number(data.attendees || 0);
+  const maxAttendees = typeof data.maxAttendees === 'number' ? data.maxAttendees : Number(data.maxAttendees || 0);
+
+  return {
+    id: data.id || data.eventId || fallbackId,
+    title,
+    desc: description,
+    description,
+    category,
+    date: data.date || '',
+    time: data.time || '',
+    venue: data.venue || '',
+    isOnline: !!data.isOnline,
+    isFree: data.isFree !== false,
+    price: Number(data.price || 0),
+    organizer: data.organizer || data.organizerName || '',
+    organizerId: data.organizerId || data.organizer_uid || '',
+    communityId: data.communityId || '',
+    attendees,
+    maxAttendees,
+    tags,
+    agenda: normalizeList(data.agenda),
+    speakers: normalizeList(data.speakers),
+    sponsors: normalizeList(data.sponsors),
+    collaborators: normalizeList(data.collaborators || data.collaboration),
+    organizingTeam: normalizeList(data.organizingTeam || data.organisingTeam),
+    emoji: data.emoji || getFallbackEventEmoji(category),
+    banner: data.banner || getFallbackEventBanner(category),
+    isApproved: data.isApproved !== false,
+    status: data.status || 'upcoming',
+    schedule: Array.isArray(data.schedule) ? data.schedule : [],
+    removedByAdmin: !!data.removedByAdmin,
+    createdAt: data.createdAt || null,
+    registrationDeadline: data.registrationDeadline || null,
+  };
+}
+
+function normalizeCommunityRecord(data = {}, fallbackId = '') {
+  const category = data.category || 'Other';
+  const description = data.description || data.desc || '';
+  const members = typeof data.memberCount === 'number' ? data.memberCount : Number(data.memberCount || data.members || 0);
+
+  return {
+    id: data.id || data.communityId || fallbackId,
+    name: data.name || 'Untitled Community',
+    description,
+    desc: description,
+    category,
+    emoji: data.emoji || '🌐',
+    banner: data.banner || getFallbackEventBanner(category),
+    logo: data.logo || '',
+    website: data.website || '',
+    linkedin: data.linkedin || '',
+    instagram: data.instagram || '',
+    github: data.github || '',
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    college: data.college || '',
+    city: data.city || '',
+    organizerId: data.organizerId || data.organizer_uid || '',
+    organizerName: data.organizerName || data.organizer || 'NEXOVERSE',
+    organizerEmail: data.organizerEmail || '',
+    organizer: data.organizerName || data.organizer || 'NEXOVERSE',
+    memberCount: members,
+    members,
+    events: Number(data.events || data.eventsCount || 0),
+    createdAt: data.createdAt || null,
+    founded: data.createdAt || data.founded || null,
+    status: data.status || '',
+    isApproved: data.isApproved !== false,
+    removedByAdmin: !!data.removedByAdmin,
+  };
+}
+
+async function loadEventsFromFirestore(force = false) {
+  const localEvents = readLocalCreatedEvents();
+  if (!db) {
+    const fallback = mergeEventSources(DUMMY_DATA.events, localEvents);
+    firestoreEventCache = fallback;
+    firestoreEventCacheLoaded = true;
+    return fallback;
+  }
+  if (firestoreEventLoadPromise && !force) return firestoreEventLoadPromise;
+
+  firestoreEventLoadPromise = (async () => {
+    try {
+      const snapshot = await db.collection('events').get();
+      const remoteEvents = snapshot.docs.map(doc => normalizeEventRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id));
+      firestoreEventCache = mergeEventSources(localEvents, remoteEvents);
+      firestoreEventCacheLoaded = true;
+      return firestoreEventCache;
+    } catch (error) {
+      console.warn('Failed to load events from Firestore', error);
+      firestoreEventCacheLoaded = true;
+      if (!Array.isArray(firestoreEventCache) || firestoreEventCache.length === 0) {
+        firestoreEventCache = mergeEventSources(localEvents);
+      }
+      return firestoreEventCache;
+    } finally {
+      firestoreEventLoadPromise = null;
+    }
+  })();
+
+  return firestoreEventLoadPromise;
+}
+
+async function loadCommunitiesFromFirestore(force = false) {
+  if (!db) return Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+  if (firestoreCommunityLoadPromise && !force) return firestoreCommunityLoadPromise;
+
+  firestoreCommunityLoadPromise = (async () => {
+    try {
+      const snapshot = await db.collection('communities').get();
+      firestoreCommunityCache = snapshot.docs.map(doc => normalizeCommunityRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id));
+      firestoreCommunityCacheLoaded = true;
+      return firestoreCommunityCache;
+    } catch (error) {
+      console.warn('Failed to load communities from Firestore', error);
+      firestoreCommunityCacheLoaded = true;
+      if (!Array.isArray(firestoreCommunityCache)) firestoreCommunityCache = null;
+      return Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    } finally {
+      firestoreCommunityLoadPromise = null;
+    }
+  })();
+
+  return firestoreCommunityLoadPromise;
+}
+
 // ── Data Access Helpers ───────────────────────
 const DataStore = {
+  async loadEventsFromFirestore(force = false) {
+    return loadEventsFromFirestore(force);
+  },
+  getLiveEvents() {
+    return Array.isArray(firestoreEventCache) ? firestoreEventCache : [];
+  },
+  hasLoadedEventsFromFirestore() {
+    return firestoreEventCacheLoaded;
+  },
+  async loadCommunitiesFromFirestore(force = false) {
+    return loadCommunitiesFromFirestore(force);
+  },
+  getCommunitiesForUser(userId) {
+    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    return source.filter(c => !c.removedByAdmin && (
+      c.organizerId === userId ||
+      c.organizer_uid === userId ||
+      c.isApproved
+    ));
+  },
   getCommunities(filter = null) {
-    let list = DUMMY_DATA.communities.filter(c => c.isApproved);
+    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    let list = source.filter(c => c.isApproved && !c.removedByAdmin);
     if (filter && filter !== 'all') list = list.filter(c => c.category === filter);
     return list;
   },
   getCommunity(id) {
-    return DUMMY_DATA.communities.find(c => c.id === id);
+    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    return source.find(c => c.id === id) || DUMMY_DATA.communities.find(c => c.id === id);
   },
   getEvents(filter = null) {
-    let list = DUMMY_DATA.events.filter(e => e.isApproved);
+    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    let list = source.filter(e => e.isApproved && !e.removedByAdmin);
     if (filter && filter !== 'all') list = list.filter(e => e.category === filter);
     return list;
   },
   getEvent(id) {
-    return DUMMY_DATA.events.find(e => e.id === id);
+    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    return source.find(e => e.id === id) || DUMMY_DATA.events.find(e => e.id === id);
   },
   getUserRegistrations(uid) {
     const regs = DUMMY_DATA.registrations.filter(r => r.userId === uid);
     return regs.map(r => ({ ...r, event: DataStore.getEvent(r.eventId) }));
   },
+  async getEventAttendeeProfiles(eventId, limit = 12) {
+    if (!eventId) return { profiles: [], count: 0 };
+
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('registrations').where('eventId', '==', eventId).get();
+        const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+        const count = registrations.length;
+        const attendeeIds = [...new Set(registrations.map(item => item.userId).filter(Boolean))].slice(0, limit);
+        if (attendeeIds.length === 0) return { profiles: [], count };
+
+        const userDocs = await Promise.all(attendeeIds.map(userId => db.collection('users').doc(userId).get()));
+        return {
+          count,
+          profiles: userDocs
+          .map((doc, index) => {
+            const data = doc.exists ? (doc.data() || {}) : {};
+            const fallbackName = attendeeIds[index];
+            const name = data.name || data.displayName || fallbackName;
+            const initials = (data.avatar || name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'U');
+            const reg = registrations.find(item => item.userId === attendeeIds[index]) || {};
+            return {
+              id: attendeeIds[index],
+              name,
+              email: data.email || '',
+              avatar: initials,
+              role: data.role || 'member',
+              registeredAt: reg.registeredAt || reg.createdAt || null,
+              ticketId: reg.ticketId || '',
+            };
+          })
+          .filter(Boolean),
+        };
+      } catch (error) {
+        console.warn('Failed to load event attendee profiles from Firestore', error);
+      }
+    }
+
+    const fallbackRegs = DUMMY_DATA.registrations.filter(item => item.eventId === eventId).slice(0, limit);
+    const demoUsers = typeof DEMO_USERS !== 'undefined' ? DEMO_USERS : {};
+    return {
+      count: fallbackRegs.length,
+      profiles: fallbackRegs.map(item => {
+      const user = Object.values(demoUsers).find(profile => profile.uid === item.userId) || null;
+      const name = user?.name || item.userId || 'Attendee';
+      return {
+        id: item.userId,
+        name,
+        email: user?.email || '',
+        avatar: user?.avatar || name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'U',
+        role: user?.role || 'member',
+        registeredAt: item.registeredAt || null,
+        ticketId: item.ticketId || '',
+      };
+      }),
+    };
+  },
   getNotifications(uid) {
-    return DUMMY_DATA.notifications;
+    // If demo notifications include userId, filter by uid; otherwise return demo list
+    if (!Array.isArray(DUMMY_DATA.notifications)) return [];
+    try {
+      const hasUserId = DUMMY_DATA.notifications.some(n => Object.prototype.hasOwnProperty.call(n, 'userId'));
+      if (hasUserId && uid) {
+        return DUMMY_DATA.notifications.filter(n => n.userId === uid);
+      }
+      return DUMMY_DATA.notifications;
+    } catch (e) {
+      return DUMMY_DATA.notifications;
+    }
   },
   getAnalytics() {
     return DUMMY_DATA.analytics;
@@ -212,24 +505,39 @@ const DataStore = {
   },
   searchEvents(query) {
     const q = query.toLowerCase();
-    return DUMMY_DATA.events.filter(e =>
-      e.title.toLowerCase().includes(q) ||
-      e.category.toLowerCase().includes(q) ||
-      e.tags.some(t => t.toLowerCase().includes(q))
+    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
+    return source.filter(e =>
+      e.isApproved && !e.removedByAdmin && (
+        e.title.toLowerCase().includes(q) ||
+        e.category.toLowerCase().includes(q) ||
+        e.tags.some(t => t.toLowerCase().includes(q))
+      )
     );
+  },
+  saveCreatedEventLocal(event) {
+    if (!event) return;
+    const merged = mergeEventSources(readLocalCreatedEvents(), [event]);
+    writeLocalCreatedEvents(merged);
+    if (Array.isArray(firestoreEventCache) && firestoreEventCache.length > 0) {
+      firestoreEventCache = mergeEventSources(firestoreEventCache, [event]);
+    }
   },
   searchCommunities(query) {
     const q = query.toLowerCase();
-    return DUMMY_DATA.communities.filter(c =>
+    const source = Array.isArray(firestoreCommunityCache) ? firestoreCommunityCache : DUMMY_DATA.communities;
+    return source.filter(c =>
+      c.isApproved && !c.removedByAdmin && (
       c.name.toLowerCase().includes(q) ||
       c.category.toLowerCase().includes(q) ||
       c.desc.toLowerCase().includes(q)
+      )
     );
   },
   getPendingApprovals() {
+    const source = Array.isArray(firestoreEventCache) ? firestoreEventCache : DUMMY_DATA.events;
     return {
       communities: DUMMY_DATA.communities.filter(c => !c.isApproved),
-      events: DUMMY_DATA.events.filter(e => !e.isApproved),
+      events: source.filter(e => !e.isApproved),
     };
   },
   getDashboardStats(role) {

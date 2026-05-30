@@ -106,7 +106,6 @@ function buildNavbar(pageTitle, basePath = '') {
         <!-- Search trigger removed -->
 
         <!-- Notifications removed -->
-
         <!-- Profile Dropdown -->
         <div class="profile-dropdown-wrap" id="profile-dropdown-wrap">
           <div class="profile-trigger" id="profile-trigger">
@@ -151,4 +150,36 @@ function initDashboardLayout(options = {}) {
   initProfileDropdown();
   initMobileSidebar();
   populateUserInfo();
+  // Update notifications badge
+  try { setTimeout(() => { if (typeof fetchNotifCount === 'function') fetchNotifCount(); }, 300); } catch(e){}
+}
+
+// Fetch unread notification count for current user and update badge
+async function fetchNotifCount() {
+  const user = getCurrentUser();
+  const badge = document.getElementById('notif-count-badge');
+  if (!badge) return;
+  try {
+    if (typeof window !== 'undefined' && window.db && user?.uid) {
+      const snap = await window.db.collection('notifications')
+        .where('userId', '==', user.uid)
+        .where('read', '==', false)
+        .get();
+      const count = snap.size || 0;
+      badge.textContent = count > 0 ? String(count) : '';
+      return;
+    }
+  } catch (err) {
+    console.warn('fetchNotifCount failed', err);
+  }
+
+  // Fallback to DataStore
+  try {
+    const count = (typeof DataStore !== 'undefined' && DataStore.getNotifications)
+      ? DataStore.getNotifications(user?.uid || '').filter(n => !n.read).length
+      : 0;
+    badge.textContent = count > 0 ? String(count) : '';
+  } catch (e) {
+    badge.textContent = '';
+  }
 }
