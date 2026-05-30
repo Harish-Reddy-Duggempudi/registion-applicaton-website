@@ -384,6 +384,12 @@ select.input-field option { background: var(--bg-secondary); }
 
 textarea.input-field { resize: vertical; min-height: 100px; }
 
+/* Collaboration chips & suggestions */
+.collab-suggestion { padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer }
+.collab-suggestion:hover { background:var(--bg-card-hover) }
+.collab-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:var(--bg-card); border:1px solid var(--border) }
+.collab-chip .remove-collab-btn { padding:6px }
+
 /* ── Aurora Background ── */
 .aurora-bg {
   position: fixed;

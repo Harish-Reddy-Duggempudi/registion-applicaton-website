@@ -172,14 +172,16 @@
             <div class="mb-4">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
                 <label class="input-label" style="margin:0">Collaboration</label>
-                <button type="button" class="btn btn-ghost btn-sm" id="add-collaboration-btn">+ Add Community</button>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn-ghost btn-sm" id="add-collaboration-btn">+ Add</button>
+                </div>
               </div>
-              <div class="input-group mb-3">
-                <input id="collaboration-search" class="input-field" list="collaboration-community-options" placeholder="Search a community already on the platform" />
-                <datalist id="collaboration-community-options"></datalist>
+              <div class="input-group mb-2" style="position:relative">
+                <input id="collaboration-search" class="input-field" placeholder="Search communities (type to search)" autocomplete="off" />
+                <div id="collaboration-suggestions" style="position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:none;max-height:220px;overflow:auto;margin-top:8px"></div>
               </div>
-              <div id="collaboration-builder" style="display:flex;flex-direction:column;gap:10px"></div>
-              <div class="text-secondary text-xs mt-2">Search an existing community and add it to collaboration. You can also type a custom partner name.</div>
+              <div id="collaboration-builder" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+              <div class="text-secondary text-xs mt-2">Select communities to collaborate with. If you're an admin of a community it will be added automatically; otherwise a collaboration request will be sent.</div>
             </div>
             <div class="input-group">
               <label class="input-label">Organising Team</label>

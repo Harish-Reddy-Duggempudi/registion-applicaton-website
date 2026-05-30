@@ -30,6 +30,13 @@ async function initEventsPage() {
       console.warn('Event sync failed', error);
     }
   }
+  if (DataStore?.loadCommunitiesFromFirestore) {
+    try {
+      await DataStore.loadCommunitiesFromFirestore();
+    } catch (error) {
+      console.warn('Community sync failed', error);
+    }
+  }
   renderFeaturedEvent();
   renderEventCards('all');
   initEventFilters();
@@ -96,6 +103,7 @@ function buildEventCard(e) {
   const userRegs = DataStore.getUserRegistrations(user?.uid || '');
   const isRegistered = userRegs.some(r => r.eventId === e.id);
   const fillPct = Math.round((e.attendees / e.maxAttendees) * 100);
+  const eventCommunity = e.communityId ? (typeof DataStore?.getCommunity === 'function' ? DataStore.getCommunity(e.communityId) : null) : null;
 
   return `
     <div class="event-card" data-category="${e.category}">
@@ -114,6 +122,7 @@ function buildEventCard(e) {
           <span>📅 ${formatDate(e.date)} · ⏰ ${e.time}</span>
           <span>${e.isOnline ? '🌐 Online Event' : '📍 '+e.venue.split(',')[0]}</span>
           <span>🏛️ ${e.organizer}</span>
+          ${eventCommunity ? `<span>🌐 ${eventCommunity.name}</span>` : ''}
         </div>
         <div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
@@ -184,11 +193,19 @@ async function handleEventRegister(event, eventId, eventTitle) {
 async function initEventDetailsPage() {
   const params = new URLSearchParams(window.location.search);
   const id     = params.get('id') || '';
+  let acceptedCollaborationNames = [];
   if (DataStore?.loadEventsFromFirestore) {
     try {
       await DataStore.loadEventsFromFirestore();
     } catch (error) {
       console.warn('Event detail sync failed', error);
+    }
+  }
+  if (DataStore?.loadCommunitiesFromFirestore) {
+    try {
+      await DataStore.loadCommunitiesFromFirestore();
+    } catch (error) {
+      console.warn('Community detail sync failed', error);
     }
   }
   const event = (typeof DataStore.getLiveEvents === 'function' ? DataStore.getLiveEvents() : []).find(e => e.id === id);
@@ -206,12 +223,31 @@ async function initEventDetailsPage() {
 
   renderEventDetail(event, { profiles: [], count: event.attendees || 0 });
 
+  if (DataStore?.getAcceptedCollaborationNamesForEvent) {
+    DataStore.getAcceptedCollaborationNamesForEvent(event)
+      .then(collaborationNames => {
+        acceptedCollaborationNames = Array.isArray(collaborationNames) ? collaborationNames : [];
+        const latestEvent = (typeof DataStore.getLiveEvents === 'function' ? DataStore.getLiveEvents() : []).find(item => item.id === id);
+        if (!latestEvent) return;
+        const mergedCollaborators = acceptedCollaborationNames.length
+          ? acceptedCollaborationNames
+          : (Array.isArray(latestEvent.collaborators) ? latestEvent.collaborators : []);
+        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators }, { profiles: [], count: latestEvent.attendees || 0 });
+      })
+      .catch(error => {
+        console.warn('Accepted collab load failed', error);
+      });
+  }
+
   if (DataStore?.getEventAttendeeProfiles) {
     DataStore.getEventAttendeeProfiles(id, 10)
       .then(attendeeData => {
         const latestEvent = (typeof DataStore.getLiveEvents === 'function' ? DataStore.getLiveEvents() : []).find(item => item.id === id);
         if (!latestEvent) return;
-        renderEventDetail(latestEvent, attendeeData);
+        const mergedCollaborators = acceptedCollaborationNames.length
+          ? acceptedCollaborationNames
+          : (Array.isArray(latestEvent.collaborators) ? latestEvent.collaborators : []);
+        renderEventDetail({ ...latestEvent, collaborators: mergedCollaborators }, attendeeData);
       })
       .catch(error => {
         console.warn('Attendee profile load failed', error);
@@ -242,6 +278,10 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
   const attendeeProfiles = Array.isArray(attendeeData.profiles) ? attendeeData.profiles : [];
   const fillPct = Math.round((liveAttendeeCount / e.maxAttendees) * 100);
   const canManage = typeof canUseOrganizerFeatures === 'function' ? canUseOrganizerFeatures(user) : (user?.role === 'organizer' || user?.role === 'admin');
+  const eventCommunity = e.communityId ? (typeof DataStore?.getCommunity === 'function' ? DataStore.getCommunity(e.communityId) : null) : null;
+  const collaborationItems = Array.isArray(e.collaborators)
+    ? e.collaborators.map(resolveCommunityDisplayName).filter(Boolean)
+    : [];
   const renderSpeakerValue = (item) => {
     if (item && typeof item === 'object') {
       const name = item.name || item.title || '';
@@ -283,6 +323,7 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
               { icon:'⏰', label:'Time', value: e.time },
               { icon:'📍', label:'Venue', value: e.isOnline ? 'Online Event' : e.venue },
               { icon:'🏛️', label:'Organizer', value: e.organizer },
+              ...(eventCommunity ? [{ icon:'🌐', label:'Community', value: eventCommunity.name }] : []),
               { icon:'👥', label:'Capacity', value: `${e.attendees}/${e.maxAttendees} registered` },
               { icon:'💰', label:'Entry', value: e.isFree ? 'Free' : '₹'+e.price },
             ].map(row => `
@@ -332,7 +373,8 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
 
         <div class="card mb-4">
           <div class="section-title mb-4">🔗 Collaboration</div>
-          <ul style="padding-left:18px;color:var(--text-secondary);line-height:1.8;margin:0">${renderList(e.collaborators)}</ul>
+          <ul style="padding-left:18px;color:var(--text-secondary);line-height:1.8;margin:0">${renderList(collaborationItems)}</ul>
+          ${!collaborationItems.length ? '<div class="text-muted text-xs mt-2">No collaboration communities added yet.</div>' : ''}
         </div>
 
         <div class="card mb-4">
@@ -429,11 +471,11 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
         </div>
 
         <!-- Community card -->
-        ${e.communityId ? (() => {
-          const c = DataStore.getCommunity(e.communityId);
-          return c ? `
+        ${eventCommunity ? (() => {
+          const c = eventCommunity;
+          return `
             <div class="card mt-4">
-              <div class="text-muted text-xs mb-3">ORGANIZED BY</div>
+              <div class="text-muted text-xs mb-3">COMMUNITY</div>
               <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="window.location='community-details.html?id=${c.id}'">
                 <div style="width:44px;height:44px;border-radius:10px;background:${c.banner};display:flex;align-items:center;justify-content:center;font-size:20px">${c.emoji}</div>
                 <div>
@@ -442,7 +484,7 @@ function renderEventDetail(e, attendeeData = { profiles: [], count: 0 }) {
                 </div>
               </div>
               <button class="btn btn-ghost btn-sm w-full mt-3" onclick="joinCommunity && joinCommunity('${c.id}','${c.name}')">🌟 Join Community</button>
-            </div>` : '';
+            </div>`;
         })() : ''}
       </div>
     </div>
@@ -528,6 +570,148 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function resolveCommunityDisplayName(value) {
+  if (!value) return '';
+  if (typeof value === 'object') {
+    return value.name || value.title || value.label || '';
+  }
+  const text = String(value).trim();
+  if (!text) return '';
+  if (typeof DataStore?.getCommunity === 'function') {
+    try {
+      const community = DataStore.getCommunity(text);
+      if (community?.name) return community.name;
+    } catch (error) {
+      // fall through to the raw value
+    }
+  }
+  return text;
+}
+
+// ---------- Collaboration multi-select (search + chips) ----------
+async function renderCollaborationSuggestions(query = '') {
+  const box = document.getElementById('collaboration-suggestions');
+  if (!box) return;
+  const q = String(query || '').trim().toLowerCase();
+  // Ensure communities are loaded from Firestore when possible so search covers all communities
+  if (typeof DataStore?.loadCommunitiesFromFirestore === 'function') {
+    try {
+      await DataStore.loadCommunitiesFromFirestore();
+    } catch (err) {
+      // continue with what we have
+    }
+  }
+  // prefer DataStore.searchCommunities when available; otherwise fall back to full communities list
+  let source = [];
+  if (typeof DataStore?.searchCommunities === 'function') {
+    try {
+      source = DataStore.searchCommunities(''); // get full list; we'll filter below
+    } catch (err) {
+      source = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : (Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : []);
+    }
+  } else if (typeof DataStore?.getCommunities === 'function') {
+    source = DataStore.getCommunities();
+  } else {
+    source = Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : [];
+  }
+
+  // If source seems unexpectedly small (e.g. only 0-1 items), try a direct Firestore fetch as a fallback
+  if (Array.isArray(source) && source.length <= 1 && typeof db !== 'undefined' && db) {
+    try {
+      const snap = await db.collection('communities').where('isApproved', '==', true).get();
+      source = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+    } catch (err) {
+      // ignore and continue with whatever source we have
+      console.warn('collab: fallback community fetch failed', err);
+    }
+  }
+
+  console.debug('[collab] communities loaded:', source.length, 'query:', q);
+
+  // filter by query if present
+  const filtered = q ? source.filter(item => (item.name || '').toLowerCase().includes(q) || (item.category || '').toLowerCase().includes(q) || (item.desc || '').toLowerCase().includes(q)) : source;
+  const matches = filtered.slice(0, 50);
+  console.debug('[collab] suggestions matched:', matches.length);
+  if (!matches.length) {
+    box.style.display = 'none'; box.innerHTML = ''; return;
+  }
+  box.style.display = '';
+  box.innerHTML = matches.map(item => {
+    const label = item.category ? `${item.name} — ${item.category}` : item.name;
+    return `<div class="collab-suggestion" data-id="${escapeHtml(item.id || '')}" style="padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer">${escapeHtml(label)}</div>`;
+  }).join('');
+}
+
+function buildCollabChip(item) {
+  const label = item.category ? `${item.name} — ${item.category}` : item.name;
+  const id = item.id || '';
+  return `<div class="collab-chip" data-id="${escapeHtml(id)}" style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--bg-card);border:1px solid var(--border)">` +
+    `<div style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(label)}</div>` +
+    `<button type="button" class="btn btn-ghost btn-sm remove-collab-btn">✕</button>` +
+    `</div>`;
+}
+
+function getSelectedCollabIds() {
+  const chips = document.querySelectorAll('#collaboration-builder .collab-chip');
+  return Array.from(chips).map(c => c.dataset.id || '').filter(Boolean);
+}
+
+function addCollaborationChip(item) {
+  const builder = document.getElementById('collaboration-builder');
+  if (!builder) return;
+  const label = item.category ? `${item.name} — ${item.category}` : item.name;
+  // prevent duplicates
+  const existing = Array.from(builder.querySelectorAll('.collab-chip')).some(ch => ch.textContent.includes(label));
+  if (existing) return;
+  builder.insertAdjacentHTML('beforeend', buildCollabChip(item));
+}
+
+function getSelectedCollabLabels() {
+  const chips = document.querySelectorAll('#collaboration-builder .collab-chip');
+  return Array.from(chips).map(ch => {
+    const txt = ch.querySelector('div')?.textContent || ch.textContent || '';
+    return txt.trim();
+  }).filter(Boolean);
+}
+
+async function attemptAddOrRequestCollab(item, requestMeta = {}) {
+  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  const isAdmin = user && (item.organizerId === user.uid || item.organizer_uid === user.uid);
+  if (isAdmin) {
+    addCollaborationChip(item);
+    if (typeof toast === 'object' && typeof toast.success === 'function') toast.success('Added', `${item.name} added as collaborator`);
+    return { action: 'added' };
+  }
+  // send request
+  try {
+    const payload = {
+      fromUserId: user?.uid || '',
+      eventDraft: {
+        title: document.querySelector('#e-title')?.value || '',
+        date: document.querySelector('#e-date')?.value || '',
+        eventId: requestMeta.eventId || '',
+        draftId: requestMeta.draftId || '',
+      },
+      toCommunity: {
+        id: item.id || '',
+        name: item.name || '',
+        category: item.category || '',
+      },
+    };
+    if (typeof DataStore?.sendCollabRequest === 'function') {
+      await DataStore.sendCollabRequest(item.id, payload);
+      if (typeof toast === 'object' && typeof toast.success === 'function') toast.success('Request sent', `Collaboration request sent to ${item.name}`);
+    } else {
+      // fallback: notify user
+      if (typeof toast === 'object' && typeof toast.info === 'function') toast.info('Request queued', `Collaboration request queued for ${item.name}`);
+    }
+    return { action: 'requested' };
+  } catch (err) {
+    if (typeof toast === 'object' && typeof toast.error === 'function') toast.error('Request failed', err?.message || 'Unable to send request');
+    return { action: 'failed' };
+  }
 }
 
 function splitTimeRange(value) {
@@ -698,96 +882,8 @@ function collectSponsorBuilder() {
   return getSponsorLabels();
 }
 
-function getCollaborationCommunitySource() {
-  if (typeof DataStore?.getCommunities === 'function') {
-    return DataStore.getCommunities();
-  }
-  return Array.isArray(DUMMY_DATA?.communities) ? DUMMY_DATA.communities.filter(item => item.isApproved && !item.removedByAdmin) : [];
-}
+// Collaboration features reverted — use the simple textarea field `#e-collaborators`
 
-function getCollaborationCommunityLabels() {
-  return getCollaborationCommunitySource().map(item => ({
-    id: item.id || '',
-    name: item.name || '',
-    category: item.category || '',
-  })).filter(item => item.name);
-}
-
-function normalizeCollaborationDraft(value) {
-  if (value && typeof value === 'object') {
-    return {
-      id: value.id || '',
-      name: value.name || value.title || '',
-      category: value.category || '',
-    };
-  }
-  const text = String(value || '').trim();
-  if (!text) return { id: '', name: '', category: '' };
-  return { id: '', name: text, category: '' };
-}
-
-function buildCollaborationChip(collaboration = {}) {
-  const draft = normalizeCollaborationDraft(collaboration);
-  const label = draft.category ? `${draft.name} — ${draft.category}` : draft.name;
-  return `
-    <div class="collaboration-chip" data-collaboration-id="${escapeHtml(draft.id || '')}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg-card)">
-      <div style="min-width:0">
-        <div class="text-sm font-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(draft.name || '')}</div>
-        ${draft.category ? `<div class="text-muted text-xs" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(draft.category)}</div>` : ''}
-      </div>
-      <button type="button" class="btn btn-ghost btn-sm remove-collaboration-btn">Remove</button>
-    </div>
-  `;
-}
-
-function renderCollaborationOptions() {
-  const list = document.getElementById('collaboration-community-options');
-  if (!list) return;
-  const labels = getCollaborationCommunityLabels();
-  list.innerHTML = labels.map(item => {
-    const label = item.category ? `${item.name} — ${item.category}` : item.name;
-    return `<option value="${escapeHtml(item.name)}" data-id="${escapeHtml(item.id)}" label="${escapeHtml(label)}"></option>`;
-  }).join('');
-}
-
-function populateCollaborationBuilder(collaborators = []) {
-  const container = document.getElementById('collaboration-builder');
-  if (!container) return;
-  const list = Array.isArray(collaborators) && collaborators.length ? collaborators : [];
-  container.innerHTML = list.map(item => buildCollaborationChip(item)).join('');
-}
-
-function collectCollaborationBuilder() {
-  const items = document.querySelectorAll('#collaboration-builder .collaboration-chip');
-  return Array.from(items).map(item => {
-    const name = item.querySelector('.text-sm.font-semibold')?.textContent.trim() || '';
-    const category = item.querySelector('.text-muted.text-xs')?.textContent.trim() || '';
-    return category ? `${name} — ${category}` : name;
-  }).filter(Boolean);
-}
-
-function addCollaborationFromInput() {
-  const input = document.getElementById('collaboration-search');
-  const container = document.getElementById('collaboration-builder');
-  if (!input || !container) return;
-
-  const query = input.value.trim();
-  if (!query) return;
-
-  const source = getCollaborationCommunityLabels();
-  const match = source.find(item => item.name.toLowerCase() === query.toLowerCase()) ||
-    source.find(item => item.name.toLowerCase().includes(query.toLowerCase()));
-  const entry = match || { name: query, category: '' };
-  const existing = collectCollaborationBuilder();
-  const label = entry.category ? `${entry.name} — ${entry.category}` : entry.name;
-  if (existing.includes(label)) {
-    input.value = '';
-    return;
-  }
-
-  container.insertAdjacentHTML('beforeend', buildCollaborationChip(entry));
-  input.value = '';
-}
 
 function buildSessionBuilderItem(session = {}) {
   const draft = normalizeSessionDraft(session);
@@ -886,7 +982,7 @@ function populateEventForm(event) {
   setValue('#e-tags', Array.isArray(event.tags) ? event.tags.join(', ') : '');
   populateSpeakerBuilder(Array.isArray(event.speakers) ? event.speakers : []);
   populateSponsorBuilder(Array.isArray(event.sponsors) ? event.sponsors : []);
-  populateCollaborationBuilder(Array.isArray(event.collaborators) ? event.collaborators : []);
+  setValue('#e-collaborators', Array.isArray(event.collaborators) ? event.collaborators.join('\n') : '');
   setValue('#e-organizing-team', Array.isArray(event.organizingTeam) ? event.organizingTeam.join('\n') : '');
   populateSessionBuilder(Array.isArray(event.schedule) && event.schedule.length ? event.schedule : parseAgendaBlocks(Array.isArray(event.agenda) ? event.agenda.join('\n') : ''));
   refreshSessionSpeakerSelectors();
@@ -926,7 +1022,7 @@ async function initCreateEventPage() {
       console.warn('Community sync failed', error);
     }
   }
-  renderCollaborationOptions();
+  // collaboration uses a simple textarea; no suggestion UI here
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get('edit') || '';
@@ -939,6 +1035,7 @@ async function initCreateEventPage() {
       console.warn('Edit event sync failed', error);
     }
   }
+  const collaborationDraftId = editEvent?.collaborationDraftId || `collab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   // Pre-fill community if passed in URL
   const communityId = params.get('community');
@@ -976,7 +1073,6 @@ async function initCreateEventPage() {
 
   const speakerBuilder = document.getElementById('speaker-builder');
   const sponsorBuilder = document.getElementById('sponsor-builder');
-  const collaborationBuilder = document.getElementById('collaboration-builder');
   const addSpeakerBtn = document.getElementById('add-speaker-btn');
   addSpeakerBtn?.addEventListener('click', () => {
     speakerBuilder?.insertAdjacentHTML('beforeend', buildSpeakerBuilderItem({}));
@@ -989,9 +1085,37 @@ async function initCreateEventPage() {
   });
 
   const addCollaborationBtn = document.getElementById('add-collaboration-btn');
-  addCollaborationBtn?.addEventListener('click', () => {
-    addCollaborationFromInput();
+  const collabInput = document.getElementById('collaboration-search');
+  addCollaborationBtn?.addEventListener('click', async () => {
+    const q = (collabInput?.value || '').trim();
+    if (!q) return;
+    // find community by exact name or best match
+    const source = typeof DataStore?.searchCommunities === 'function' ? DataStore.searchCommunities(q) : (Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : []);
+    const match = source.find(c => c.name.toLowerCase() === q.toLowerCase()) || source.find(c => c.name.toLowerCase().includes(q.toLowerCase()));
+    if (!match) { if (typeof toast === 'object' && typeof toast.warning === 'function') toast.warning('Not found', 'No matching community found'); collabInput.focus(); return; }
+    const res = await attemptAddOrRequestCollab(match, { eventId: editId || '', draftId: collaborationDraftId });
+    if (res.action === 'added' || res.action === 'requested') collabInput.value = '';
   });
+  collabInput?.addEventListener('input', (ev) => {
+    renderCollaborationSuggestions(ev.target.value);
+  });
+  const suggBox = document.getElementById('collaboration-suggestions');
+  suggBox?.addEventListener('click', async (ev) => {
+    const item = ev.target.closest('.collab-suggestion');
+    if (!item) return;
+    const id = item.dataset.id || '';
+    // find community by id
+    const all = Array.isArray(DUMMY_DATA.communities) ? DUMMY_DATA.communities : [];
+    const match = all.find(c => (c.id || '') === id) || (typeof DataStore?.getCommunity === 'function' ? DataStore.getCommunity(id) : null);
+    if (!match) return;
+    const res = await attemptAddOrRequestCollab(match, { eventId: editId || '', draftId: collaborationDraftId });
+    if (res.action === 'added' || res.action === 'requested') {
+      collabInput.value = '';
+      suggBox.style.display = 'none';
+    }
+  });
+
+  // collaboration uses a simple textarea; no suggestion UI here
 
   speakerBuilder?.addEventListener('input', () => {
     refreshSessionSpeakerSelectors();
@@ -1020,14 +1144,13 @@ async function initCreateEventPage() {
     }
   });
 
-  collaborationBuilder?.addEventListener('click', (event) => {
-    const chip = event.target.closest('.collaboration-chip');
+  // remove chip handler
+  const collabBuilder = document.getElementById('collaboration-builder');
+  collabBuilder?.addEventListener('click', (event) => {
+    const chip = event.target.closest('.collab-chip');
     if (!chip) return;
-    if (event.target.closest('.remove-collaboration-btn')) {
+    if (event.target.closest('.remove-collab-btn')) {
       chip.remove();
-      if (collaborationBuilder && !collaborationBuilder.querySelector('.collaboration-chip')) {
-        populateCollaborationBuilder([]);
-      }
     }
   });
 
@@ -1037,9 +1160,7 @@ async function initCreateEventPage() {
   if (sponsorBuilder && !sponsorBuilder.querySelector('.sponsor-builder-item')) {
     populateSponsorBuilder([]);
   }
-  if (collaborationBuilder && !collaborationBuilder.querySelector('.collaboration-chip')) {
-    populateCollaborationBuilder([]);
-  }
+  // no collaboration-builder initialization
 
   const sessionBuilder = document.getElementById('session-builder');
   const addSessionBtn = document.getElementById('add-session-btn');
@@ -1129,7 +1250,7 @@ async function initCreateEventPage() {
     const sessions = collectSessionBuilder();
     const speakers = collectSpeakerBuilder();
     const sponsors = collectSponsorBuilder();
-    const collaborators = collectCollaborationBuilder();
+    const collaborators = getSelectedCollabLabels();
     const organizingTeam = splitListField(form.querySelector('#e-organizing-team')?.value);
     const { emoji, banner } = getEventDraftDefaults(category);
     const payload = {
@@ -1149,6 +1270,7 @@ async function initCreateEventPage() {
       organizerName: selectedCommunity?.name || currentUser?.name || currentUser?.email || 'NEXOVERSE',
       organizerId: currentUser?.uid || '',
       communityId: selectedCommunityId || '',
+      collaborationDraftId,
       attendees: editId && editEvent ? Number(editEvent.attendees || 0) : 0,
       maxAttendees: capacity,
       tags,

@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Dashboard event sync failed', error);
       }
     }
+    if (DataStore?.loadCommunitiesFromFirestore) {
+      try {
+        await DataStore.loadCommunitiesFromFirestore();
+      } catch (error) {
+        console.warn('Dashboard community sync failed', error);
+      }
+    }
     renderDashboard();
     startDashboardOrganizerSync();
   })();
@@ -34,6 +41,7 @@ function renderDashboard(userOverride) {
   renderRoleContent(role);
   renderRecentActivity();
   renderUpcomingEvents();
+  renderCollabRequestsPanel();
 
   finalizeDashboardReady();
 
@@ -569,6 +577,83 @@ function renderUpcomingEvents() {
     </div>
   `).join('');
 }
+
+async function renderCollabRequestsPanel() {
+  const el = document.getElementById('collab-requests-content');
+  if (!el) return;
+  el.innerHTML = '<div class="text-secondary">Loading requests…</div>';
+  const user = getCurrentUser();
+  if (!user) { el.innerHTML = '<div class="empty-state"><div class="empty-title">Sign in to view requests</div></div>'; return; }
+  try {
+    // Incoming: for communities user organizes/owns
+    const allCommunities = typeof DataStore?.getCommunities === 'function' ? DataStore.getCommunities() : [];
+    const ownerComms = allCommunities.filter(c => (c.organizerId === user.uid) || (c.organizer_uid === user.uid) || (c.ownerId === user.uid) || (c.createdBy === user.uid));
+    let incoming = [];
+    for (const c of ownerComms) {
+      if (typeof DataStore?.getCommunityCollabRequests === 'function') {
+        const reqs = await DataStore.getCommunityCollabRequests(c.id);
+        const pendingReqs = (reqs || []).filter(r => (r.status || 'pending') === 'pending');
+        incoming = incoming.concat(pendingReqs.map(r => ({ community: c, req: r })));
+      }
+    }
+
+    // Sent: requests from this user
+    let sent = [];
+    if (typeof db !== 'undefined' && db && typeof db.collection === 'function') {
+      const snapshot = await db.collection('collabRequests').where('payload.fromUserId', '==', user.uid).get();
+      sent = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+    } else if (Array.isArray(DUMMY_DATA.collabRequests)) {
+      sent = DUMMY_DATA.collabRequests.filter(r => r.payload && r.payload.fromUserId === user.uid);
+    }
+
+    // Render
+    let html = '';
+    if (incoming.length === 0) {
+      html += '<div class="empty-state"><div class="empty-icon">🤝</div><div class="empty-title">No incoming requests</div><div class="empty-desc">No communities have collaboration requests right now.</div></div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px">';
+      incoming.slice(0,5).forEach(item => {
+        const r = item.req;
+        const title = (r.payload && r.payload.eventDraft && r.payload.eventDraft.title) ? r.payload.eventDraft.title : (r.payload && r.payload.eventId) ? `Event: ${r.payload.eventId}` : 'Event draft';
+        const when = r.createdAt && r.createdAt.seconds ? new Date(r.createdAt.seconds*1000).toLocaleString() : (r.createdAt || '');
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card)">`;
+        html += `<div style="min-width:0"><div style="font-weight:600">${escapeHtml(title)}</div><div class="text-muted text-xs">From: ${escapeHtml(r.payload?.fromUserId || 'Unknown')} • ${escapeHtml(when)}</div></div>`;
+        html += `<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" data-id="${r.id}" data-cid="${item.community.id}" onclick="handleDashboardCollabAction(event,'accept')">Accept</button><button class="btn btn-ghost btn-sm" data-id="${r.id}" data-cid="${item.community.id}" onclick="handleDashboardCollabAction(event,'reject')">Reject</button></div>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div style="height:12px"></div>';
+    html += '<div class="section-subtitle">My sent requests</div>';
+    if (!sent.length) {
+      html += '<div class="text-muted text-xs">You have not sent any collaboration requests.</div>';
+    } else {
+      html += sent.slice(0,6).map(s => `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:8px;background:var(--bg-card)"><div style="font-weight:600">${escapeHtml((s.payload?.eventDraft?.title) || s.payload?.eventId || 'Event draft')}</div><div class="text-muted text-xs">To: ${escapeHtml(s.toCommunityId || '')} • Status: ${escapeHtml(s.status || 'pending')}</div></div>`).join('');
+    }
+
+    el.innerHTML = html;
+  } catch (err) {
+    console.warn('Failed to load collab requests for dashboard', err);
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">Unable to load requests</div><div class="empty-desc">Try refreshing the page.</div></div>';
+  }
+}
+
+window.handleDashboardCollabAction = async function(event, action) {
+  const btn = event.currentTarget;
+  const id = btn.dataset.id;
+  const communityId = btn.dataset.cid;
+  if (!id) return;
+  btn.disabled = true; btn.textContent = action === 'accept' ? 'Accepting…' : 'Rejecting…';
+  try {
+    await DataStore.handleCollabRequest(id, action, getCurrentUser()?.uid || '');
+    toast.success(action === 'accept' ? 'Accepted' : 'Rejected', `Request ${action}ed.`);
+    setTimeout(() => renderCollabRequestsPanel(), 600);
+  } catch (err) {
+    btn.disabled = false; btn.textContent = action === 'accept' ? 'Accept' : 'Reject';
+    toast.error('Failed', err?.message || 'Unable to process request');
+  }
+};
 
 // ── Admin Actions ─────────────────────────────
 function approveItem(type, id) {

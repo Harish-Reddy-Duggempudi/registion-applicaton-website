@@ -143,6 +143,7 @@ const DUMMY_DATA = {
     { id:'r2', userId:'u1', eventId:'e3', status:'confirmed', registeredAt:'2025-07-30', ticketId:'NXR-E3-042', attended:false },
     { id:'r3', userId:'u1', eventId:'e6', status:'pending',   registeredAt:'2025-08-01', ticketId:'NXR-E6-019', attended:false },
   ],
+  
 
   notifications: [
     { id:'n1', type:'event', title:'Event starts in 3 days!', message:'Google I/O Extended Hyderabad is on Aug 15', read:false, time:'1h ago' },
@@ -387,7 +388,8 @@ const DataStore = {
     return source.filter(c => !c.removedByAdmin && (
       c.organizerId === userId ||
       c.organizer_uid === userId ||
-      c.isApproved
+      c.ownerId === userId ||
+      c.createdBy === userId
     ));
   },
   getCommunities(filter = null) {
@@ -554,5 +556,212 @@ const DataStore = {
       joinedCommunities: 4, registeredEvents: 3, upcomingEvents: 2,
       certificates: 1, attendanceRate: '85%', points: 340,
     };
+  },
+  async sendCollabRequest(toCommunityId, requestPayload = {}) {
+    if (!toCommunityId) throw new Error('Missing community id');
+    if (db && typeof db.collection === 'function') {
+      try {
+        const docRef = await db.collection('collabRequests').add({
+          toCommunityId,
+          payload: requestPayload,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        return { id: docRef.id, toCommunityId, payload: requestPayload, status: 'pending' };
+      } catch (err) {
+        console.warn('Failed to send collaboration request to Firestore', err);
+        throw err;
+      }
+    }
+    // fallback to local storage
+    const req = { id: 'cr' + Date.now(), toCommunityId, payload: requestPayload, status: 'pending', createdAt: new Date().toISOString() };
+    if (!Array.isArray(DUMMY_DATA.collabRequests)) DUMMY_DATA.collabRequests = [];
+    DUMMY_DATA.collabRequests.push(req);
+    return req;
+  },
+  async getCommunityCollabRequests(communityId) {
+    if (!communityId) return [];
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('collabRequests').where('toCommunityId', '==', communityId).get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+      } catch (err) {
+        console.warn('Failed to load collab requests from Firestore', err);
+      }
+    }
+    return Array.isArray(DUMMY_DATA.collabRequests) ? DUMMY_DATA.collabRequests.filter(r => r.toCommunityId === communityId) : [];
+  },
+  async getAcceptedCollaborationNamesForEvent(event = {}) {
+    const normalizeText = value => String(value || '').trim().toLowerCase();
+    const matchEventRequest = (request) => {
+      const eventId = request?.payload?.eventId || request?.payload?.eventDraft?.eventId || '';
+      const draftId = request?.payload?.eventDraft?.draftId || request?.payload?.draftId || '';
+      const title = String(request?.payload?.eventDraft?.title || request?.payload?.title || '').trim();
+      const date = String(request?.payload?.eventDraft?.date || request?.payload?.date || '').trim();
+
+      if (event.id && eventId && normalizeText(event.id) === normalizeText(eventId)) return true;
+      if (event.collaborationDraftId && draftId && normalizeText(event.collaborationDraftId) === normalizeText(draftId)) return true;
+      if (title && date) {
+        return normalizeText(event.title) === normalizeText(title) && normalizeText(event.date) === normalizeText(date);
+      }
+      if (title) return normalizeText(event.title) === normalizeText(title);
+      return false;
+    };
+    const requestToLabel = (request) => {
+      const communityName = request?.payload?.toCommunity?.name || request?.payload?.toCommunityName || request?.toCommunityName || '';
+      return String(communityName || request?.toCommunityId || '').trim();
+    };
+
+    if (db && typeof db.collection === 'function') {
+      try {
+        const snapshot = await db.collection('collabRequests').where('status', '==', 'accepted').get();
+        return snapshot.docs
+          .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
+          .filter(matchEventRequest)
+          .map(requestToLabel)
+          .filter(Boolean);
+      } catch (err) {
+        console.warn('Failed to load accepted collaboration names', err);
+      }
+    }
+
+    return Array.isArray(DUMMY_DATA.collabRequests)
+      ? DUMMY_DATA.collabRequests
+          .filter(req => req.status === 'accepted' && matchEventRequest(req))
+          .map(requestToLabel)
+          .filter(Boolean)
+      : [];
+  },
+  async handleCollabRequest(requestId, action = 'accept', handlerUid = '', opts = {}) {
+    if (!requestId) throw new Error('Missing requestId');
+    const normalizeText = value => String(value || '').trim().toLowerCase();
+    const resolveCollaboratorLabel = async (data) => {
+      const candidate = data?.payload?.toCommunity?.name || data?.payload?.toCommunityName || data?.toCommunityName || '';
+      if (candidate) return String(candidate).trim();
+
+      const communityId = String(data?.toCommunityId || data?.payload?.toCommunityId || '').trim();
+      if (!communityId) return '';
+
+      if (db && typeof db.collection === 'function') {
+        try {
+          const doc = await db.collection('communities').doc(communityId).get();
+          const community = doc.exists ? normalizeCommunityRecord({ id: doc.id, ...(doc.data() || {}) }, doc.id) : null;
+          if (community?.name) return community.name;
+        } catch (error) {
+          console.warn('Failed to resolve collaborator community name', error);
+        }
+      }
+
+      const community = Array.isArray(firestoreCommunityCache)
+        ? firestoreCommunityCache.find(item => item.id === communityId)
+        : DUMMY_DATA.communities.find(item => item.id === communityId);
+      return String(community?.name || communityId).trim();
+    };
+    const findEventByRequest = async (data) => {
+      const eventId = data?.payload?.eventId || data?.payload?.eventDraft?.eventId || '';
+      const draftId = data?.payload?.eventDraft?.draftId || data?.payload?.draftId || '';
+      const draftTitle = String(data?.payload?.eventDraft?.title || data?.payload?.title || '').trim();
+      const draftDate = String(data?.payload?.eventDraft?.date || data?.payload?.date || '').trim();
+      const fromUserId = String(data?.payload?.fromUserId || data?.fromUserId || '').trim();
+
+      if (eventId) {
+        const byId = db.collection('events').doc(eventId).get();
+        return byId;
+      }
+
+      if (draftId) {
+        const draftQuery = await db.collection('events').where('collaborationDraftId', '==', draftId).get();
+        if (!draftQuery.empty) return draftQuery.docs[0];
+      }
+
+      if (draftTitle && draftDate) {
+        const titleQuery = await db.collection('events')
+          .where('title', '==', draftTitle)
+          .where('date', '==', draftDate)
+          .get();
+        if (!titleQuery.empty) return titleQuery.docs[0];
+      }
+
+      if (draftTitle) {
+        const titleQuery = await db.collection('events').where('title', '==', draftTitle).get();
+        if (!titleQuery.empty) {
+          const sorted = [...titleQuery.docs].sort((a, b) => {
+            const aTime = a.data()?.createdAt?.toMillis ? a.data().createdAt.toMillis() : 0;
+            const bTime = b.data()?.createdAt?.toMillis ? b.data().createdAt.toMillis() : 0;
+            return bTime - aTime;
+          });
+          return sorted[0];
+        }
+      }
+
+      if (draftTitle || draftDate) {
+        const fallbackQuery = await db.collection('events').get();
+        const candidates = fallbackQuery.docs.filter(docSnap => {
+          const docData = docSnap.data() || {};
+          const titleMatch = draftTitle ? normalizeText(docData.title) === normalizeText(draftTitle) : true;
+          const dateMatch = draftDate ? normalizeText(docData.date) === normalizeText(draftDate) : true;
+          const organizerMatch = fromUserId ? normalizeText(docData.organizerId || docData.organizer_uid || '') === normalizeText(fromUserId) : true;
+          return titleMatch && dateMatch && organizerMatch;
+        });
+        if (candidates.length) {
+          candidates.sort((a, b) => {
+            const aTime = a.data()?.createdAt?.toMillis ? a.data().createdAt.toMillis() : 0;
+            const bTime = b.data()?.createdAt?.toMillis ? b.data().createdAt.toMillis() : 0;
+            return bTime - aTime;
+          });
+          return candidates[0];
+        }
+      }
+
+      return null;
+    };
+    if (db && typeof db.collection === 'function') {
+      try {
+        const ref = db.collection('collabRequests').doc(requestId);
+        await ref.update({ status: action === 'accept' ? 'accepted' : 'rejected', handledBy: handlerUid || null, handledAt: firebase.firestore.FieldValue.serverTimestamp(), ...(opts || {}) });
+        const doc = await ref.get();
+        const data = doc.exists ? doc.data() : null;
+        if (action === 'accept' && data) {
+          const collaboratorLabel = await resolveCollaboratorLabel(data);
+          const targetDoc = await findEventByRequest(data);
+          if (targetDoc?.ref && collaboratorLabel) {
+            await targetDoc.ref.update({ collaborators: firebase.firestore.FieldValue.arrayUnion(collaboratorLabel) });
+          }
+        }
+        return true;
+      } catch (err) {
+        console.warn('Failed to handle collab request in Firestore', err);
+        throw err;
+      }
+    }
+    // local fallback
+    if (Array.isArray(DUMMY_DATA.collabRequests)) {
+      const idx = DUMMY_DATA.collabRequests.findIndex(r => r.id === requestId);
+      if (idx === -1) return false;
+      DUMMY_DATA.collabRequests[idx].status = action === 'accept' ? 'accepted' : 'rejected';
+      DUMMY_DATA.collabRequests[idx].handledBy = handlerUid || null;
+      DUMMY_DATA.collabRequests[idx].handledAt = new Date().toISOString();
+      const data = DUMMY_DATA.collabRequests[idx];
+      if (action === 'accept' && data) {
+        const collaboratorLabel = await resolveCollaboratorLabel(data);
+        const eventId = data?.payload?.eventId || data?.payload?.eventDraft?.eventId || '';
+        const draftId = data?.payload?.eventDraft?.draftId || data?.payload?.draftId || '';
+        const draftTitle = String(data?.payload?.eventDraft?.title || data?.payload?.title || '').trim();
+        const draftDate = String(data?.payload?.eventDraft?.date || data?.payload?.date || '').trim();
+        const fromUserId = String(data?.payload?.fromUserId || data?.fromUserId || '').trim();
+        const ev = eventId
+          ? DUMMY_DATA.events.find(e => e.id === eventId)
+          : (draftId
+            ? DUMMY_DATA.events.find(e => e.collaborationDraftId === draftId)
+            : (draftTitle && draftDate
+              ? DUMMY_DATA.events.find(e => normalizeText(e.title) === normalizeText(draftTitle) && normalizeText(e.date) === normalizeText(draftDate) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId)))
+              : (draftTitle ? DUMMY_DATA.events.find(e => normalizeText(e.title) === normalizeText(draftTitle) && (!fromUserId || normalizeText(e.organizerId || e.organizer_uid || '') === normalizeText(fromUserId))) : null)));
+        if (ev && collaboratorLabel) {
+          ev.collaborators = Array.isArray(ev.collaborators) ? ev.collaborators.concat([collaboratorLabel]) : [collaboratorLabel];
+        }
+      }
+      return true;
+    }
+    return false;
   },
 };
